@@ -4,6 +4,36 @@ World::World()
 {
 	window = renderer.GetWindow();
 
+	// Define the variables for object1
+	glm::vec3 gravity1 = glm::vec3(0.f, 0.f, 0.f);
+	glm::vec3 position1 = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 velocity1 = glm::vec3(0.0f, 0.0f, 0.0f);
+	std::vector<glm::vec3> initialActingForces1 = std::vector<glm::vec3>();
+	glm::vec3 rotationAxis1 = glm::vec3(0.0f, 0.0f, 0.0f); // glm::vec3(0.5f, 1.0f, 0.7f);
+	float angle1 = 50.0f;
+	float mass1 = 50.f;
+	float faceSize1 = 1.f;
+
+	// Create object1 and add it to the world
+	PhysicsObject* object1 = new PhysicsObject(position1, velocity1, initialActingForces1, rotationAxis1, angle1, mass1, gravity1, false, faceSize1);
+	AddObject(object1);
+
+	// Define the variables for object2
+	glm::vec3 gravity2 = glm::vec3(0.f, 0.f, 0.f);
+	glm::vec3 position2 = glm::vec3(1.5f, 0.0f, -0.f);
+	glm::vec3 velocity2 = glm::vec3(0.0f, 0.0f, 0.0f);
+	std::vector<glm::vec3> initialActingForces2 = std::vector<glm::vec3>();
+	glm::vec3 rotationAxis2 = glm::vec3(0.0f, 0.0f, 0.0f);
+	float angle2 = 30.0f;
+	float mass2 = 100.0f;
+	float faceSize2 = 1.f;
+
+	// Create object2 and add it to the world
+	PhysicsObject* object2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotationAxis2, angle2, mass2, gravity2, false, faceSize2);
+	AddObject(object2);
+
+	// object2->GetMesh().ChangeSize(2.5f);
+
 	std::cout << PhysicObjects.size() << std::endl;
 	
 }
@@ -32,19 +62,19 @@ void World::CollisionUpdate()
 		{
 			bool result = false;
 			glm::vec3 shortestOverlap = glm::vec3(1000000.0f);
-			CheckCollision(PhysicObjects[i], PhysicObjects[z], result, shortestOverlap);
+			CheckCollision(*PhysicObjects[i], *PhysicObjects[z], result, shortestOverlap);
 			if (result)
 			{
 				// Collision reaction
 				std::cout << "Collision" << std::endl;
-				std::vector<glm::vec3> instantaneousCollisionVelocities = CalculateCollisionVelocity(PhysicObjects[i], PhysicObjects[z]);
-				if (!PhysicObjects[i].IsAnchored()) {
+				std::vector<glm::vec3> instantaneousCollisionVelocities = CalculateCollisionVelocity(*PhysicObjects[i], *PhysicObjects[z]);
+				if (!PhysicObjects[i]->IsAnchored()) {
 					//PhysicObjects[i].AddInstantaneousForce(-shortestOverlap);
-					PhysicObjects[i].AddInstantaneousForce(instantaneousCollisionVelocities[0]);
+					PhysicObjects[i]->AddInstantaneousForce(instantaneousCollisionVelocities[0]);
 				}
-				if (!PhysicObjects[z].IsAnchored()) {
+				if (!PhysicObjects[z]->IsAnchored()) {
 					//PhysicObjects[z].AddInstantaneousForce(shortestOverlap);
-					PhysicObjects[z].AddInstantaneousForce(instantaneousCollisionVelocities[1]);
+					PhysicObjects[z]->AddInstantaneousForce(instantaneousCollisionVelocities[1]);
 				}
 			}
 		}
@@ -211,9 +241,9 @@ void World::PhysicsUpdate()
 	// Handles Physics
 	for (int i = 0; i < PhysicObjects.size(); i++)
 	{
-		if (!PhysicObjects[i].IsAnchored()) {
+		if (!PhysicObjects[i]->IsAnchored()) {
 			//std::cout << "Object " << i << " velocity: " << PhysicsUtility::vec3ToString(PhysicObjects[i].GetCurrentVelocity()) << " units/unit" << std::endl;
-			PhysicObjects[i].CalculatePhysics(renderer.GetDeltaTime());
+			PhysicObjects[i]->CalculatePhysics(renderer.GetDeltaTime());
 		}
 	}
 }
@@ -223,7 +253,7 @@ void World::Render()
 	renderer.RenderLoop(&camera, PhysicObjects);
 }
 
-void World::AddObject(PhysicsObject &object)
+void World::AddObject(PhysicsObject* object)
 {
 	PhysicObjects.push_back(object);
 }
@@ -231,6 +261,8 @@ void World::AddObject(PhysicsObject &object)
 void World::ProcessInput()
 {
 	float cameraSpeed = 7.5f * renderer.deltaTime;
+
+	// WASD Movement
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
 		camera.cameraPos += cameraSpeed * camera.cameraFront;
@@ -247,6 +279,8 @@ void World::ProcessInput()
 	{
 		camera.cameraPos += glm::normalize(glm::cross(camera.cameraFront, camera.cameraUp)) * cameraSpeed;
 	}
+
+	// Altitude Movement
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
 		camera.cameraPos -= cameraSpeed * glm::vec3(0, 1, 0);
@@ -255,10 +289,15 @@ void World::ProcessInput()
 	{
 		camera.cameraPos += cameraSpeed * glm::vec3(0, 1, 0);
 	}
+
+	// Program Controls
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
+
+	// Debuging Controls
+
 }
 
 void World::ProcessMouseMovement(double xpos, double ypos)

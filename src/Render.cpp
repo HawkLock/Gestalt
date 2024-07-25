@@ -114,7 +114,7 @@ void Renderer::Cleanup()
     glfwTerminate();
 }
 
-void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject> RenderObjects)
+void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjects)
 {
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
@@ -137,35 +137,28 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject> RenderObjec
     shader.setMat4("projection", projection); // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
     shader.setMat4("view", view);
 
-    glBindVertexArray(VAO);
+    // glBindVertexArray(VAO);
 
     // Only renders cubes at the moment
-    for (unsigned int i = 0; i < RenderObjects.size(); i++)
+    for (auto& object : RenderObjects)
     {
+        object->GetMesh().Bind();
+
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, RenderObjects[i].GetCurrentPos());
-        if (RenderObjects[i].GetRotationAxis() != glm::vec3(0.0f, 0.0f, 0.0f))
+        model = glm::translate(model, object->GetCurrentPos());
+        if (object->GetRotationAxis() != glm::vec3(0.0f, 0.0f, 0.0f))
         {
-            model = glm::rotate(model, glm::radians(RenderObjects[i].GetRotationAngle()), RenderObjects[i].GetRotationAxis());
+            model = glm::rotate(model, glm::radians(object->GetRotationAngle()), object->GetRotationAxis());
         }
         shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        // std::cout << object->GetMesh().GetVertexCount() << std::endl;
+        glDrawArrays(GL_TRIANGLES, 0, object->GetMesh().GetVertexCount());
+        //glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 
     glfwSwapBuffers(window);
     glfwPollEvents();
-}
-// Unused
-void Renderer::RenderCube(glm::vec3 position, float rotation, glm::vec3 rotationAxis)
-{
-    glBindVertexArray(VAO);
-
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, position);
-    model = glm::rotate(model, glm::radians(rotation), rotationAxis);
-    shader.setMat4("model", model);
-
-    //glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)

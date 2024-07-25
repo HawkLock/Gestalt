@@ -8,7 +8,7 @@
 class World {
 
 protected:
-	std::vector<PhysicsObject> PhysicObjects;
+	std::vector<PhysicsObject*> PhysicObjects;
 	Renderer renderer;
 	glm::vec3 Gravity = glm::vec3(0.0f, -0.98f, 0.0f);
 
@@ -31,7 +31,7 @@ public:
 	void ProcessMouseMovement(double xpos, double ypos);
 	void ProcessMouseScroll(float yoffset);
 
-	void AddObject(PhysicsObject &object);
+	void AddObject(PhysicsObject* object);
 
 	Renderer GetRenderer() { return renderer; }
 	glm::vec3 GetGravity() { return Gravity; }

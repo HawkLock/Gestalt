@@ -1,33 +1,30 @@
 #include "PhysicsObject.h"
 
 PhysicsObject::PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, glm::vec3 initialNetForce, glm::vec3 rotationAxis, float angle, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize)
+	: pos(initialPosition),
+	velocity(initialVelocity),
+	NetForce(initialNetForce),
+	Mass(initialMass),
+	rotation{ rotationAxis, angle },
+	Anchored(isAnchored),
+	Model(initialPosition, faceSize) // Calls the parameterized constructor of Mesh
 {
-	pos = initialPosition;
-	velocity = initialVelocity;
-	NetForce = initialNetForce;
-	Mass = initialMass;
-	PhysicsUtility::Rotation tempRotation; tempRotation.RotationAxis = rotationAxis; tempRotation.Angle = angle;
-	rotation = tempRotation;
-	Anchored = isAnchored;
-
 	AddForce(gravity, "Gravity");
-
-	Model = Mesh(initialPosition, faceSize);
 }
 
-PhysicsObject::PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::vec3 rotationAxis, float angle, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize) {
-	pos = initialPosition;
-	velocity = initialVelocity;
+
+PhysicsObject::PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::vec3 rotationAxis, float angle, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize)
+	: pos(initialPosition),
+	velocity(initialVelocity),
+	Mass(initialMass),
+	rotation{ rotationAxis, angle },
+	Anchored(isAnchored),
+	Model(initialPosition, faceSize) // Use parameterized constructor
+{
 	generateForceVectorFromVec3Vector(initialActingForcesVectors);
-	Mass = initialMass;
-	PhysicsUtility::Rotation tempRotation; tempRotation.RotationAxis = rotationAxis; tempRotation.Angle = angle;
-	rotation = tempRotation;
-	Anchored = isAnchored;
-
 	AddForce(gravity, "Gravity");
-
-	Model = Mesh(initialPosition, faceSize);
 }
+
 
 
 // Force Manipulation Functions

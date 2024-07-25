@@ -76,12 +76,10 @@ public:
 
 	Renderer();
 
-	void RenderLoop(Camera* camera, std::vector<PhysicsObject> RenderObjects);
+	void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjects);
     void Initialize();
     void Cleanup();
-
-    void RenderCube(glm::vec3 position, float rotation, glm::vec3 rotationAxis);
-
+ 
     GLFWwindow* GetWindow() { return window; }
     float GetDeltaTime() { return deltaTime; }
 

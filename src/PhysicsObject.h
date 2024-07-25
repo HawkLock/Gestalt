@@ -45,6 +45,7 @@ public:
 	glm::vec3 GetRotationAxis() { return rotation.RotationAxis; }
 	float GetRotationAngle() { return rotation.Angle; }
 	float GetMass() { return Mass; }
+	Mesh& GetMesh() { return Model; }
 	float GetFaceExtent() { return Model.faceLength; }
 	float IsAnchored() { return Anchored; }
 
