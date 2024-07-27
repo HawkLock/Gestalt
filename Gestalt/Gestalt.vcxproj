@@ -30,17 +30,16 @@
     <ClCompile Include="..\src\PhysicsObject.cpp" />
     <ClCompile Include="..\src\PhysicsUtility.cpp" />
     <ClCompile Include="..\src\Render.cpp" />
-    <ClCompile Include="..\src\RigidBodyObject.cpp" />
     <ClCompile Include="..\src\stb.cpp" />
     <ClCompile Include="..\src\World.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Camera.h" />
     <ClInclude Include="..\src\Mesh.h" />
+    <ClInclude Include="..\src\MeshLibrary.h" />
     <ClInclude Include="..\src\PhysicsObject.h" />
     <ClInclude Include="..\src\PhysicsUtility.h" />
     <ClInclude Include="..\src\Render.h" />
-    <ClInclude Include="..\src\RigidBodyObject.h" />
     <ClInclude Include="..\src\Shader.h" />
     <ClInclude Include="..\src\World.h" />
   </ItemGroup>

@@ -4,9 +4,11 @@ World::World()
 {
 	window = renderer.GetWindow();
 
+
+
 	// Define the variables for object1
 	glm::vec3 gravity1 = glm::vec3(0.f, 0.f, 0.f);
-	glm::vec3 position1 = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 position1 = glm::vec3(-0.5f, 0.0f, 0.0f);
 	glm::vec3 velocity1 = glm::vec3(0.0f, 0.0f, 0.0f);
 	std::vector<glm::vec3> initialActingForces1 = std::vector<glm::vec3>();
 	glm::vec3 rotationAxis1 = glm::vec3(0.0f, 0.0f, 0.0f); // glm::vec3(0.5f, 1.0f, 0.7f);
@@ -14,25 +16,31 @@ World::World()
 	float mass1 = 50.f;
 	float faceSize1 = 1.f;
 
+	std::string modelPath1 = "C:/Programming/Gestalt/Models/cube.txt";
+
+
 	// Create object1 and add it to the world
-	PhysicsObject* object1 = new PhysicsObject(position1, velocity1, initialActingForces1, rotationAxis1, angle1, mass1, gravity1, false, faceSize1);
+	PhysicsObject* object1 = new PhysicsObject(position1, velocity1, initialActingForces1, rotationAxis1, angle1, mass1, gravity1, false, faceSize1, modelPath1);
 	AddObject(object1);
 
 	// Define the variables for object2
 	glm::vec3 gravity2 = glm::vec3(0.f, 0.f, 0.f);
-	glm::vec3 position2 = glm::vec3(1.5f, 0.0f, -0.f);
+	glm::vec3 position2 = glm::vec3(2.0f, 0.0f, 0.f);
 	glm::vec3 velocity2 = glm::vec3(0.0f, 0.0f, 0.0f);
 	std::vector<glm::vec3> initialActingForces2 = std::vector<glm::vec3>();
 	glm::vec3 rotationAxis2 = glm::vec3(0.0f, 0.0f, 0.0f);
 	float angle2 = 30.0f;
 	float mass2 = 100.0f;
-	float faceSize2 = 1.f;
+	float faceSize2 = 1.0f;
+
+	std::string modelPath2 = "C:/Programming/Gestalt/Models/cube.txt";
 
 	// Create object2 and add it to the world
-	PhysicsObject* object2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotationAxis2, angle2, mass2, gravity2, false, faceSize2);
+	//PhysicsObject* object2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotationAxis2, angle2, mass2, gravity2, false, faceSize2, meshLibrary.getCubeVertices(faceSize2));
+	PhysicsObject* object2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotationAxis2, angle2, mass2, gravity2, false, faceSize2, modelPath2);
 	AddObject(object2);
 
-	// object2->GetMesh().ChangeSize(2.5f);
+	object2->GetMesh().ChangeSize(0.5f);
 
 	std::cout << PhysicObjects.size() << std::endl;
 	
@@ -47,7 +55,7 @@ void World::Update()
 	CollisionUpdate();
 
 	// Handles Other Physics
-	PhysicsUpdate();
+	// PhysicsUpdate();
 
 	// Handles Rendering
 	Render();
@@ -60,25 +68,56 @@ void World::CollisionUpdate()
 	{
 		for (int z = i+1; z < PhysicObjects.size(); z++)
 		{
-			bool result = false;
-			glm::vec3 shortestOverlap = glm::vec3(1000000.0f);
-			CheckCollision(*PhysicObjects[i], *PhysicObjects[z], result, shortestOverlap);
+			//*PhysicObjects[i], * PhysicObjects[z]
+			std::vector<float> vertices1 = std::vector<float>();
+			std::vector<float> vertices2 = std::vector<float>();
+
+			std::vector<Vertex> obj1Vertices = PhysicObjects[i]->extractVertices(vertices1);
+			std::vector<Vertex> obj2Vertices = PhysicObjects[i]->extractVertices(vertices2);
+
+			bool result = false; // checkSATCollision(;
 			if (result)
 			{
 				// Collision reaction
 				std::cout << "Collision" << std::endl;
-				std::vector<glm::vec3> instantaneousCollisionVelocities = CalculateCollisionVelocity(*PhysicObjects[i], *PhysicObjects[z]);
-				if (!PhysicObjects[i]->IsAnchored()) {
-					//PhysicObjects[i].AddInstantaneousForce(-shortestOverlap);
-					PhysicObjects[i]->AddInstantaneousForce(instantaneousCollisionVelocities[0]);
-				}
-				if (!PhysicObjects[z]->IsAnchored()) {
-					//PhysicObjects[z].AddInstantaneousForce(shortestOverlap);
-					PhysicObjects[z]->AddInstantaneousForce(instantaneousCollisionVelocities[1]);
-				}
+				
 			}
 		}
 	}
+}
+
+float World::project(const Vertex& vertex, const Vertex& axis) {
+	return vertex.x * axis.x + vertex.y * axis.y + vertex.z * axis.z;
+}
+
+std::pair<float, float> World::getProjectionRange(const std::vector<Vertex>& vertices, const Vertex& axis) {
+	float minProj = project(vertices[0], axis);
+	float maxProj = minProj;
+
+	for (const auto& vertex : vertices) {
+		float proj = project(vertex, axis);
+		if (proj < minProj) minProj = proj;
+		if (proj > maxProj) maxProj = proj;
+	}
+
+	return { minProj, maxProj };
+}
+
+bool World::intervalsOverlap(const std::pair<float, float>& range1, const std::pair<float, float>& range2) {
+	return range1.second >= range2.first && range2.second >= range1.first;
+}
+
+bool World::checkSATCollision(const std::vector<Vertex>& vertices1, const std::vector<Vertex>& vertices2, const std::vector<Vertex>& axes) {
+	for (const auto& axis : axes) {
+		auto range1 = getProjectionRange(vertices1, axis);
+		auto range2 = getProjectionRange(vertices2, axis);
+
+		if (!intervalsOverlap(range1, range2)) {
+			return false; // Separating axis found, no collision
+		}
+	}
+
+	return true; // No separating axis found, collision detected
 }
 
 // Uses elastic collision calculation

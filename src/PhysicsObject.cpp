@@ -1,31 +1,28 @@
 #include "PhysicsObject.h"
 
-PhysicsObject::PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, glm::vec3 initialNetForce, glm::vec3 rotationAxis, float angle, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize)
-	: pos(initialPosition),
-	velocity(initialVelocity),
-	NetForce(initialNetForce),
-	Mass(initialMass),
-	rotation{ rotationAxis, angle },
-	Anchored(isAnchored),
-	Model(initialPosition, faceSize) // Calls the parameterized constructor of Mesh
+PhysicsObject::PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::vec3 rotationAxis, float angle, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize, std::vector<float> inputVertices)
+    : pos(initialPosition),
+      velocity(initialVelocity),
+      Mass(initialMass),
+      rotation{rotationAxis, angle},
+      Anchored(isAnchored),
+      Model(initialPosition, faceSize, inputVertices) // Use parameterized constructor
 {
-	AddForce(gravity, "Gravity");
+    generateForceVectorFromVec3Vector(initialActingForcesVectors);
+    AddForce(gravity, "Gravity");
 }
 
-
-PhysicsObject::PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::vec3 rotationAxis, float angle, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize)
+PhysicsObject::PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::vec3 rotationAxis, float angle, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize, std::string& modelPath)
 	: pos(initialPosition),
 	velocity(initialVelocity),
 	Mass(initialMass),
 	rotation{ rotationAxis, angle },
 	Anchored(isAnchored),
-	Model(initialPosition, faceSize) // Use parameterized constructor
+	Model(initialPosition, faceSize, modelPath) // Use parameterized constructor
 {
 	generateForceVectorFromVec3Vector(initialActingForcesVectors);
 	AddForce(gravity, "Gravity");
 }
-
-
 
 // Force Manipulation Functions
 unsigned int PhysicsObject::FindForceIndex(std::string forceName)
@@ -40,6 +37,7 @@ unsigned int PhysicsObject::FindForceIndex(std::string forceName)
 	return -1;
 	// If the given force does not exist in the acting forces vector of the physics object
 }
+
 void PhysicsObject::AddForce(glm::vec3 newForceVector, std::string forceName)
 {
 	Force newForce;
@@ -48,6 +46,7 @@ void PhysicsObject::AddForce(glm::vec3 newForceVector, std::string forceName)
 	ActingForces.push_back(newForce);
 	CalculateNetForce();
 }
+
 void PhysicsObject::RemoveForce(std::string forceName)
 {
 	unsigned int forceIndex = FindForceIndex(forceName);
@@ -121,13 +120,24 @@ void PhysicsObject::applyFriction(float modifier)
 	velocity -= velocity * (universalVelocityDecay * modifier);
 }
 
+
+// Collision
+
+std::vector<Vertex> PhysicsObject::extractVertices(const std::vector<float>& data) {
+	std::vector<Vertex> vertices;
+	for (size_t i = 0; i < data.size(); i += 5) {
+		vertices.push_back({ data[i], data[i + 1], data[i + 2] });
+	}
+	return vertices;
+}
+
 std::vector<glm::vec3> PhysicsObject::GetVertices()
 {
 	// Retrieves all the corner vertices from the mesh
 	std::vector<glm::vec3> vertices;
-	for (int i = 0; i < sizeof(Model.vertices) / sizeof(Model.vertices[0]);)
+	for (int i = 0; i < sizeof(Model.verticesU) / sizeof(Model.verticesU[0]);)
 	{
-		glm::vec3 vertex = glm::vec3(Model.vertices[i], Model.vertices[i + 1], Model.vertices[i + 2]) + pos;
+		glm::vec3 vertex = glm::vec3(Model.verticesU[i], Model.verticesU[i + 1], Model.verticesU[i + 2]) + pos;
 		vertices.push_back(vertex);
 		i += 5;
 	}
@@ -157,4 +167,25 @@ std::vector<glm::vec3> PhysicsObject::GetVertices()
 	}
 
 	return vertices;
+}
+
+void PhysicsObject::RenderMesh(const Shader& shader, const glm::mat4& modelMatrix, GLuint textureID)
+{
+	// Bind the VAO associated with the mesh
+	glBindVertexArray(Model.VAO);
+
+	// Bind the texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+
+	// Bind the shader and set uniforms
+	shader.use();
+	shader.setMat4("model", modelMatrix);
+	shader.setInt("texture1", 0);  // Ensure the uniform sampler is set to the correct texture unit
+
+	// Draw elements using indices
+	glDrawElements(GL_TRIANGLES, Model.indices.size(), GL_UNSIGNED_INT, 0);
+
+	// Unbind the VAO (optional, but good practice)
+	glBindVertexArray(0);
 }

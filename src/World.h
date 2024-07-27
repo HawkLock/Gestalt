@@ -1,9 +1,8 @@
 #pragma once
 #include <vector>
 #include <glm/glm/glm.hpp>
-
 #include "Render.h"
-#include "RigidBodyObject.h"
+#include "MeshLibrary.h"
 
 class World {
 
@@ -32,6 +31,12 @@ public:
 	void ProcessMouseScroll(float yoffset);
 
 	void AddObject(PhysicsObject* object);
+
+	// Collision
+	float project(const Vertex& vertex, const Vertex& axis);
+	std::pair<float, float> getProjectionRange(const std::vector<Vertex>& vertices, const Vertex& axis);
+	bool intervalsOverlap(const std::pair<float, float>& range1, const std::pair<float, float>& range2);
+	bool checkSATCollision(const std::vector<Vertex>& vertices1, const std::vector<Vertex>& vertices2, const std::vector<Vertex>& axes);
 
 	Renderer GetRenderer() { return renderer; }
 	glm::vec3 GetGravity() { return Gravity; }

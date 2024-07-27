@@ -153,8 +153,9 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
         shader.setMat4("model", model);
 
         // std::cout << object->GetMesh().GetVertexCount() << std::endl;
-        glDrawArrays(GL_TRIANGLES, 0, object->GetMesh().GetVertexCount());
+        //glDrawArrays(GL_TRIANGLES, 0, object->GetMesh().GetVertexCount());
         //glDrawArrays(GL_TRIANGLES, 0, 36);
+        object->RenderMesh(shader, model, texture1);
     }
 
     glfwSwapBuffers(window);

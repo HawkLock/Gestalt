@@ -47,9 +47,6 @@
     <ClCompile Include="..\src\Render.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\RigidBodyObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\stb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -73,13 +70,13 @@
     <ClInclude Include="..\src\Render.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\RigidBodyObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\World.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\MeshLibrary.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
