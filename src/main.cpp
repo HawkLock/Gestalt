@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 
 #include "World.h"
+#include "PhysicsUtility.h"
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);

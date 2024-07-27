@@ -1,118 +1,54 @@
 #include "PhysicsObject.h"
 
-PhysicsObject::PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize, std::vector<float> inputVertices)
-    : pos(initialPosition),
-      velocity(initialVelocity),
-	  rot(initialRot),
-      Mass(initialMass),
-      Anchored(isAnchored),
-      Model(initialPosition, faceSize, inputVertices) // Use parameterized constructor
-{
-    generateForceVectorFromVec3Vector(initialActingForcesVectors);
-    AddForce(gravity, "Gravity");
-}
-
-PhysicsObject::PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize, std::string& modelPath)
+PhysicsObject::PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, bool isAnchored, float faceSize, std::string& modelPath)
 	: pos(initialPosition),
-	velocity(initialVelocity),
 	rot(initialRot),
 	Mass(initialMass),
 	Anchored(isAnchored),
 	Model(initialPosition, faceSize, modelPath) // Use parameterized constructor
 {
-	generateForceVectorFromVec3Vector(initialActingForcesVectors);
-	AddForce(gravity, "Gravity");
+	Force gravity = Force();
+	gravity.ForceName = "Gravity";
+	gravity.ForceVector = gravityVec;
+	AddForce(gravity, true);
 }
 
 // Force Manipulation Functions
-unsigned int PhysicsObject::FindForceIndex(std::string forceName)
+
+void PhysicsObject::AddForce(Force newForce, bool isContinuous) {
+	if (isContinuous) {
+		continuousForces.push_back(newForce);
+	}
+}
+
+void PhysicsObject::CalculateAcceleration() {
+	// Apply Continuous Forces
+	// All other forces will have been applied earlier in the physics pass
+	for (Force force : continuousForces) {
+		acceleration += force.ForceVector / Mass;
+	}
+}
+
+void PhysicsObject::CalculateVelocity(float deltaTime)
 {
-	for (unsigned int i = 0; i < ActingForces.size(); i++)
-	{
-		if (ActingForces[i].ForceName == forceName)
-		{
-			return i;
-		}
-	}
-	return -1;
-	// If the given force does not exist in the acting forces vector of the physics object
+	velocity += acceleration * deltaTime;
 }
 
-void PhysicsObject::AddForce(glm::vec3 newForceVector, std::string forceName)
+void PhysicsObject::CalculatePosition(float deltaTime)
 {
-	Force newForce;
-	newForce.ForceVector = newForceVector;
-	newForce.ForceName = forceName;
-	ActingForces.push_back(newForce);
-	CalculateNetForce();
-}
-
-void PhysicsObject::RemoveForce(std::string forceName)
-{
-	unsigned int forceIndex = FindForceIndex(forceName);
-	// If there is no force by that name
-	if (forceIndex == -1) {
-		return;
-	}
-	ActingForces.erase(ActingForces.begin() + forceIndex - 1);
-	CalculateNetForce();
-}
-
-void PhysicsObject::AddInstantaneousForce(glm::vec3 instantForce) {
-	//pos += instantForce;
-	Force newForce;
-	newForce.ForceName = "InstantForce";
-	newForce.ForceVector = instantForce;
-	ForceStack.push(newForce);
-}
-
-void PhysicsObject::AddInstantaneousTorque(PhysicsUtility::Torque torque) {
-	TorqueStack.push(torque);
-}
-
-void PhysicsObject::CalculateNetForce()
-{
-	glm::vec3 newNetForce = glm::vec3(0.0f, 0.0f, 0.0f);
-
-	for (unsigned int i = 0; i < ActingForces.size(); i++)
-	{
-		newNetForce += ActingForces[i].ForceVector;
-	}
-	while (!ForceStack.empty()) {
-		newNetForce += ForceStack.top().ForceVector;
-		ForceStack.pop();
-	}
-	NetForce = newNetForce;
-	glm::vec3 acceleration = NetForce / Mass;
-	velocity += acceleration;
-}
-
-void PhysicsObject::CalculateNetTorque() {
-	PhysicsUtility::Torque newNetTorque = PhysicsUtility::Torque();
-	for (unsigned int i = 0; i < ActingTorques.size(); i++) {
-		newNetTorque.AddTorque(ActingTorques[i]);
-	}
-	while (!TorqueStack.empty()) {
-		newNetTorque.AddTorque(TorqueStack.top());
-		TorqueStack.pop();
-	}
-	NetTorque = newNetTorque;
+	pos += (velocity * deltaTime) + (0.5f * acceleration * deltaTime * deltaTime);
 }
 
 void PhysicsObject::CalculatePhysics(float deltaTime)
 {
-	CalculateNetForce();
-	pos += velocity * deltaTime;
+	CalculateAcceleration();
+	CalculatePosition(deltaTime);
+	CalculateVelocity(deltaTime); // Position is calculated first because velocity is only updated for the next pass
 	//applyFriction(deltaTime);
 	//printf("Pos: %f, %f, %f \n", pos.x, pos.y, pos.z);
-}
 
-std::vector<Force> PhysicsObject::generateForceVectorFromVec3Vector(std::vector<glm::vec3> vec3Vector) {
-	std::vector<Force> forceVector = std::vector<Force>();
-	for (glm::vec3 vec : vec3Vector) {
-		AddForce(vec, "");
-	}
-	return forceVector;
+	// Reset acceleration
+	acceleration = glm::vec3();
 }
 
 void PhysicsObject::applyFriction(float modifier)

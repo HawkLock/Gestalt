@@ -18,33 +18,30 @@ class PhysicsObject {
 protected:
 	float universalVelocityDecay = 0.5; 
 
+	glm::vec3 gravityVec = glm::vec3(0, -9.8, 0);
+
 	glm::vec3 pos;
 	glm::quat rot;
 
+	glm::vec3 acceleration;
 	glm::vec3 velocity; // In m/s
-	glm::vec3 NetForce; // In N
 	
-	PhysicsUtility::Torque NetTorque; // In N
-	std::vector<Force> ActingForces; // A set of all the currently acting forces on the physics object
-	std::vector<PhysicsUtility::Torque> ActingTorques;
 	float Mass; // In Kg
 	bool Anchored;
-	std::stack<Force> ForceStack;
-	std::stack<PhysicsUtility::Torque> TorqueStack;
+	std::vector<Force> continuousForces;
 
 	Mesh Model;
 
 public:
 
-	PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize, std::vector<float> inputVertices);
-	PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize, std::string& modelPath);
+	PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, bool isAnchored, float faceSize, std::string& modelPath);
 
 	// Getters and Setters
 	glm::vec3 GetCurrentPos() { return pos; }
 	glm::quat GetCurrentRot() { return rot; }
 
 	glm::vec3 GetCurrentVelocity() { return velocity; }
-	glm::vec3 GetCurrentNetForce() { return NetForce; }
+	glm::vec3 GetCurrentNetForce() { return glm::vec3(); }
 
 	float GetMass() { return Mass; }
 	Mesh& GetMesh() { return Model; }
@@ -59,29 +56,21 @@ public:
 
 	void AddRotation(glm::quat addRot) { rot = glm::normalize(addRot * rot); }
 
-	// These forces are used for all forces currently acting on the physics objects
-	unsigned int FindForceIndex(std::string forceName);
-	void AddForce(glm::vec3 newForceVector, std::string forceName);
-	void RemoveForce(std::string forceName);
-	void CalculateNetForce();
-	void CalculateNetTorque();
-	void AddInstantaneousForce(glm::vec3 instantForce); // Used for forces that go away immediately
-	void AddInstantaneousTorque(PhysicsUtility::Torque torque); // Used for torques that go away immediately
-
 	// Collision
 	std::vector<Vertex> extractVertices(const std::vector<float>& data);
 
+	// Physics
+	void AddForce(Force newForce, bool isContinuous);
+	void CalculateAcceleration();
+	void CalculateVelocity(float deltaTime);
+	void CalculatePosition(float deltaTime);
 	void CalculatePhysics(float deltaTime);
 
 	std::vector<glm::vec3> GetVertices();
-	int getForceStackDepth() {
-		return ForceStack.size();
-	}
 
 	void RenderMesh(const Shader& shader, GLuint textureID); 
 
 private: 
-	std::vector<Force> generateForceVectorFromVec3Vector(std::vector<glm::vec3> vec3Vector);
 	void applyFriction(float modifier); // Decays the velocity to add the idea of friction
 
 };

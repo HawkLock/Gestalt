@@ -15,26 +15,25 @@ World::World()
 	startTime = std::chrono::high_resolution_clock::now();
 	window = renderer.GetWindow();
 
-
 	// Define the variables for object1
 	glm::vec3 gravity1 = glm::vec3(0.f, 0.f, 0.f);
-	glm::vec3 position1 = glm::vec3(-0.5f, 0.0f, 0.0f);
-	glm::quat rotation1 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
+	glm::vec3 position1 = glm::vec3(0.0f, -2.0f, 0.0f);
+	//glm::quat rotation1 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
+	glm::quat rotation1 = glm::angleAxis(glm::radians(-75.0f), glm::vec3(1.0f, 0.0f, 0.0f)); 
 	glm::vec3 velocity1 = glm::vec3(0.0f, 0.0f, 0.0f);
 	std::vector<glm::vec3> initialActingForces1 = std::vector<glm::vec3>();
 	float mass1 = 50.f;
 	float faceSize1 = 1.f;
 
-	std::string modelPath1 = "C:/Programming/Gestalt/Models/cube.txt";
-
+	std::string modelPath1 = "C:/Programming/Gestalt/Models/plane.txt";
 
 	// Create object1 and add it to the world
-	testObj1 = new PhysicsObject(position1, velocity1, initialActingForces1, rotation1, mass1, gravity1, false, faceSize1, modelPath1);
+	testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, true, faceSize1, modelPath1);
 	AddObject(testObj1);
 
 	// Define the variables for object2
 	glm::vec3 gravity2 = glm::vec3(0.f, 0.f, 0.f);
-	glm::vec3 position2 = glm::vec3(2.0f, 0.0f, 0.f);
+	glm::vec3 position2 = glm::vec3(0.f, 0.0f, 0.f);
 	//glm::quat rotation2 = glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); 
 	glm::quat rotation2 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
 	glm::vec3 velocity2 = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -46,14 +45,11 @@ World::World()
 
 	// Create object2 and add it to the world
 	//PhysicsObject* object2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotationAxis2, angle2, mass2, gravity2, false, faceSize2, meshLibrary.getCubeVertices(faceSize2));
-	testObj2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotation2, mass2, gravity2, false, faceSize2, modelPath2);
+	testObj2 = new PhysicsObject(position2, initialActingForces2, rotation2, mass2, false, faceSize2, modelPath2);
 	AddObject(testObj2);
 
 	//testObj2->GetMesh().ChangeSize(0.5f);
-	//testObj2->AddRotation(glm::angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
-
-	std::cout << PhysicObjects.size() << std::endl;
-	
+	//testObj2->AddRotation(glm::angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f)));	
 }
 
 void World::Update()
@@ -65,7 +61,7 @@ void World::Update()
 	CollisionUpdate();
 
 	// Handles Other Physics
-	// PhysicsUpdate();
+	PhysicsUpdate();
 
 	// Handles Rendering
 	Render();
@@ -124,6 +120,38 @@ void ApplyObjectTransformation(std::vector<Vertex>& vertices, std::vector<glm::v
     }
 }
 
+void World::resolveCollision(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap) {
+	glm::vec3 posA = objA->GetCurrentPos();
+	glm::vec3 posB = objB->GetCurrentPos();
+	glm::vec3 separationDir = glm::normalize(posA - posB);
+
+	// Determine the direction to move the objects
+	if (glm::dot(separationDir, overlap.axis) < 0) {
+		separationDir = -overlap.axis;
+	}
+	else {
+		separationDir = overlap.axis;
+	}
+
+	// Check if either object is anchored
+	bool isAnchoredA = objA->IsAnchored();
+	bool isAnchoredB = objB->IsAnchored();
+
+	if (isAnchoredA && !isAnchoredB) {
+		// Move only objB
+		objB->SetPos(posB - separationDir * overlap.depth);
+	}
+	else if (!isAnchoredA && isAnchoredB) {
+		// Move only objA
+		objA->SetPos(posA + separationDir * overlap.depth);
+	}
+	else if (!isAnchoredA && !isAnchoredB) {
+		// Move both objects equally
+		objA->SetPos(posA + separationDir * overlap.depth * 0.5f);
+		objB->SetPos(posB - separationDir * overlap.depth * 0.5f);
+	}
+}
+
 
 void World::CollisionUpdate() {
 	for (int i = 0; i < PhysicObjects.size(); i++) {
@@ -166,7 +194,11 @@ void World::CollisionUpdate() {
 				std::chrono::high_resolution_clock::time_point currTime = std::chrono::high_resolution_clock::now();
 				std::chrono::duration<double> elapsed = currTime - startTime;
 
-				std::cout << elapsed.count() << " -- Collision Depth: " << smallestOverlap.depth << std::endl;
+				//std::cout << "Time: " << elapsed.count() << " -- Collision Depth: " << smallestOverlap.depth << std::endl;
+				std::cout << "Time: " << elapsed.count() << " -- Collision Depth: " << smallestOverlap.depth << " -- Axis: " << smallestOverlap.axis.x << ", " << smallestOverlap.axis.y << ", " << smallestOverlap.axis.z << std::endl;
+
+				resolveCollision(PhysicObjects[i], PhysicObjects[z], smallestOverlap);
+				// PhysicObjects[i]->SetPos(PhysicObjects[i]->GetCurrentPos() + smallestOverlap.axis * smallestOverlap.depth);
 			}
 		}
 	}

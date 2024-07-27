@@ -52,6 +52,7 @@ public:
 	void AddObject(PhysicsObject* object);
 
 	// Collision
+	void resolveCollision(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap);
 	void generateSeparationAxes(std::vector<glm::vec3>& axes, std::vector<glm::vec3>& edges1, std::vector<glm::vec3>& edges2);
 	std::pair<float, float> getProjectionRange(const std::vector<Vertex>& vertices, glm::vec3& axis);
 	bool intervalsOverlap(const std::pair<float, float>& range1, const std::pair<float, float>& range2);
