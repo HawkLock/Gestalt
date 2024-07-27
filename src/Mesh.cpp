@@ -5,6 +5,7 @@ Mesh::Mesh(glm::vec3 initialPosition, float faceSize, std::vector<float> inputVe
 {
 	pos = initialPosition;
 	faceLength = faceSize;
+    edges = std::vector<glm::vec3>();
 
 	// Generate the vertices for the cube
     float verticeDistance = faceLength / 2;
@@ -25,7 +26,33 @@ Mesh::Mesh(glm::vec3 initialPosition, float faceSize, std::string &modelPath)
     float verticeDistance = faceLength / 2;
 
     vertices = std::vector<Vertex>();
-    parseVertexData(modelPath, vertices, normals, indices);
+    parseVertexData(modelPath, vertices, normals, indices, edges);
+
+    int i = 0;
+    //for (Vertex vertex : vertices) {
+    //    i++;
+    //    std::cout << "Vertex: " << i << ": " << vertex.x << ", " << vertex.y << ", " << vertex.z << std::endl;
+    //}
+    //i = 0;
+    //for (glm::vec3 normal : normals) {
+    //    i++;
+    //    std::cout << "Normal: " << i << ": " << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
+    //}
+    //i = 0;
+    //for (float index : indices) {
+    //    i++;
+    //    std::cout << "Index: " << i << ": " << index << std::endl;
+    //}
+    //std::cout << "Edges: " << edges.size() << std::endl;
+    //i = 0;
+    //for (glm::vec3 edge : edges) {
+    //    i++;
+    //    std::cout << i << ": " << edge.x << ", " << edge.y << ", " << edge.z << std::endl;
+    //}
+    //std::cout << std::endl;
+
+    extractEdgesFromIndices(indices, vertices, edges);
+
 
     SetupMesh();
     vertexCount = vertices.size(); // There are five components to each in the vector
@@ -61,9 +88,9 @@ void Mesh::SetupMesh()
 
     // Bind VBO and upload vertex data (positions and UVs)
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex) + normals.size() * sizeof(Normal), nullptr, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex) + normals.size() * sizeof(glm::vec3), nullptr, GL_STATIC_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
-    glBufferSubData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), normals.size() * sizeof(Normal), normals.data());
+    glBufferSubData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), normals.size() * sizeof(glm::vec3), normals.data());
 
     // Bind EBO and upload index data
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -79,16 +106,37 @@ void Mesh::SetupMesh()
 
     // Setup normal attributes
     // Assuming normals are stored after the vertices in the buffer
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Normal), (void*)0);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
     glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
 }
 
+bool AreVectorsEqual(const glm::vec3& a, const glm::vec3& b) {
+    return a.x == b.x && a.y == b.y && a.z == b.z;
+}
 
+std::vector<glm::vec3> RemoveDuplicates(const std::vector<glm::vec3>& input) {
+    std::vector<glm::vec3> uniqueVec;
 
-void Mesh::parseVertexData(const std::string& filepath, std::vector<Vertex>& vertices, std::vector<Normal>& normals,
-    std::vector<unsigned int>& indices) {
+    for (const auto& vec : input) {
+        bool isDuplicate = false;
+        for (const auto& uniqueVecItem : uniqueVec) {
+            if (AreVectorsEqual(vec, uniqueVecItem)) {
+                isDuplicate = true;
+                break;
+            }
+        }
+
+        if (!isDuplicate) {
+            uniqueVec.push_back(vec);
+        }
+    }
+
+    return uniqueVec;
+}
+
+void Mesh::parseVertexData(const std::string& filepath, std::vector<Vertex>& vertices, std::vector<glm::vec3>& normals, std::vector<unsigned int>& indices, std::vector<glm::vec3>& edgeVectors) {
     std::ifstream file(filepath);
 
     if (!file.is_open()) {
@@ -96,30 +144,52 @@ void Mesh::parseVertexData(const std::string& filepath, std::vector<Vertex>& ver
         return;
     }
 
+    std::vector<glm::vec3> normalCache = std::vector<glm::vec3>();
+
     std::string line;
     while (std::getline(file, line)) {
         std::istringstream iss(line);
-        unsigned int index;
-        Vertex vertex;
-        Normal normal;
-        if (!(iss >> index >> vertex.x >> vertex.y >> vertex.z >> vertex.u >> vertex.v >> normal.nx >> normal.ny >> normal.nz)) {
-            std::cerr << "Error parsing line: " << line << std::endl;
-            continue;
-        }
+        std::string type;
+        iss >> type;
 
-        // Assuming that vertex and normal data are stored in the order they are read
-        if (index >= vertices.size()) {
-            vertices.resize(index + 1);
-            normals.resize(index + 1);
+        if (type == "edge") {
+            // Read edge data
+            glm::vec3 v1, v2;
+            if (!(iss >> v1.x >> v1.y >> v1.z >> v2.x >> v2.y >> v2.z)) {
+                std::cerr << "Error parsing edge line: " << line << std::endl;
+                continue;
+            }
+            glm::vec3 edgeVector = v2 - v1;
+            edgeVectors.push_back(edgeVector);
         }
+        else {
+            // Read vertex data
+            unsigned int index;
+            Vertex vertex;
+            glm::vec3 normal = glm::vec3();
+            if (!(iss >> index >> vertex.x >> vertex.y >> vertex.z >> vertex.u >> vertex.v >> normal.x >> normal.y >> normal.z)) {
+                std::cerr << "Error parsing vertex line: " << line << std::endl;
+                continue;
+            }
+            normalCache.push_back(normal);
 
-        vertices[index] = vertex;
-        normals[index] = normal;
-        indices.push_back(index);
+            // Assuming that vertex and normal data are stored in the order they are read
+            if (index >= vertices.size()) {
+                vertices.resize(index + 1);
+                normals.resize(index + 1);
+            }
+
+            vertices[index] = vertex;
+            normals[index] = normal;
+            indices.push_back(index);
+        }
     }
+
+    normals = RemoveDuplicates(normalCache);
 
     file.close();
 }
+
 
 
 void Mesh::ChangeSize(float scale)
@@ -129,15 +199,56 @@ void Mesh::ChangeSize(float scale)
         vertices[i].x *= scale;     // Scale x
         vertices[i].y *= scale;   // Scale y
         vertices[i].z *= scale;   // Scale z
-        // Skip vertices[i+3] (u) and vertices[i+4] (v) as they are texture coordinates
     }
 
     SetupMesh();
 }
 
+std::pair<unsigned int, unsigned int> Mesh::makeEdge(unsigned int v1, unsigned int v2) {
+    if (v1 > v2) std::swap(v1, v2);
+    return std::make_pair(v1, v2);
+}
+
+// Function to extract edges from indices
+void Mesh::extractEdgesFromIndices( const std::vector<unsigned int>& indices, const std::vector<Vertex>& vertices, std::vector<glm::vec3>& edges
+) {
+    std::set<std::pair<unsigned int, unsigned int>> edgeSet;
+
+    // Loop through indices in chunks of 3 (assuming triangles; adjust if necessary)
+    for (size_t i = 0; i < indices.size(); i += 3) {
+        unsigned int v0 = indices[i];
+        unsigned int v1 = indices[i + 1];
+        unsigned int v2 = indices[i + 2];
+
+        // Create edges for each face (triangle) using the vertex indices
+        std::vector<std::pair<unsigned int, unsigned int>> faceEdges = {
+            makeEdge(v0, v1),
+            makeEdge(v1, v2),
+            makeEdge(v2, v0)
+        };
+
+        // Add edges to the set (automatically handles duplicates)
+        for (const auto& edge : faceEdges) {
+            edgeSet.insert(edge);
+        }
+    }
+
+    // Convert edge set to vector of glm::vec3 for storing in edges
+    for (const auto& edge : edgeSet) {
+        unsigned int v1 = edge.first;
+        unsigned int v2 = edge.second;
+        glm::vec3 edgeVector(
+            vertices[v2].x - vertices[v1].x,
+            vertices[v2].y - vertices[v1].y,
+            vertices[v2].z - vertices[v1].z
+        );
+        edges.push_back(edgeVector);
+    }
+}
 
 Mesh::~Mesh()
 {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
 }

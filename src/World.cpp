@@ -2,9 +2,8 @@
 
 World::World()
 {
+	startTime = std::chrono::high_resolution_clock::now();
 	window = renderer.GetWindow();
-
-
 
 	// Define the variables for object1
 	glm::vec3 gravity1 = glm::vec3(0.f, 0.f, 0.f);
@@ -20,8 +19,8 @@ World::World()
 
 
 	// Create object1 and add it to the world
-	PhysicsObject* object1 = new PhysicsObject(position1, velocity1, initialActingForces1, rotationAxis1, angle1, mass1, gravity1, false, faceSize1, modelPath1);
-	AddObject(object1);
+	testObj1 = new PhysicsObject(position1, velocity1, initialActingForces1, rotationAxis1, angle1, mass1, gravity1, false, faceSize1, modelPath1);
+	AddObject(testObj1);
 
 	// Define the variables for object2
 	glm::vec3 gravity2 = glm::vec3(0.f, 0.f, 0.f);
@@ -37,10 +36,10 @@ World::World()
 
 	// Create object2 and add it to the world
 	//PhysicsObject* object2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotationAxis2, angle2, mass2, gravity2, false, faceSize2, meshLibrary.getCubeVertices(faceSize2));
-	PhysicsObject* object2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotationAxis2, angle2, mass2, gravity2, false, faceSize2, modelPath2);
-	AddObject(object2);
+	testObj2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotationAxis2, angle2, mass2, gravity2, false, faceSize2, modelPath2);
+	AddObject(testObj2);
 
-	object2->GetMesh().ChangeSize(0.5f);
+	//testObj2->GetMesh().ChangeSize(0.5f);
 
 	std::cout << PhysicObjects.size() << std::endl;
 	
@@ -62,43 +61,139 @@ void World::Update()
 	//std::cout << "Update" << std::endl;
 }
 
-void World::CollisionUpdate()
-{
-	for (int i = 0; i < PhysicObjects.size(); i++)
-	{
-		for (int z = i+1; z < PhysicObjects.size(); z++)
-		{
-			//*PhysicObjects[i], * PhysicObjects[z]
-			std::vector<float> vertices1 = std::vector<float>();
-			std::vector<float> vertices2 = std::vector<float>();
+bool AreParallel(const glm::vec3& v1, const glm::vec3& v2, float tolerance = 1e-6f) {
+	// Compute the cross product
+	glm::vec3 crossProd = glm::cross(v1, v2);
+	// Check if the magnitude of the cross product is close to zero
+	return glm::length(crossProd) < tolerance;
+}
 
-			std::vector<Vertex> obj1Vertices = PhysicObjects[i]->extractVertices(vertices1);
-			std::vector<Vertex> obj2Vertices = PhysicObjects[i]->extractVertices(vertices2);
+// Function to remove parallel vectors from the vector
+void RemoveParallelVectors(std::vector<glm::vec3>& vectors, float tolerance = 1e-6f) {
+	std::vector<glm::vec3> result;
 
-			bool result = false; // checkSATCollision(;
-			if (result)
-			{
+	for (const auto& vec : vectors) {
+		bool isParallel = false;
+		for (const auto& resVec : result) {
+			if (AreParallel(vec, resVec, tolerance)) {
+				isParallel = true;
+				break;
+			}
+		}
+		if (!isParallel) {
+			result.push_back(vec);
+		}
+	}
+
+	vectors = std::move(result);
+}
+
+void ApplyObjectTransformation(std::vector<Vertex>& vertices, PhysicsObject* object) {
+	// Get the current position of the object
+	glm::vec3 objectPos = object->GetCurrentPos();
+
+	// Iterate through each vertex and update its position based on the object's position
+	for (Vertex& vertex : vertices) {
+		// Apply translation transformation
+		vertex.x += objectPos.x;
+		vertex.y += objectPos.y;
+		vertex.z += objectPos.z;
+	}
+}
+
+void World::CollisionUpdate() {
+	for (int i = 0; i < PhysicObjects.size(); i++) {
+		for (int z = i + 1; z < PhysicObjects.size(); z++) {
+			// Extract vertices and normals from the meshes
+			std::vector<Vertex> obj1Vertices = PhysicObjects[i]->GetMesh().vertices;
+			std::vector<Vertex> obj2Vertices = PhysicObjects[z]->GetMesh().vertices;
+			std::vector<glm::vec3> normals1 = PhysicObjects[i]->GetMesh().normals;
+			std::vector<glm::vec3> normals2 = PhysicObjects[z]->GetMesh().normals;
+
+			ApplyObjectTransformation(obj1Vertices, PhysicObjects[i]);
+			ApplyObjectTransformation(obj2Vertices, PhysicObjects[z]);
+
+			std::vector<glm::vec3> axes;
+
+			// Add normals as axes
+			for (const auto& normal : normals1) {
+				axes.push_back(normal);
+			}
+
+			for (const auto& normal : normals2) {
+				axes.push_back(normal);
+			}
+
+			generateSeparationAxes(axes, PhysicObjects[i]->GetMesh().edges, PhysicObjects[z]->GetMesh().edges);
+			RemoveParallelVectors(axes);
+
+			//int i = 0;
+			//std::cout << "Axes: " << axes.size() << std::endl;
+			//for (glm::vec3 axis : axes) {
+			//	i++;
+			//    std::cout << "Axis: " << i << ": " << axis.x << ", " << axis.y << ", " << axis.z << std::endl;
+			//}
+			//std::cout << std::endl;
+
+			bool result = checkSATCollision(obj1Vertices, obj2Vertices, axes);
+			if (result) {
 				// Collision reaction
-				std::cout << "Collision" << std::endl;
-				
+				std::chrono::high_resolution_clock::time_point currTime = std::chrono::high_resolution_clock::now();
+				std::chrono::duration<double> elapsed = currTime - startTime;
+
+				std::cout << "Collision: " << elapsed.count() << std::endl;
 			}
 		}
 	}
 }
 
-float World::project(const Vertex& vertex, const Vertex& axis) {
-	return vertex.x * axis.x + vertex.y * axis.y + vertex.z * axis.z;
+// Helper function to create a unique axis identifier
+std::string createAxisKey(const glm::vec3& axis) {
+	const float epsilon = 1e-6f;
+	glm::vec3 normAxis = normalize(axis);
+	return std::to_string(static_cast<int>(normAxis.x / epsilon)) + "," +
+		std::to_string(static_cast<int>(normAxis.y / epsilon)) + "," +
+		std::to_string(static_cast<int>(normAxis.z / epsilon));
 }
 
-std::pair<float, float> World::getProjectionRange(const std::vector<Vertex>& vertices, const Vertex& axis) {
-	float minProj = project(vertices[0], axis);
+void World::generateSeparationAxes(std::vector<glm::vec3>& axes, std::vector<glm::vec3>& edges1, std::vector<glm::vec3>& edges2) {
+	std::set<std::string> uniqueAxes; // To store unique axis keys
+
+	for (const glm::vec3& edge1 : edges1) {
+		for (const glm::vec3& edge2 : edges2) {
+			// Compute the cross product to generate a separating axis
+			glm::vec3 axis = glm::cross(edge1, edge2);
+
+			// Normalize the axis and ensure it's not a zero vector
+			if (glm::length(axis) > 0.0f) {
+				axis = normalize(axis);
+
+				// Create a unique key for the axis
+				std::string axisKey = createAxisKey(axis);
+
+				// Check if this axis is unique
+				if (uniqueAxes.find(axisKey) == uniqueAxes.end()) {
+					uniqueAxes.insert(axisKey);
+					axes.push_back(axis);
+				}
+			}
+		}
+	}
+}
+
+std::pair<float, float> World::getProjectionRange(const std::vector<Vertex>& vertices, glm::vec3& axis) {
+	// Initialize min and max projection with the first vertex projection
+	float minProj = glm::dot(glm::vec3(vertices[0].x, vertices[0].y, vertices[0].z), axis);
 	float maxProj = minProj;
 
+	// Loop through all vertices to find the min and max projection
 	for (const auto& vertex : vertices) {
-		float proj = project(vertex, axis);
+		float proj = glm::dot(glm::vec3(vertex.x, vertex.y, vertex.z), axis);
 		if (proj < minProj) minProj = proj;
 		if (proj > maxProj) maxProj = proj;
 	}
+
+	// std::cout << "Min: " << minProj << ", Max: " << maxProj << std::endl;
 
 	return { minProj, maxProj };
 }
@@ -107,17 +202,16 @@ bool World::intervalsOverlap(const std::pair<float, float>& range1, const std::p
 	return range1.second >= range2.first && range2.second >= range1.first;
 }
 
-bool World::checkSATCollision(const std::vector<Vertex>& vertices1, const std::vector<Vertex>& vertices2, const std::vector<Vertex>& axes) {
-	for (const auto& axis : axes) {
-		auto range1 = getProjectionRange(vertices1, axis);
-		auto range2 = getProjectionRange(vertices2, axis);
+bool World::checkSATCollision(const std::vector<Vertex>& vertices1, const std::vector<Vertex>& vertices2, std::vector<glm::vec3>& axes) {
+	for (glm::vec3 axis : axes) {
+		std::pair<float, float> projection1 = getProjectionRange(vertices1, axis);
+		std::pair<float, float> projection2 = getProjectionRange(vertices2, axis);
 
-		if (!intervalsOverlap(range1, range2)) {
-			return false; // Separating axis found, no collision
+		if (!intervalsOverlap(projection1, projection2)) {
+			return false;
 		}
 	}
-
-	return true; // No separating axis found, collision detected
+	return true;
 }
 
 // Uses elastic collision calculation
@@ -300,6 +394,7 @@ void World::AddObject(PhysicsObject* object)
 void World::ProcessInput()
 {
 	float cameraSpeed = 7.5f * renderer.deltaTime;
+	float boxSpeed = 1.5f * renderer.deltaTime;
 
 	// WASD Movement
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -336,6 +431,30 @@ void World::ProcessInput()
 	}
 
 	// Debuging Controls
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(-1, 0, 0));
+	}
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(1, 0, 0));
+	}
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, 0, -1));
+	}
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, 0, 1));
+	}
+	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
+	{
+		testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, -1, 0));
+	}
+	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
+	{
+		testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, 1, 0));
+	}
 
 }
 
