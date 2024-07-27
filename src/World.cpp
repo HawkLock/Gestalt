@@ -1,17 +1,27 @@
 #include "World.h"
 
+void PrintQuaternion(const glm::quat& q) {
+	std::cout << "Quaternion: ("
+		<< q.x << ", "
+		<< q.y << ", "
+		<< q.z << ", "
+		<< q.w << ")"
+		<< std::endl;
+}
+
+
 World::World()
 {
 	startTime = std::chrono::high_resolution_clock::now();
 	window = renderer.GetWindow();
 
+
+	glm::quat rotation = glm::quat(glm::vec3(0.0f)); // Identity quaternion
 	// Define the variables for object1
 	glm::vec3 gravity1 = glm::vec3(0.f, 0.f, 0.f);
 	glm::vec3 position1 = glm::vec3(-0.5f, 0.0f, 0.0f);
 	glm::vec3 velocity1 = glm::vec3(0.0f, 0.0f, 0.0f);
 	std::vector<glm::vec3> initialActingForces1 = std::vector<glm::vec3>();
-	glm::vec3 rotationAxis1 = glm::vec3(0.0f, 0.0f, 0.0f); // glm::vec3(0.5f, 1.0f, 0.7f);
-	float angle1 = 50.0f;
 	float mass1 = 50.f;
 	float faceSize1 = 1.f;
 
@@ -19,7 +29,7 @@ World::World()
 
 
 	// Create object1 and add it to the world
-	testObj1 = new PhysicsObject(position1, velocity1, initialActingForces1, rotationAxis1, angle1, mass1, gravity1, false, faceSize1, modelPath1);
+	testObj1 = new PhysicsObject(position1, velocity1, initialActingForces1, rotation, mass1, gravity1, false, faceSize1, modelPath1);
 	AddObject(testObj1);
 
 	// Define the variables for object2
@@ -27,8 +37,6 @@ World::World()
 	glm::vec3 position2 = glm::vec3(2.0f, 0.0f, 0.f);
 	glm::vec3 velocity2 = glm::vec3(0.0f, 0.0f, 0.0f);
 	std::vector<glm::vec3> initialActingForces2 = std::vector<glm::vec3>();
-	glm::vec3 rotationAxis2 = glm::vec3(0.0f, 0.0f, 0.0f);
-	float angle2 = 30.0f;
 	float mass2 = 100.0f;
 	float faceSize2 = 1.0f;
 
@@ -36,10 +44,11 @@ World::World()
 
 	// Create object2 and add it to the world
 	//PhysicsObject* object2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotationAxis2, angle2, mass2, gravity2, false, faceSize2, meshLibrary.getCubeVertices(faceSize2));
-	testObj2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotationAxis2, angle2, mass2, gravity2, false, faceSize2, modelPath2);
+	testObj2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotation, mass2, gravity2, false, faceSize2, modelPath2);
 	AddObject(testObj2);
 
 	//testObj2->GetMesh().ChangeSize(0.5f);
+	//testObj2->AddRotation(glm::angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
 
 	std::cout << PhysicObjects.size() << std::endl;
 	
@@ -88,18 +97,31 @@ void RemoveParallelVectors(std::vector<glm::vec3>& vectors, float tolerance = 1e
 	vectors = std::move(result);
 }
 
-void ApplyObjectTransformation(std::vector<Vertex>& vertices, PhysicsObject* object) {
-	// Get the current position of the object
-	glm::vec3 objectPos = object->GetCurrentPos();
+void ApplyObjectTransformation(std::vector<Vertex>& vertices, std::vector<glm::vec3>& normals, PhysicsObject* object) {
+    // Get the object's position and rotation
+    glm::vec3 objectPos = object->GetCurrentPos();
+    glm::quat objectRotation = object->GetCurrentRot();
 
-	// Iterate through each vertex and update its position based on the object's position
-	for (Vertex& vertex : vertices) {
-		// Apply translation transformation
-		vertex.x += objectPos.x;
-		vertex.y += objectPos.y;
-		vertex.z += objectPos.z;
-	}
+    // Transformation matrix
+    glm::mat4 transformationMatrix = glm::mat4(1.0f);
+    transformationMatrix = glm::translate(transformationMatrix, objectPos); // Apply translation
+    transformationMatrix *= glm::mat4_cast(objectRotation); // Apply rotation
+
+    // Apply transformation to vertices
+    for (Vertex& vertex : vertices) {
+        glm::vec4 transformedVertex = transformationMatrix * glm::vec4(vertex.x, vertex.y, vertex.z, 1.0f);
+        vertex.x = transformedVertex.x;
+        vertex.y = transformedVertex.y;
+        vertex.z = transformedVertex.z;
+    }
+
+    // Apply rotation to normals (no translation)
+    glm::mat3 normalMatrix = glm::mat3(glm::transpose(glm::inverse(transformationMatrix)));
+    for (glm::vec3& normal : normals) {
+        normal = glm::normalize(normalMatrix * normal);
+    }
 }
+
 
 void World::CollisionUpdate() {
 	for (int i = 0; i < PhysicObjects.size(); i++) {
@@ -110,8 +132,8 @@ void World::CollisionUpdate() {
 			std::vector<glm::vec3> normals1 = PhysicObjects[i]->GetMesh().normals;
 			std::vector<glm::vec3> normals2 = PhysicObjects[z]->GetMesh().normals;
 
-			ApplyObjectTransformation(obj1Vertices, PhysicObjects[i]);
-			ApplyObjectTransformation(obj2Vertices, PhysicObjects[z]);
+			ApplyObjectTransformation(obj1Vertices, normals1, PhysicObjects[i]);
+			ApplyObjectTransformation(obj2Vertices, normals2, PhysicObjects[z]);
 
 			std::vector<glm::vec3> axes;
 
@@ -395,6 +417,7 @@ void World::ProcessInput()
 {
 	float cameraSpeed = 7.5f * renderer.deltaTime;
 	float boxSpeed = 1.5f * renderer.deltaTime;
+	float rotSpeed = 25.f * renderer.deltaTime;
 
 	// WASD Movement
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -454,6 +477,17 @@ void World::ProcessInput()
 	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
 	{
 		testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, 1, 0));
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
+	{
+		glm::quat rot = glm::angleAxis(glm::radians(rotSpeed), glm::vec3(0.0f, 0.0f, 1.0f));
+		testObj2->AddRotation(rot);
+	}
+	if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
+	{
+		glm::quat rot = glm::angleAxis(glm::radians(-rotSpeed), glm::vec3(0.0f, 0.0f, 1.0f));
+		testObj2->AddRotation(rot);
 	}
 
 }

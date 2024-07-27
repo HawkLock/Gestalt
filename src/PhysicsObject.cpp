@@ -1,10 +1,10 @@
 #include "PhysicsObject.h"
 
-PhysicsObject::PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::vec3 rotationAxis, float angle, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize, std::vector<float> inputVertices)
+PhysicsObject::PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize, std::vector<float> inputVertices)
     : pos(initialPosition),
       velocity(initialVelocity),
+	  rot(initialRot),
       Mass(initialMass),
-      rotation{rotationAxis, angle},
       Anchored(isAnchored),
       Model(initialPosition, faceSize, inputVertices) // Use parameterized constructor
 {
@@ -12,11 +12,11 @@ PhysicsObject::PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocit
     AddForce(gravity, "Gravity");
 }
 
-PhysicsObject::PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::vec3 rotationAxis, float angle, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize, std::string& modelPath)
+PhysicsObject::PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize, std::string& modelPath)
 	: pos(initialPosition),
 	velocity(initialVelocity),
+	rot(initialRot),
 	Mass(initialMass),
-	rotation{ rotationAxis, angle },
 	Anchored(isAnchored),
 	Model(initialPosition, faceSize, modelPath) // Use parameterized constructor
 {
@@ -169,10 +169,18 @@ std::vector<glm::vec3> PhysicsObject::GetVertices()
 	return vertices;
 }
 
-void PhysicsObject::RenderMesh(const Shader& shader, const glm::mat4& modelMatrix, GLuint textureID)
+void PhysicsObject::RenderMesh(const Shader& shader, GLuint textureID)
 {
+	// Compute the model matrix
+	glm::mat4 modelMatrix = glm::mat4(1.0f); // Identity matrix
+	modelMatrix = glm::translate(modelMatrix, pos); // Apply translation
+	modelMatrix *= glm::mat4_cast(rot); // Apply rotation
+
+	// Optionally apply scale
+	// modelMatrix = glm::scale(modelMatrix, scale);
+
 	// Bind the VAO associated with the mesh
-	glBindVertexArray(Model.VAO);
+	Model.Bind();
 
 	// Bind the texture
 	glActiveTexture(GL_TEXTURE0);
@@ -189,3 +197,4 @@ void PhysicsObject::RenderMesh(const Shader& shader, const glm::mat4& modelMatri
 	// Unbind the VAO (optional, but good practice)
 	glBindVertexArray(0);
 }
+

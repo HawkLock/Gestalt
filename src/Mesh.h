@@ -9,6 +9,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm/glm.hpp>
+#include <glm/glm/gtc/quaternion.hpp>
+#include <glm/glm/gtc/matrix_transform.hpp>
 
 #include "Shader.h"
 
@@ -21,10 +23,6 @@ struct VertexData {
 struct Vertex {
 	float x, y, z;   // Position
 	float u, v;      // UV coordinates
-};
-
-struct Face {
-	std::vector<unsigned int> vertexIndices; // Indices of vertices that form the face
 };
 
 // Currently only a cube

@@ -139,23 +139,9 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
 
     // glBindVertexArray(VAO);
 
-    // Only renders cubes at the moment
     for (auto& object : RenderObjects)
     {
-        object->GetMesh().Bind();
-
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, object->GetCurrentPos());
-        if (object->GetRotationAxis() != glm::vec3(0.0f, 0.0f, 0.0f))
-        {
-            model = glm::rotate(model, glm::radians(object->GetRotationAngle()), object->GetRotationAxis());
-        }
-        shader.setMat4("model", model);
-
-        // std::cout << object->GetMesh().GetVertexCount() << std::endl;
-        //glDrawArrays(GL_TRIANGLES, 0, object->GetMesh().GetVertexCount());
-        //glDrawArrays(GL_TRIANGLES, 0, 36);
-        object->RenderMesh(shader, model, texture1);
+        object->RenderMesh(shader, texture1);
     }
 
     glfwSwapBuffers(window);

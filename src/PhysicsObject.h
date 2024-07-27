@@ -19,11 +19,12 @@ protected:
 	float universalVelocityDecay = 0.5; 
 
 	glm::vec3 pos;
+	glm::quat rot;
+
 	glm::vec3 velocity; // In m/s
 	glm::vec3 NetForce; // In N
 	
 	PhysicsUtility::Torque NetTorque; // In N
-	PhysicsUtility::Rotation rotation;
 	std::vector<Force> ActingForces; // A set of all the currently acting forces on the physics object
 	std::vector<PhysicsUtility::Torque> ActingTorques;
 	float Mass; // In Kg
@@ -35,24 +36,28 @@ protected:
 
 public:
 
-	PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::vec3 rotationAxis, float angle, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize, std::vector<float> inputVertices);
-	PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::vec3 rotationAxis, float angle, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize, std::string& modelPath);
+	PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize, std::vector<float> inputVertices);
+	PhysicsObject(glm::vec3 initialPosition, glm::vec3 initialVelocity, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, glm::vec3 gravity, bool isAnchored, float faceSize, std::string& modelPath);
 
 	// Getters and Setters
 	glm::vec3 GetCurrentPos() { return pos; }
+	glm::quat GetCurrentRot() { return rot; }
+
 	glm::vec3 GetCurrentVelocity() { return velocity; }
 	glm::vec3 GetCurrentNetForce() { return NetForce; }
-	glm::vec3 GetRotationAxis() { return rotation.RotationAxis; }
-	float GetRotationAngle() { return rotation.Angle; }
+
 	float GetMass() { return Mass; }
 	Mesh& GetMesh() { return Model; }
 	float GetFaceExtent() { return Model.faceLength; }
 	float IsAnchored() { return Anchored; }
 
 	void SetPos(glm::vec3 newPos) { pos = newPos; }
+	void SetRot(glm::quat newRot) { rot = newRot; }
+
 	void SetVelocity(glm::vec3 newVelocity) { velocity = newVelocity; }
 	void SetMass(float newMass) { Mass = newMass; }
-	void SetAngle(glm::vec3 rotationAxis, float angle) { rotation.RotationAxis = rotationAxis;  rotation.Angle = angle; }
+
+	void AddRotation(glm::quat addRot) { rot = glm::normalize(addRot * rot); }
 
 	// These forces are used for all forces currently acting on the physics objects
 	unsigned int FindForceIndex(std::string forceName);
@@ -73,7 +78,7 @@ public:
 		return ForceStack.size();
 	}
 
-	void RenderMesh(const Shader& shader, const glm::mat4& modelMatrix, GLuint textureID); 
+	void RenderMesh(const Shader& shader, GLuint textureID); 
 
 private: 
 	std::vector<Force> generateForceVectorFromVec3Vector(std::vector<glm::vec3> vec3Vector);
