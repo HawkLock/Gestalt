@@ -16,10 +16,10 @@ World::World()
 	window = renderer.GetWindow();
 
 
-	glm::quat rotation = glm::quat(glm::vec3(0.0f)); // Identity quaternion
 	// Define the variables for object1
 	glm::vec3 gravity1 = glm::vec3(0.f, 0.f, 0.f);
 	glm::vec3 position1 = glm::vec3(-0.5f, 0.0f, 0.0f);
+	glm::quat rotation1 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
 	glm::vec3 velocity1 = glm::vec3(0.0f, 0.0f, 0.0f);
 	std::vector<glm::vec3> initialActingForces1 = std::vector<glm::vec3>();
 	float mass1 = 50.f;
@@ -29,12 +29,14 @@ World::World()
 
 
 	// Create object1 and add it to the world
-	testObj1 = new PhysicsObject(position1, velocity1, initialActingForces1, rotation, mass1, gravity1, false, faceSize1, modelPath1);
+	testObj1 = new PhysicsObject(position1, velocity1, initialActingForces1, rotation1, mass1, gravity1, false, faceSize1, modelPath1);
 	AddObject(testObj1);
 
 	// Define the variables for object2
 	glm::vec3 gravity2 = glm::vec3(0.f, 0.f, 0.f);
 	glm::vec3 position2 = glm::vec3(2.0f, 0.0f, 0.f);
+	//glm::quat rotation2 = glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); 
+	glm::quat rotation2 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
 	glm::vec3 velocity2 = glm::vec3(0.0f, 0.0f, 0.0f);
 	std::vector<glm::vec3> initialActingForces2 = std::vector<glm::vec3>();
 	float mass2 = 100.0f;
@@ -44,7 +46,7 @@ World::World()
 
 	// Create object2 and add it to the world
 	//PhysicsObject* object2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotationAxis2, angle2, mass2, gravity2, false, faceSize2, meshLibrary.getCubeVertices(faceSize2));
-	testObj2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotation, mass2, gravity2, false, faceSize2, modelPath2);
+	testObj2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotation2, mass2, gravity2, false, faceSize2, modelPath2);
 	AddObject(testObj2);
 
 	//testObj2->GetMesh().ChangeSize(0.5f);
@@ -157,13 +159,14 @@ void World::CollisionUpdate() {
 			//}
 			//std::cout << std::endl;
 
-			bool result = checkSATCollision(obj1Vertices, obj2Vertices, axes);
+			Overlap smallestOverlap = Overlap();
+			bool result = checkSATCollision(obj1Vertices, obj2Vertices, axes, smallestOverlap);
 			if (result) {
 				// Collision reaction
 				std::chrono::high_resolution_clock::time_point currTime = std::chrono::high_resolution_clock::now();
 				std::chrono::duration<double> elapsed = currTime - startTime;
 
-				std::cout << "Collision: " << elapsed.count() << std::endl;
+				std::cout << elapsed.count() << " -- Collision Depth: " << smallestOverlap.depth << std::endl;
 			}
 		}
 	}
@@ -224,7 +227,24 @@ bool World::intervalsOverlap(const std::pair<float, float>& range1, const std::p
 	return range1.second >= range2.first && range2.second >= range1.first;
 }
 
-bool World::checkSATCollision(const std::vector<Vertex>& vertices1, const std::vector<Vertex>& vertices2, std::vector<glm::vec3>& axes) {
+float World::getOverlap(const std::pair<float, float>& range1, const std::pair<float, float>& range2) {
+	// Calculate the overlap depth
+	float overlapStart = std::max(range1.first, range2.first);
+	float overlapEnd = std::min(range1.second, range2.second);
+
+	// If there's an overlap, return the overlap depth
+	if (overlapStart <= overlapEnd) {
+		return overlapEnd - overlapStart;
+	}
+
+	// If there's no overlap, return 0
+	return 0.0f;
+}
+
+
+bool World::checkSATCollision(const std::vector<Vertex>& vertices1, const std::vector<Vertex>& vertices2, std::vector<glm::vec3>& axes, Overlap& smallestOverlap) {
+	float smallestOverlapDepth = INT_MAX;
+	glm::vec3 smallestOverlapAxis = glm::vec3();
 	for (glm::vec3 axis : axes) {
 		std::pair<float, float> projection1 = getProjectionRange(vertices1, axis);
 		std::pair<float, float> projection2 = getProjectionRange(vertices2, axis);
@@ -232,7 +252,17 @@ bool World::checkSATCollision(const std::vector<Vertex>& vertices1, const std::v
 		if (!intervalsOverlap(projection1, projection2)) {
 			return false;
 		}
+		else {
+			float overlap = getOverlap(projection1, projection2);
+
+			if (overlap < smallestOverlapDepth) {
+				smallestOverlapDepth = overlap;
+				smallestOverlapAxis = axis;
+			}
+		}
 	}
+	smallestOverlap.depth = smallestOverlapDepth;
+	smallestOverlap.axis = smallestOverlapAxis;
 	return true;
 }
 
