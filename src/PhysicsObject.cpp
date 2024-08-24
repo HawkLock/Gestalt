@@ -44,8 +44,6 @@ void PhysicsObject::CalculatePhysics(float deltaTime)
 	CalculateAcceleration();
 	CalculatePosition(deltaTime);
 	CalculateVelocity(deltaTime); // Position is calculated first because velocity is only updated for the next pass
-	//applyFriction(deltaTime);
-	//printf("Pos: %f, %f, %f \n", pos.x, pos.y, pos.z);
 
 	// Reset acceleration
 	acceleration = glm::vec3();
@@ -55,7 +53,6 @@ void PhysicsObject::applyFriction(float modifier)
 {
 	velocity -= velocity * (universalVelocityDecay * modifier);
 }
-
 
 // Collision
 

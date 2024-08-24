@@ -18,7 +18,8 @@ class PhysicsObject {
 protected:
 	float universalVelocityDecay = 0.5; 
 
-	glm::vec3 gravityVec = glm::vec3(0, -9.8, 0);
+	 glm::vec3 gravityVec = glm::vec3(0, -9.8, 0);
+	// glm::vec3 gravityVec = glm::vec3(0, 0.0, 0); // disabled
 
 	glm::vec3 pos;
 	glm::quat rot;

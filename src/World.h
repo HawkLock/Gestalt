@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <functional>
 #include <limits>
+#include <algorithm>
 
 #include <glm/glm/glm.hpp>
 #include <glm/glm/gtc/matrix_transform.hpp>
@@ -11,11 +12,10 @@
 
 #include "Render.h"
 #include "MeshLibrary.h"
+#include "ConvexShape.h"
+#include "GJKAlgorithm.h"
+#include "EPAAlgorithm.h"
 
-struct Overlap {
-	float depth;
-	glm::vec3 axis;
-};
 
 class World {
 

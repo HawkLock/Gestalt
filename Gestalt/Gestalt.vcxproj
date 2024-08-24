@@ -35,12 +35,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Camera.h" />
+    <ClInclude Include="..\src\ConvexShape.h" />
+    <ClInclude Include="..\src\EPAAlgorithm.h" />
+    <ClInclude Include="..\src\GJKAlgorithm.h" />
     <ClInclude Include="..\src\Mesh.h" />
     <ClInclude Include="..\src\MeshLibrary.h" />
     <ClInclude Include="..\src\PhysicsObject.h" />
     <ClInclude Include="..\src\PhysicsUtility.h" />
     <ClInclude Include="..\src\Render.h" />
     <ClInclude Include="..\src\Shader.h" />
+    <ClInclude Include="..\src\Simplex.h" />
     <ClInclude Include="..\src\World.h" />
   </ItemGroup>
   <ItemGroup>
@@ -137,6 +141,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

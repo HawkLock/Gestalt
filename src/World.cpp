@@ -17,9 +17,9 @@ World::World()
 
 	// Define the variables for object1
 	glm::vec3 gravity1 = glm::vec3(0.f, 0.f, 0.f);
-	glm::vec3 position1 = glm::vec3(0.0f, -2.0f, 0.0f);
+	glm::vec3 position1 = glm::vec3(0.0f, -2.5f, 0.0f);
 	//glm::quat rotation1 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
-	glm::quat rotation1 = glm::angleAxis(glm::radians(-75.0f), glm::vec3(1.0f, 0.0f, 0.0f)); 
+	glm::quat rotation1 = glm::angleAxis(glm::radians(-75.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	glm::vec3 velocity1 = glm::vec3(0.0f, 0.0f, 0.0f);
 	std::vector<glm::vec3> initialActingForces1 = std::vector<glm::vec3>();
 	float mass1 = 50.f;
@@ -96,28 +96,36 @@ void RemoveParallelVectors(std::vector<glm::vec3>& vectors, float tolerance = 1e
 }
 
 void ApplyObjectTransformation(std::vector<Vertex>& vertices, std::vector<glm::vec3>& normals, PhysicsObject* object) {
-    // Get the object's position and rotation
-    glm::vec3 objectPos = object->GetCurrentPos();
-    glm::quat objectRotation = object->GetCurrentRot();
+	// Get the object's position and rotation
+	glm::vec3 objectPos = object->GetCurrentPos();
+	glm::quat objectRotation = object->GetCurrentRot();
 
-    // Transformation matrix
-    glm::mat4 transformationMatrix = glm::mat4(1.0f);
-    transformationMatrix = glm::translate(transformationMatrix, objectPos); // Apply translation
-    transformationMatrix *= glm::mat4_cast(objectRotation); // Apply rotation
+	// Transformation matrix
+	glm::mat4 transformationMatrix = glm::mat4(1.0f);
+	transformationMatrix = glm::translate(transformationMatrix, objectPos); // Apply translation
+	transformationMatrix *= glm::mat4_cast(objectRotation); // Apply rotation
 
-    // Apply transformation to vertices
-    for (Vertex& vertex : vertices) {
-        glm::vec4 transformedVertex = transformationMatrix * glm::vec4(vertex.x, vertex.y, vertex.z, 1.0f);
-        vertex.x = transformedVertex.x;
-        vertex.y = transformedVertex.y;
-        vertex.z = transformedVertex.z;
-    }
+	// Apply transformation to vertices
+	for (Vertex& vertex : vertices) {
+		glm::vec4 transformedVertex = transformationMatrix * glm::vec4(vertex.x, vertex.y, vertex.z, 1.0f);
+		vertex.x = transformedVertex.x;
+		vertex.y = transformedVertex.y;
+		vertex.z = transformedVertex.z;
+	}
 
-    // Apply rotation to normals (no translation)
-    glm::mat3 normalMatrix = glm::mat3(glm::transpose(glm::inverse(transformationMatrix)));
-    for (glm::vec3& normal : normals) {
-        normal = glm::normalize(normalMatrix * normal);
-    }
+	// Apply rotation to normals (no translation)
+	glm::mat3 normalMatrix = glm::mat3(glm::transpose(glm::inverse(transformationMatrix)));
+	for (glm::vec3& normal : normals) {
+		normal = glm::normalize(normalMatrix * normal);
+	}
+}
+
+std::vector<glm::vec3> ConvertVertexToGLM(std::vector<Vertex> vertices) {
+	std::vector<glm::vec3> newVertices = std::vector<glm::vec3>();
+	for (Vertex vertex : vertices) {
+		newVertices.push_back(glm::vec3(vertex.x, vertex.y, vertex.z));
+	}
+	return newVertices;
 }
 
 void World::resolveCollision(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap) {
@@ -153,6 +161,57 @@ void World::resolveCollision(PhysicsObject* objA, PhysicsObject* objB, const Ove
 }
 
 
+//void World::CollisionUpdate() {
+//	for (int i = 0; i < PhysicObjects.size(); i++) {
+//		for (int z = i + 1; z < PhysicObjects.size(); z++) {
+//			// Extract vertices and normals from the meshes
+//			std::vector<Vertex> obj1Vertices = PhysicObjects[i]->GetMesh().vertices;
+//			std::vector<Vertex> obj2Vertices = PhysicObjects[z]->GetMesh().vertices;
+//			std::vector<glm::vec3> normals1 = PhysicObjects[i]->GetMesh().normals;
+//			std::vector<glm::vec3> normals2 = PhysicObjects[z]->GetMesh().normals;
+//
+//			ApplyObjectTransformation(obj1Vertices, normals1, PhysicObjects[i]);
+//			ApplyObjectTransformation(obj2Vertices, normals2, PhysicObjects[z]);
+//
+//			std::vector<glm::vec3> axes;
+//
+//			// Add normals as axes
+//			for (const auto& normal : normals1) {
+//				axes.push_back(normal);
+//			}
+//
+//			for (const auto& normal : normals2) {
+//				axes.push_back(normal);
+//			}
+//
+//			generateSeparationAxes(axes, PhysicObjects[i]->GetMesh().edges, PhysicObjects[z]->GetMesh().edges);
+//			RemoveParallelVectors(axes);
+//
+//			//int i = 0;
+//			//std::cout << "Axes: " << axes.size() << std::endl;
+//			//for (glm::vec3 axis : axes) {
+//			//	i++;
+//			//    std::cout << "Axis: " << i << ": " << axis.x << ", " << axis.y << ", " << axis.z << std::endl;
+//			//}
+//			//std::cout << std::endl;
+//
+//			Overlap smallestOverlap = Overlap();
+//			bool result = checkSATCollision(obj1Vertices, obj2Vertices, axes, smallestOverlap);
+//			if (result) {
+//				// Collision reaction
+//				std::chrono::high_resolution_clock::time_point currTime = std::chrono::high_resolution_clock::now();
+//				std::chrono::duration<double> elapsed = currTime - startTime;
+//
+//				//std::cout << "Time: " << elapsed.count() << " -- Collision Depth: " << smallestOverlap.depth << std::endl;
+//				std::cout << "Time: " << elapsed.count() << " -- Collision Depth: " << smallestOverlap.depth << " -- Axis: " << smallestOverlap.axis.x << ", " << smallestOverlap.axis.y << ", " << smallestOverlap.axis.z << std::endl;
+//
+//				resolveCollision(PhysicObjects[i], PhysicObjects[z], smallestOverlap);
+//				// PhysicObjects[i]->SetPos(PhysicObjects[i]->GetCurrentPos() + smallestOverlap.axis * smallestOverlap.depth);
+//			}
+//		}
+//	}
+//}
+
 void World::CollisionUpdate() {
 	for (int i = 0; i < PhysicObjects.size(); i++) {
 		for (int z = i + 1; z < PhysicObjects.size(); z++) {
@@ -165,40 +224,29 @@ void World::CollisionUpdate() {
 			ApplyObjectTransformation(obj1Vertices, normals1, PhysicObjects[i]);
 			ApplyObjectTransformation(obj2Vertices, normals2, PhysicObjects[z]);
 
-			std::vector<glm::vec3> axes;
 
-			// Add normals as axes
-			for (const auto& normal : normals1) {
-				axes.push_back(normal);
-			}
+			std::vector<glm::vec3> vertices1 = ConvertVertexToGLM(obj1Vertices);
+			std::vector<glm::vec3> vertices2 = ConvertVertexToGLM(obj2Vertices);
 
-			for (const auto& normal : normals2) {
-				axes.push_back(normal);
-			}
+			ConvexShape shape1(vertices1);
+			ConvexShape shape2(vertices2);
 
-			generateSeparationAxes(axes, PhysicObjects[i]->GetMesh().edges, PhysicObjects[z]->GetMesh().edges);
-			RemoveParallelVectors(axes);
+			// Perform GJK collision detection and overlap calculation
+			Overlap smallestOverlap;
+			Simplex simplex;
+			bool isColliding = GJKAlgorithm::GJK(shape1, shape2, smallestOverlap, simplex);
 
-			//int i = 0;
-			//std::cout << "Axes: " << axes.size() << std::endl;
-			//for (glm::vec3 axis : axes) {
-			//	i++;
-			//    std::cout << "Axis: " << i << ": " << axis.x << ", " << axis.y << ", " << axis.z << std::endl;
-			//}
-			//std::cout << std::endl;
+			if (isColliding) {
+				// Collision response
+				smallestOverlap = EPAAlgorithm::EPA(simplex, shape1, shape2);
 
-			Overlap smallestOverlap = Overlap();
-			bool result = checkSATCollision(obj1Vertices, obj2Vertices, axes, smallestOverlap);
-			if (result) {
-				// Collision reaction
 				std::chrono::high_resolution_clock::time_point currTime = std::chrono::high_resolution_clock::now();
 				std::chrono::duration<double> elapsed = currTime - startTime;
 
-				//std::cout << "Time: " << elapsed.count() << " -- Collision Depth: " << smallestOverlap.depth << std::endl;
-				std::cout << "Time: " << elapsed.count() << " -- Collision Depth: " << smallestOverlap.depth << " -- Axis: " << smallestOverlap.axis.x << ", " << smallestOverlap.axis.y << ", " << smallestOverlap.axis.z << std::endl;
+				std::cout << "Time: " << elapsed.count() << " -- Collision Depth: " << smallestOverlap.depth
+					<< " -- Axis: " << smallestOverlap.axis.x << ", " << smallestOverlap.axis.y << ", " << smallestOverlap.axis.z << std::endl;
 
 				resolveCollision(PhysicObjects[i], PhysicObjects[z], smallestOverlap);
-				// PhysicObjects[i]->SetPos(PhysicObjects[i]->GetCurrentPos() + smallestOverlap.axis * smallestOverlap.depth);
 			}
 		}
 	}
@@ -322,7 +370,7 @@ std::vector<glm::vec3> World::CalculateCollisionVelocity(PhysicsObject one, Phys
 }
 
 // SAT Algorithm Implementation WIP
-void World::CheckCollision(PhysicsObject& one, PhysicsObject& two, bool &result, glm::vec3 &shortestOverlap)
+void World::CheckCollision(PhysicsObject& one, PhysicsObject& two, bool& result, glm::vec3& shortestOverlap)
 {
 	std::vector<glm::vec3> oneVertices = one.GetVertices();
 	std::vector<glm::vec3> twoVertices = two.GetVertices();
@@ -413,11 +461,11 @@ void World::CheckCollision(PhysicsObject& one, PhysicsObject& two, bool &result,
 
 	std::vector<PhysicsUtility::Edge> oneCollisionEdges;
 	std::vector<PhysicsUtility::Edge> twoCollisionEdges;
-	for (int i = 1; i < oneCollisionVertices.size(); i+=2) {
-		oneCollisionEdges.push_back(PhysicsUtility::Edge(oneCollisionVertices[i-1], oneCollisionVertices[i]));
+	for (int i = 1; i < oneCollisionVertices.size(); i += 2) {
+		oneCollisionEdges.push_back(PhysicsUtility::Edge(oneCollisionVertices[i - 1], oneCollisionVertices[i]));
 	}
-	for (int i = 1; i < twoCollisionVertices.size(); i+=2) {
-		twoCollisionEdges.push_back(PhysicsUtility::Edge(twoCollisionVertices[i-1], twoCollisionVertices[i]));
+	for (int i = 1; i < twoCollisionVertices.size(); i += 2) {
+		twoCollisionEdges.push_back(PhysicsUtility::Edge(twoCollisionVertices[i - 1], twoCollisionVertices[i]));
 	}
 	/*
 	printf("One Vertex Count: %d\n", oneCollisionVertices.size());
@@ -437,7 +485,7 @@ std::vector<float> World::ProjectVertices(std::vector<glm::vec3> vertices, glm::
 	float min = FLT_MAX;
 	float max = -min;
 
-	for (int i = 0; i < vertices.size(); i++) 
+	for (int i = 0; i < vertices.size(); i++)
 	{
 		glm::vec3 v = vertices[i];
 		float proj = glm::dot(v, axis);
