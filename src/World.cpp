@@ -15,28 +15,41 @@ World::World()
 	startTime = std::chrono::high_resolution_clock::now();
 	window = renderer.GetWindow();
 
+	//// Define the variables for object1
+	//glm::vec3 position1 = glm::vec3(0.0f, -2.5f, 0.0f);
+	////glm::quat rotation1 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
+	//glm::quat rotation1 = glm::angleAxis(glm::radians(-75.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	//glm::vec3 velocity1 = glm::vec3(0.0f, 0.0f, 0.0f);
+	//std::vector<glm::vec3> initialActingForces1 = std::vector<glm::vec3>();
+	//float mass1 = 50.f;
+	//float faceSize1 = 1.f;
+
+	//std::string modelPath1 = "C:/Programming/Gestalt/Models/plane.txt";
+
+	//// Create object1 and add it to the world
+	//testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, true, faceSize1, modelPath1);
+	//AddObject(testObj1);	
+
 	// Define the variables for object1
-	glm::vec3 gravity1 = glm::vec3(0.f, 0.f, 0.f);
-	glm::vec3 position1 = glm::vec3(0.0f, -2.5f, 0.0f);
-	//glm::quat rotation1 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
-	glm::quat rotation1 = glm::angleAxis(glm::radians(-75.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	glm::vec3 velocity1 = glm::vec3(0.0f, 0.0f, 0.0f);
+	//glm::vec3 position1 = glm::vec3(0.0f, -2.5f, 0.0f);
+	glm::vec3 position1 = glm::vec3(-2.5f, 0.f, 0.0f);
+	//glm::quat rotation1 = glm::angleAxis(glm::radians(-75.0f), glm::vec3(1.0f, 1.0f, 0.0f));
+	glm::quat rotation1 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
 	std::vector<glm::vec3> initialActingForces1 = std::vector<glm::vec3>();
 	float mass1 = 50.f;
 	float faceSize1 = 1.f;
 
-	std::string modelPath1 = "C:/Programming/Gestalt/Models/plane.txt";
+	std::string modelPath1 = "C:/Programming/Gestalt/Models/cube.txt";
 
 	// Create object1 and add it to the world
-	testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, true, faceSize1, modelPath1);
+	testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, false, faceSize1, modelPath1);
 	AddObject(testObj1);
 
 	// Define the variables for object2
-	glm::vec3 gravity2 = glm::vec3(0.f, 0.f, 0.f);
-	glm::vec3 position2 = glm::vec3(0.f, 0.0f, 0.f);
+	//glm::vec3 position2 = glm::vec3(0.f, 2.0f, 0.f);
+	glm::vec3 position2 = glm::vec3(2.f, 0.0f, 0.f);
 	//glm::quat rotation2 = glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); 
 	glm::quat rotation2 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
-	glm::vec3 velocity2 = glm::vec3(0.0f, 0.0f, 0.0f);
 	std::vector<glm::vec3> initialActingForces2 = std::vector<glm::vec3>();
 	float mass2 = 100.0f;
 	float faceSize2 = 1.0f;
@@ -46,6 +59,8 @@ World::World()
 	// Create object2 and add it to the world
 	//PhysicsObject* object2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotationAxis2, angle2, mass2, gravity2, false, faceSize2, meshLibrary.getCubeVertices(faceSize2));
 	testObj2 = new PhysicsObject(position2, initialActingForces2, rotation2, mass2, false, faceSize2, modelPath2);
+	// testObj2->SetVelocity(glm::vec3(0.0f, -0.5f, 0.0f));
+	 testObj2->SetVelocity(glm::vec3(-0.5f, 0.f, 0.0f));
 	AddObject(testObj2);
 
 	//testObj2->GetMesh().ChangeSize(0.5f);
@@ -57,15 +72,18 @@ void World::Update()
 	// Handles User Input
 	ProcessInput();
 
-	// Handles Collision
-	CollisionUpdate();
-
-	// Handles Other Physics
-	PhysicsUpdate();
-
 	// Handles Rendering
 	Render();
-	//std::cout << "Update" << std::endl;
+
+	// Physics Time Step
+	while (renderer.timeAccumulator >= renderer.fixedTimeStep) {
+		// Handles Collision
+		CollisionUpdate();
+
+		// Handles Other Physics
+		PhysicsUpdate();
+		renderer.timeAccumulator -= renderer.fixedTimeStep;
+	}
 }
 
 bool AreParallel(const glm::vec3& v1, const glm::vec3& v2, float tolerance = 1e-6f) {
@@ -128,36 +146,156 @@ std::vector<glm::vec3> ConvertVertexToGLM(std::vector<Vertex> vertices) {
 	return newVertices;
 }
 
+glm::vec3 axisFromQuaternion(const glm::quat& q) {
+	// Ensure the quaternion is normalized
+	glm::quat normalizedQ = glm::normalize(q);
+
+	// The angle of rotation can be derived from the quaternion
+	float angle = 2.0f * acos(normalizedQ.w); // w component gives the angle
+	float sinHalfAngle = sqrt(1.0f - normalizedQ.w * normalizedQ.w);
+
+	// Check if the angle is near zero to avoid division by zero
+	if (fabs(sinHalfAngle) < 1e-6) {
+		// The rotation is negligible, return a default axis (arbitrarily chosen)
+		return glm::vec3(1.0f, 0.0f, 0.0f); // x-axis
+	}
+
+	// Calculate the axis of rotation
+	glm::vec3 axis = glm::vec3(normalizedQ.x, normalizedQ.y, normalizedQ.z) / sinHalfAngle;
+
+	return glm::normalize(axis); // Return the normalized axis of rotation
+}
+
+glm::vec3 calculatePerpendicularRadius(const glm::vec3& point, const glm::vec3& axisPoint, const glm::vec3& axis) {
+	glm::vec3 r = point - axisPoint; // Position vector from axis point to the point
+
+	// Check if the axis is a zero vector
+	if (glm::length(axis) == 0.0f) {
+		// Return a zero vector or handle appropriately
+		return glm::vec3(0.0f);
+	}
+
+	glm::vec3 n = glm::normalize(axis); // Normalize the axis of rotation
+
+	// Project r onto the axis
+	glm::vec3 r_proj = glm::dot(r, n) * n;
+
+	// Calculate the perpendicular component
+	glm::vec3 r_perp = r - r_proj;
+
+	return r_perp;
+}
+
+// Linear velocity combined with rotational velocity
+glm::vec3 calculateCompoundVelocity(glm::vec3 pos, glm::vec3 relativePoint, glm::vec3 velocity, glm::vec3 angularVelocity, glm::quat orientation) {
+	/*if (glm::length(angularVelocity) == 0) {
+		return velocity;
+	}*/
+	//glm::vec3 radius = pos - relativePoint;
+
+	//glm::vec3 normalizedVelocity = glm::normalize(angularVelocity);
+
+	//glm::vec3 radiusPerpendicular = radius - glm::dot(radius, normalizedVelocity) * normalizedVelocity;
+	glm::vec3 radiusPerpendicular = calculatePerpendicularRadius(relativePoint, pos, axisFromQuaternion(orientation));
+	glm::vec3 rotationalVelocity = glm::cross(angularVelocity, radiusPerpendicular);
+
+
+	return velocity + rotationalVelocity;
+}
+
+void applyImpulse(PhysicsObject* obj, float impulse, glm::vec3 normal, glm::vec3 collisionPoint, glm::vec3 radius) {
+	// Update linear velocity
+	glm::vec3 newVelocity = obj->GetCurrentVelocity() + (impulse / obj->GetMass()) * normal;
+	obj->SetVelocity(newVelocity);
+
+	std::cout << "Normal: " << glm::to_string(normal) << std::endl;
+	std::cout << "Radius: " << glm::to_string(radius) << std::endl; // Fixed: Print radius
+	std::cout << "Impulse: " << impulse << std::endl;
+
+	//// Calculate the torque due to the impulse
+	//glm::vec3 torque = glm::cross(radius, impulse * normal);
+
+	//// Update angular velocity
+	//glm::vec3 newAngularVelocity = obj->GetCurrentAngularVelocity() + obj->GetInverseInertiaTensor() * torque;
+	glm::vec3 newAngularVelocity = obj->GetCurrentAngularVelocity() + glm::cross(radius, impulse * normal) * obj->GetInverseInertiaTensor();
+	obj->SetAngularVelocity(newAngularVelocity);
+}
+
+
+glm::vec3 calculateRelativeVelocities(glm::vec3 velA, glm::vec3 velB, glm::vec3 angVelA, glm::vec3 angVelB, glm::vec3 radiusA, glm::vec3 radiusB) {
+	return velB + glm::cross(angVelB, radiusB) - (velA + glm::cross(angVelA, radiusA));
+}
+
 void World::resolveCollision(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap) {
 	glm::vec3 posA = objA->GetCurrentPos();
 	glm::vec3 posB = objB->GetCurrentPos();
-	glm::vec3 separationDir = glm::normalize(posA - posB);
+	glm::quat rotA = objA->GetCurrentRot();
+	glm::quat rotB = objB->GetCurrentRot();
+	glm::vec3 velA = objA->GetCurrentVelocity();
+	glm::vec3 velB = objB->GetCurrentVelocity();
+	glm::vec3 angVelA = objA->GetCurrentAngularVelocity();
+	glm::vec3 angVelB = objB->GetCurrentAngularVelocity();
+	float massA = objA->GetMass();
+	float massB = objB->GetMass();
+	glm::mat3 IITA = objA->GetInverseInertiaTensor(); 
+	glm::mat3 IITB = objB->GetInverseInertiaTensor();
+	glm::vec3 collisionNormal = overlap.axis;
+	glm::vec3 collisionPoint = overlap.collisionPoint;
 
-	// Determine the direction to move the objects
-	if (glm::dot(separationDir, overlap.axis) < 0) {
-		separationDir = -overlap.axis;
-	}
-	else {
-		separationDir = overlap.axis;
-	}
+	// Separation
+	//glm::vec3 separationDir = glm::normalize(posA - posB);
 
-	// Check if either object is anchored
-	bool isAnchoredA = objA->IsAnchored();
-	bool isAnchoredB = objB->IsAnchored();
+	//// Determine the direction to move the objects
+	//if (glm::dot(separationDir, overlap.axis) < 0) {
+	//	separationDir = -overlap.axis;
+	//}
+	//else {
+	//	separationDir = overlap.axis;
+	//}
 
-	if (isAnchoredA && !isAnchoredB) {
-		// Move only objB
-		objB->SetPos(posB - separationDir * overlap.depth);
-	}
-	else if (!isAnchoredA && isAnchoredB) {
-		// Move only objA
-		objA->SetPos(posA + separationDir * overlap.depth);
-	}
-	else if (!isAnchoredA && !isAnchoredB) {
-		// Move both objects equally
-		objA->SetPos(posA + separationDir * overlap.depth * 0.5f);
-		objB->SetPos(posB - separationDir * overlap.depth * 0.5f);
-	}
+	//// Check if either object is anchored
+	//bool isAnchoredA = objA->IsAnchored();
+	//bool isAnchoredB = objB->IsAnchored();
+
+	//if (isAnchoredA && !isAnchoredB) {
+	//	// Move only objB
+	//	objB->SetPos(posB - separationDir * overlap.depth);
+	//}
+	//else if (!isAnchoredA && isAnchoredB) {
+	//	// Move only objA
+	//	objA->SetPos(posA + separationDir * overlap.depth);
+	//}
+	//else if (!isAnchoredA && !isAnchoredB) {
+	//	// Move both objects equally
+	//	objA->SetPos(posA + separationDir * overlap.depth * 0.5f);
+	//	objB->SetPos(posB - separationDir * overlap.depth * 0.5f);
+	//}
+
+	// Impulse (courtesy of Chros Hecker: http://www.chrishecker.com/images/b/bb/Gdmphys4.pdf)
+	glm::vec3 velocityA = calculateCompoundVelocity(posA, collisionPoint, velA, angVelA, rotA);
+	glm::vec3 velocityB = calculateCompoundVelocity(posB, collisionPoint, velB, angVelB, rotB);
+	glm::vec3 relativeVelocity = velocityA - velocityB;
+	glm::vec3 collisionRadiusA = posA - collisionPoint;
+	glm::vec3 collisionRadiusB = posB - collisionPoint;
+	//glm::vec3 relativeVelocity = calculateRelativeVelocities(velA, velB, angVelA, angVelB, collisionRadiusA, collisionRadiusB);
+	float numerator = glm::dot(-(1 + restitution) * relativeVelocity, collisionNormal);
+	//float denominator1 = glm::dot(collisionNormal, collisionNormal * (1 / massA + 1 / massB));
+	//glm::vec3 denominator2A = glm::cross(IITA * glm::cross(collisionRadiusA, collisionNormal), collisionRadiusA);
+	//glm::vec3 denominator2B = glm::cross(IITB * glm::cross(collisionRadiusB, collisionNormal), collisionRadiusB);
+	//float denominator = denominator1 + glm::dot(denominator2A + denominator2B, collisionNormal);
+
+	glm::vec3 radiusCrossNormalA = glm::cross(collisionRadiusA, collisionNormal);
+	float denominator1 = glm::dot(radiusCrossNormalA * IITA, radiusCrossNormalA);
+	glm::vec3 radiusCrossNormalB = glm::cross(collisionRadiusB, collisionNormal);
+	float denominator2 = glm::dot(radiusCrossNormalB * IITB, radiusCrossNormalB);
+
+	float denominator = (1 / massA + 1 / massB) + denominator1 + denominator2;
+
+	float impulse = numerator / denominator;
+
+	std::cout << "IMPULSE: " << impulse << std::endl;
+	applyImpulse(objA, impulse, collisionNormal, collisionPoint, collisionRadiusA);
+	applyImpulse(objB, -impulse, collisionNormal, collisionPoint, collisionRadiusB);
 }
 
 
@@ -212,6 +350,87 @@ void World::resolveCollision(PhysicsObject* objA, PhysicsObject* objB, const Ove
 //	}
 //}
 
+static bool AreObjectsAligned(const glm::quat& orientation1, const glm::quat& orientation2, const glm::vec3& position1, const glm::vec3& position2, float tolerance = 0.001f) {
+	// Check if orientations are the same
+	glm::quat relativeRotation = glm::inverse(orientation1) * orientation2;
+	glm::quat identityQuat = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+
+	bool orientationsAligned = glm::length(relativeRotation - identityQuat) < tolerance;
+
+	// Check if positions are aligned perfectly along one axis
+	glm::vec3 positionDiff = position2 - position1;
+
+	// Check alignment on x-axis (y and z components should be nearly zero)
+	bool alignedOnX = glm::abs(positionDiff.y) < tolerance && glm::abs(positionDiff.z) < tolerance;
+
+	// Check alignment on y-axis (x and z components should be nearly zero)
+	bool alignedOnY = glm::abs(positionDiff.x) < tolerance && glm::abs(positionDiff.z) < tolerance;
+
+	// Check alignment on z-axis (x and y components should be nearly zero)
+	bool alignedOnZ = glm::abs(positionDiff.x) < tolerance && glm::abs(positionDiff.y) < tolerance;
+
+	// Return true if orientations are aligned and positions are aligned on any one axis
+	return orientationsAligned && (alignedOnX || alignedOnY || alignedOnZ);
+}
+
+
+static bool AABBIntersect(const ConvexShape& shape1, const ConvexShape& shape2, Overlap& overlap) {
+
+	glm::vec3 min1 = shape1.GetMinBounds(); // Get AABB min bounds for shape1
+	glm::vec3 max1 = shape1.GetMaxBounds(); // Get AABB max bounds for shape1
+	glm::vec3 min2 = shape2.GetMinBounds(); // Get AABB min bounds for shape2
+	glm::vec3 max2 = shape2.GetMaxBounds(); // Get AABB max bounds for shape2
+
+
+	// Check for degenerate AABB cases
+	if (glm::all(glm::equal(min1, max1)) || glm::all(glm::equal(min2, max2))) {
+		std::cerr << "Warning: Degenerate AABB detected!" << std::endl;
+		return false;
+	}
+
+	// Check for intersection along each axis
+	glm::vec3 overlapDepth(0.0f);  // Stores overlap depth in x, y, z
+
+	// X-axis overlap check
+	if (min1.x > max2.x || max1.x < min2.x) return false; // No overlap on x-axis
+	overlapDepth.x = std::min(max1.x - min2.x, max2.x - min1.x);  // Calculate x overlap
+
+	// Y-axis overlap check
+	if (min1.y > max2.y || max1.y < min2.y) return false; // No overlap on y-axis
+	overlapDepth.y = std::min(max1.y - min2.y, max2.y - min1.y);  // Calculate y overlap
+
+	// Z-axis overlap check
+	if (min1.z > max2.z || max1.z < min2.z) return false; // No overlap on z-axis
+	overlapDepth.z = std::min(max1.z - min2.z, max2.z - min1.z);  // Calculate z overlap
+
+	// Sanity check for negative overlap values
+	if (overlapDepth.x < 0 || overlapDepth.y < 0 || overlapDepth.z < 0) {
+		std::cerr << "Error: Negative overlap depth detected!" << std::endl;
+		return false;
+	}
+
+	// Determine the smallest overlap axis (for separating axis)
+	if (overlapDepth.x < overlapDepth.y && overlapDepth.x < overlapDepth.z) {
+		overlap.axis = glm::vec3(1, 0, 0);  // X-axis is the separating axis
+		overlap.depth = overlapDepth.x;
+	}
+	else if (overlapDepth.y < overlapDepth.z) {
+		overlap.axis = glm::vec3(0, 1, 0);  // Y-axis is the separating axis
+		overlap.depth = overlapDepth.y;
+	}
+	else {
+		overlap.axis = glm::vec3(0, 0, 1);  // Z-axis is the separating axis
+		overlap.depth = overlapDepth.z;
+	}
+
+	// Compute the collision point as the midpoint of the overlapping region
+	glm::vec3 center1 = (min1 + max1) * 0.5f;  // Center of shape1 AABB
+	glm::vec3 center2 = (min2 + max2) * 0.5f;  // Center of shape2 AABB
+	overlap.collisionPoint = (center1 + center2) * 0.5f;  // Midpoint of overlap
+
+	return true;  // AABB intersected
+}
+
 void World::CollisionUpdate() {
 	for (int i = 0; i < PhysicObjects.size(); i++) {
 		for (int z = i + 1; z < PhysicObjects.size(); z++) {
@@ -221,6 +440,11 @@ void World::CollisionUpdate() {
 			std::vector<glm::vec3> normals1 = PhysicObjects[i]->GetMesh().normals;
 			std::vector<glm::vec3> normals2 = PhysicObjects[z]->GetMesh().normals;
 
+			glm::vec3 pos1 = PhysicObjects[i]->GetCurrentPos();
+			glm::vec3 pos2 = PhysicObjects[z]->GetCurrentPos();
+			glm::quat orientation1 = PhysicObjects[i]->GetCurrentRot();
+			glm::quat orientation2 = PhysicObjects[z]->GetCurrentRot();
+
 			ApplyObjectTransformation(obj1Vertices, normals1, PhysicObjects[i]);
 			ApplyObjectTransformation(obj2Vertices, normals2, PhysicObjects[z]);
 
@@ -228,23 +452,35 @@ void World::CollisionUpdate() {
 			std::vector<glm::vec3> vertices1 = ConvertVertexToGLM(obj1Vertices);
 			std::vector<glm::vec3> vertices2 = ConvertVertexToGLM(obj2Vertices);
 
-			ConvexShape shape1(vertices1);
-			ConvexShape shape2(vertices2);
+			ConvexShape shape1(vertices1, orientation1, pos1);
+			ConvexShape shape2(vertices2, orientation2, pos2);
 
 			// Perform GJK collision detection and overlap calculation
 			Overlap smallestOverlap;
 			Simplex simplex;
-			bool isColliding = GJKAlgorithm::GJK(shape1, shape2, smallestOverlap, simplex);
+			bool isColliding = false;
+			bool degenrateCase = false;
+			// Degenerate case checking (collinearity) 
+			degenrateCase = AreObjectsAligned(shape1.GetOrientation(), shape2.GetOrientation(), shape1.GetPos(), shape2.GetPos());
+			if (degenrateCase) {
+				isColliding = AABBIntersect(shape1, shape2, smallestOverlap);
+			}
+			else {
+				isColliding = GJKAlgorithm::GJK(shape1, shape2, smallestOverlap, simplex);
+			}
 
 			if (isColliding) {
 				// Collision response
-				smallestOverlap = EPAAlgorithm::EPA(simplex, shape1, shape2);
+				if (!degenrateCase) {
+					smallestOverlap = EPAAlgorithm::EPA(simplex, shape1, shape2);
+				}
 
 				std::chrono::high_resolution_clock::time_point currTime = std::chrono::high_resolution_clock::now();
 				std::chrono::duration<double> elapsed = currTime - startTime;
 
-				std::cout << "Time: " << elapsed.count() << " -- Collision Depth: " << smallestOverlap.depth
-					<< " -- Axis: " << smallestOverlap.axis.x << ", " << smallestOverlap.axis.y << ", " << smallestOverlap.axis.z << std::endl;
+				/*std::cout << "Time: " << elapsed.count() << " -- Collision Depth: " << smallestOverlap.depth
+					<< " -- Axis: " << smallestOverlap.axis.x << ", " << smallestOverlap.axis.y << ", " << smallestOverlap.axis.z 
+					<< "-- POC: " << smallestOverlap.collisionPoint.x << ", " << smallestOverlap.collisionPoint.y << ", " << smallestOverlap.collisionPoint.z << std::endl;*/
 
 				resolveCollision(PhysicObjects[i], PhysicObjects[z], smallestOverlap);
 			}
@@ -508,7 +744,7 @@ void World::PhysicsUpdate()
 	{
 		if (!PhysicObjects[i]->IsAnchored()) {
 			//std::cout << "Object " << i << " velocity: " << PhysicsUtility::vec3ToString(PhysicObjects[i].GetCurrentVelocity()) << " units/unit" << std::endl;
-			PhysicObjects[i]->CalculatePhysics(renderer.GetDeltaTime());
+			PhysicObjects[i]->CalculatePhysics(renderer.fixedTimeStep);
 		}
 	}
 }
@@ -528,6 +764,11 @@ void World::ProcessInput()
 	float cameraSpeed = 7.5f * renderer.deltaTime;
 	float boxSpeed = 1.5f * renderer.deltaTime;
 	float rotSpeed = 25.f * renderer.deltaTime;
+
+	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+	{
+		PhysicObjects[1]->SetPos(glm::vec3(2.f, 0.0f, 0.f));
+	}
 
 	// WASD Movement
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -598,6 +839,22 @@ void World::ProcessInput()
 	{
 		glm::quat rot = glm::angleAxis(glm::radians(-rotSpeed), glm::vec3(0.0f, 0.0f, 1.0f));
 		testObj2->AddRotation(rot);
+	}
+
+	// Untrap Cursor with Spacebar
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		// Toggle cursor mode
+		cursorCaptured = !cursorCaptured;
+		if (cursorCaptured)
+		{
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		}
+		else
+		{
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+		}
 	}
 
 }

@@ -7,10 +7,22 @@ PhysicsObject::PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> i
 	Anchored(isAnchored),
 	Model(initialPosition, faceSize, modelPath) // Use parameterized constructor
 {
+	angularVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
+	angularAcceleration = glm::vec3(0.0f, 0.0f, 0.0f);
+
+	momentOfInertia = Mass * pow(sideLength, 2) / 6;
+	inertiaTensor = glm::mat3(
+		momentOfInertia, 0.0f, 0.0f,
+		0.0f, momentOfInertia, 0.0f,
+		0.0f, 0.0f, momentOfInertia
+	);
+	inverseInertiaTensor = glm::inverse(inertiaTensor);
+
 	Force gravity = Force();
 	gravity.ForceName = "Gravity";
 	gravity.ForceVector = gravityVec;
 	AddForce(gravity, true);
+
 }
 
 // Force Manipulation Functions
@@ -31,12 +43,23 @@ void PhysicsObject::CalculateAcceleration() {
 
 void PhysicsObject::CalculateVelocity(float deltaTime)
 {
+	// Linear
 	velocity += acceleration * deltaTime;
+	
+	// Angular
+	angularVelocity += angularAcceleration * deltaTime;
 }
+
 
 void PhysicsObject::CalculatePosition(float deltaTime)
 {
+	// Linear
 	pos += (velocity * deltaTime) + (0.5f * acceleration * deltaTime * deltaTime);
+	// Angular
+	glm::quat angularVelocityQuat(0.0f, angularVelocity.x, angularVelocity.y, angularVelocity.z);
+	glm::quat deltaRot = 0.5f * angularVelocityQuat * rot;
+	rot += deltaRot * deltaTime;
+	rot = glm::normalize(rot);
 }
 
 void PhysicsObject::CalculatePhysics(float deltaTime)
@@ -51,7 +74,18 @@ void PhysicsObject::CalculatePhysics(float deltaTime)
 
 void PhysicsObject::applyFriction(float modifier)
 {
-	velocity -= velocity * (universalVelocityDecay * modifier);
+	
+}
+
+// Energy (Kinetic)
+float PhysicsObject::CalculateTranslationalEnergy() {
+	return 0.5f * Mass * glm::dot(velocity, velocity);
+}
+float PhysicsObject::CalculateRotationalEnergy() {
+	return 0.5f * momentOfInertia * glm::dot(angularVelocity, angularVelocity);
+}
+float PhysicsObject::CalculateTotalEnergy() {
+	return CalculateTranslationalEnergy() + CalculateRotationalEnergy();
 }
 
 // Collision
@@ -102,6 +136,7 @@ std::vector<glm::vec3> PhysicsObject::GetVertices()
 	return vertices;
 }
 
+// Rendering
 void PhysicsObject::RenderMesh(const Shader& shader, GLuint textureID)
 {
 	// Compute the model matrix

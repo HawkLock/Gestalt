@@ -9,6 +9,7 @@
 #include <glm/glm/glm.hpp>
 #include <glm/glm/gtc/matrix_transform.hpp>
 #include <glm/glm/gtc/type_ptr.hpp>
+#include <glm/glm/gtx/string_cast.hpp> 
 
 #include "Render.h"
 #include "MeshLibrary.h"
@@ -23,6 +24,7 @@ protected:
 	std::vector<PhysicsObject*> PhysicObjects;
 	Renderer renderer;
 	glm::vec3 Gravity = glm::vec3(0.0f, -0.98f, 0.0f);
+	const float restitution = 1.f;
 
 public:
 
@@ -30,6 +32,7 @@ public:
 
 	GLFWwindow* window;
 	Camera camera;
+	bool cursorCaptured = true;
 
 	PhysicsObject* testObj1;
 	PhysicsObject* testObj2;

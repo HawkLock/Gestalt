@@ -104,6 +104,19 @@ void Renderer::Initialize()
     shader.setInt("texture1", 0);
     shader.setInt("texture2", 1);
 
+    // Set-up ImGUI
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io; // Getting IO object
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+    // Setup ImGui style
+    ImGui::StyleColorsDark();
+
+    // Setup platform/renderer bindings
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 130");
+
 }
 
 void Renderer::Cleanup()
@@ -112,6 +125,35 @@ void Renderer::Cleanup()
     glDeleteBuffers(1, &VBO);
 
     glfwTerminate();
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+}
+
+void Renderer::RenderObjectTable(std::vector<PhysicsObject*> objects) {
+    ImGui::BeginTable("Objects", 2); // 2 columns
+    ImGui::TableSetupColumn("Object Index");
+    ImGui::TableSetupColumn("Energy");
+    ImGui::TableHeadersRow();
+
+    float totalEnergy = 0.f;
+    for (size_t i = 0; i < objects.size(); ++i) {
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::Text("%zu", i);
+        ImGui::TableNextColumn();
+        float energy = objects[i]->CalculateTotalEnergy();
+        totalEnergy += energy;
+        ImGui::Text("%.2f J", energy);
+    }
+
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+    ImGui::Text("Total");
+    ImGui::TableNextColumn();
+    ImGui::Text("%.2f J", totalEnergy);
+
+    ImGui::EndTable();
 }
 
 void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjects)
@@ -119,6 +161,22 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
+    timeAccumulator += deltaTime;
+
+    // Start the ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    // ImGUI
+    ImGui::Begin("Real-Time Variables");
+    ImGui::SetWindowSize(ImVec2(200, 100));
+    ImGui::SetWindowPos(ImVec2(0, 0));
+    RenderObjectTable(RenderObjects);
+    ImGui::End();
+
+    ImGui::Render();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -143,6 +201,9 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     {
         object->RenderMesh(shader, texture1);
     }
+
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 
     glfwSwapBuffers(window);
     glfwPollEvents();

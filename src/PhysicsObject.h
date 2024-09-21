@@ -16,18 +16,26 @@ struct Force {
 class PhysicsObject {
 
 protected:
-	float universalVelocityDecay = 0.5; 
 
-	 glm::vec3 gravityVec = glm::vec3(0, -9.8, 0);
-	// glm::vec3 gravityVec = glm::vec3(0, 0.0, 0); // disabled
+	//glm::vec3 gravityVec = glm::vec3(0, -9.8, 0);
+	glm::vec3 gravityVec = glm::vec3(0.0f, 0.0f, 0.0f); // disabled gravity
 
 	glm::vec3 pos;
 	glm::quat rot;
+	float sideLength = 1;
 
 	glm::vec3 acceleration;
 	glm::vec3 velocity; // In m/s
+	glm::vec3 angularAcceleration;
+	glm::vec3 angularVelocity;
+
 	
 	float Mass; // In Kg
+	glm::mat3 inertiaTensor;
+	glm::mat3 inverseInertiaTensor;
+	float momentOfInertia;
+
+
 	bool Anchored;
 	std::vector<Force> continuousForces;
 
@@ -42,9 +50,12 @@ public:
 	glm::quat GetCurrentRot() { return rot; }
 
 	glm::vec3 GetCurrentVelocity() { return velocity; }
+	glm::vec3 GetCurrentAngularVelocity() { return angularVelocity; }
 	glm::vec3 GetCurrentNetForce() { return glm::vec3(); }
 
 	float GetMass() { return Mass; }
+	float GetMomentOfInertia() { return momentOfInertia; }
+	glm::mat3 GetInverseInertiaTensor() { return inverseInertiaTensor; }
 	Mesh& GetMesh() { return Model; }
 	float GetFaceExtent() { return Model.faceLength; }
 	float IsAnchored() { return Anchored; }
@@ -53,6 +64,7 @@ public:
 	void SetRot(glm::quat newRot) { rot = newRot; }
 
 	void SetVelocity(glm::vec3 newVelocity) { velocity = newVelocity; }
+	void SetAngularVelocity(glm::vec3 newVelocity) { angularVelocity = newVelocity; }
 	void SetMass(float newMass) { Mass = newMass; }
 
 	void AddRotation(glm::quat addRot) { rot = glm::normalize(addRot * rot); }
@@ -66,6 +78,10 @@ public:
 	void CalculateVelocity(float deltaTime);
 	void CalculatePosition(float deltaTime);
 	void CalculatePhysics(float deltaTime);
+
+	float CalculateTranslationalEnergy();
+	float CalculateRotationalEnergy();
+	float CalculateTotalEnergy();
 
 	std::vector<glm::vec3> GetVertices();
 

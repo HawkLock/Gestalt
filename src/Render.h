@@ -7,6 +7,10 @@
 #include <glm/glm/gtc/matrix_transform.hpp>
 #include <glm/glm/gtc/type_ptr.hpp>
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
+
 #include "Shader.h"
 
 #include "Camera.h"
@@ -71,11 +75,14 @@ public:
     };
     unsigned int texture1, texture2;
 
+    const float fixedTimeStep = 0.02f;
+    float timeAccumulator = 0.0f;
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
 
 	Renderer();
 
+    void RenderObjectTable(std::vector<PhysicsObject*> RenderObjects);
 	void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjects);
     void Initialize();
     void Cleanup();

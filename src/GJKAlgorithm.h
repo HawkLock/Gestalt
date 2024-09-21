@@ -2,13 +2,16 @@
 
 #include "Simplex.h"
 #include "ConvexShape.h"
+#include <iostream> // Include for printing warnings
 
 // GJK Algorithm class definition
 class GJKAlgorithm {
 public:
+
     // Static wrapper function for GJK collision detection with Overlap struct
     static bool GJK(ConvexShape shape1, ConvexShape shape2, Overlap& overlap, Simplex& simplex)
     {
+
         glm::vec3 penetrationDepth;
         glm::vec3 penetrationNormal;
 
@@ -27,8 +30,12 @@ public:
 private:
     // Static function to perform GJK collision detection
     static bool GJKCollisionDetection(const ConvexShape& shape1, const ConvexShape& shape2, glm::vec3& penetrationDepth, glm::vec3& penetrationNormal, Simplex& simplex) {
-        glm::vec3 support = GetSupport(shape1, shape2, glm::vec3(1.f, 0.f, 0.f)); // Arbitrary direction (x unit vector)
+        // Compute initial direction based on centroids
+        glm::vec3 center1 = shape1.GetCentroid(); // Assume this method exists
+        glm::vec3 center2 = shape2.GetCentroid();
+        glm::vec3 initialDirection = glm::normalize(center2 - center1);
 
+        glm::vec3 support = GetSupport(shape1, shape2, initialDirection);
         simplex.push_front(support);
         glm::vec3 direction = -support;
 
@@ -43,12 +50,7 @@ private:
             simplex.push_front(support);
 
             if (UpdateSimplex(simplex, direction)) {
-                return true;
-                //if (IsSimplexContainingOrigin(simplex)) {
-                //    // Compute the penetration depth and normal
-                //    ComputePenetrationDepth(shape1, shape2, simplex, penetrationDepth, penetrationNormal);
-                //    return true; // Collision detected
-                //}
+                return true; // Collision detected
             }
         }
     }
@@ -57,17 +59,16 @@ private:
         return shape1.GetSupportPoint(direction) - shape2.GetSupportPoint(-direction);
     }
 
-    static bool SameDirection(const glm::vec3& direction, const glm::vec3& ao)
-    {
+    static bool SameDirection(const glm::vec3& direction, const glm::vec3& ao) {
         return glm::dot(direction, ao) > 0;
     }
 
     // Static additional function prototypes and implementations
     static bool UpdateSimplex(Simplex& simplex, glm::vec3& direction) {
         switch (simplex.size()) {
-            case 2: return UpdateLineSimplex(simplex, direction);
-            case 3: return UpdateTriangleSimplex(simplex, direction);
-            case 4: return UpdateTetrahedronSimplex(simplex, direction);
+        case 2: return UpdateLineSimplex(simplex, direction);
+        case 3: return UpdateTriangleSimplex(simplex, direction);
+        case 4: return UpdateTetrahedronSimplex(simplex, direction);
         }
         return false;
     }
@@ -82,13 +83,19 @@ private:
         if (SameDirection(ab, ao)) {
             direction = glm::cross(glm::cross(ab, ao), ab);
         }
-
         else {
-            simplex = { a };
-            direction = ao;
+            // Check for collinearity
+            if (glm::length(glm::cross(ab, ao)) < 1e-6f) { // Collinear
+                // Set direction to a default orthogonal direction
+                direction = glm::vec3(0.0f, 1.0f, 0.0f); // Example direction
+            }
+            else {
+                simplex = { a }; // Keep only point a
+                direction = ao; // Update direction towards point a
+            }
         }
 
-        return false;
+        return false; // No collision detected yet
     }
 
     static bool UpdateTriangleSimplex(Simplex& simplex, glm::vec3& direction) {
@@ -107,22 +114,25 @@ private:
                 simplex = { a, c };
                 direction = glm::cross(glm::cross(ac, ao), ac);
             }
-
             else {
-                return UpdateLineSimplex(simplex = { a, b }, direction);
+                // Check for collinearity
+                if (glm::length(abc) < 1e-6f) { // Collinear
+                    // Set direction to a default orthogonal direction
+                    direction = glm::vec3(0.0f, 1.0f, 0.0f); // Example direction
+                }
+                else {
+                    return UpdateLineSimplex(simplex = { a, b }, direction);
+                }
             }
         }
-
         else {
             if (SameDirection(glm::cross(ab, abc), ao)) {
                 return UpdateLineSimplex(simplex = { a, b }, direction);
             }
-
             else {
                 if (SameDirection(abc, ao)) {
                     direction = abc;
                 }
-
                 else {
                     simplex = { a, c, b };
                     direction = -abc;
@@ -130,8 +140,9 @@ private:
             }
         }
 
-        return false;
+        return false; // No collision detected yet
     }
+
 
     static bool UpdateTetrahedronSimplex(Simplex& simplex, glm::vec3& direction) {
         glm::vec3 a = simplex[0];
@@ -162,8 +173,6 @@ private:
 
         return true;
     }
-
 };
-
 
 // Code adapted from https://winter.dev/
