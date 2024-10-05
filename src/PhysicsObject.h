@@ -73,6 +73,9 @@ public:
 	std::vector<Vertex> extractVertices(const std::vector<float>& data);
 
 	// Physics
+	glm::vec3 CalculateCOM();
+	void CalculateInertiaTensor(glm::mat3& tensor);
+
 	void AddForce(Force newForce, bool isContinuous);
 	void CalculateAcceleration();
 	void CalculateVelocity(float deltaTime);

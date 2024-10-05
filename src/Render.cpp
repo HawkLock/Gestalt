@@ -130,10 +130,13 @@ void Renderer::Cleanup()
     ImGui::DestroyContext();
 }
 
+// For Debugging Energy Currently
 void Renderer::RenderObjectTable(std::vector<PhysicsObject*> objects) {
-    ImGui::BeginTable("Objects", 2); // 2 columns
+    ImGui::BeginTable("Objects", 4); // 2 columns
     ImGui::TableSetupColumn("Object Index");
     ImGui::TableSetupColumn("Energy");
+    ImGui::TableSetupColumn("Lin");
+    ImGui::TableSetupColumn("Rot");
     ImGui::TableHeadersRow();
 
     float totalEnergy = 0.f;
@@ -145,6 +148,10 @@ void Renderer::RenderObjectTable(std::vector<PhysicsObject*> objects) {
         float energy = objects[i]->CalculateTotalEnergy();
         totalEnergy += energy;
         ImGui::Text("%.2f J", energy);
+        ImGui::TableNextColumn();
+        ImGui::Text("%.2f J", objects[i]->CalculateTranslationalEnergy());
+        ImGui::TableNextColumn();
+        ImGui::Text("%.2f J", objects[i]->CalculateRotationalEnergy());
     }
 
     ImGui::TableNextRow();
