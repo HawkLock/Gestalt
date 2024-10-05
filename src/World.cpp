@@ -39,7 +39,7 @@ World::World()
 	float mass1 = 100.f;
 	float faceSize1 = 2.f;
 
-	std::string modelPath1 = "C:/Programming/Gestalt/Models/cube.txt";
+	std::string modelPath1 = "../Models/cube.txt";
 
 	// Create object1 and add it to the world
 	testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, false, faceSize1, modelPath1);
@@ -54,7 +54,7 @@ World::World()
 	float mass2 = 100.0f;
 	float faceSize2 = 2.0f;
 
-	std::string modelPath2 = "C:/Programming/Gestalt/Models/cube.txt";
+	std::string modelPath2 = "../Models/cube.txt";
 
 	// Create object2 and add it to the world
 	//PhysicsObject* object2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotationAxis2, angle2, mass2, gravity2, false, faceSize2, meshLibrary.getCubeVertices(faceSize2));
