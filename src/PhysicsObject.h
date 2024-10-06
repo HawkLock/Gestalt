@@ -55,7 +55,18 @@ public:
 
 	float GetMass() { return Mass; }
 	float GetMomentOfInertia() { return momentOfInertia; }
-	glm::mat3 GetInverseInertiaTensor() { return inverseInertiaTensor; }
+
+	glm::mat3 GetInertiaTensor() {
+		glm::mat3 rotationMatrix = glm::mat3_cast(rot);
+		return rotationMatrix * inertiaTensor * glm::transpose(rotationMatrix);
+	}
+
+	glm::mat3 GetInverseInertiaTensor() { 
+		glm::mat3 rotationMatrix = glm::mat3_cast(rot);
+		glm::mat3 worldInertiaTensor = rotationMatrix * inertiaTensor * glm::transpose(rotationMatrix);
+		return glm::inverse(inertiaTensor);
+	}
+
 	Mesh& GetMesh() { return Model; }
 	float GetFaceExtent() { return Model.faceLength; }
 	float IsAnchored() { return Anchored; }
@@ -68,6 +79,8 @@ public:
 	void SetMass(float newMass) { Mass = newMass; }
 
 	void AddRotation(glm::quat addRot) { rot = glm::normalize(addRot * rot); }
+
+	void ScaleSize(float scale);
 
 	// Collision
 	std::vector<Vertex> extractVertices(const std::vector<float>& data);
@@ -85,6 +98,8 @@ public:
 	float CalculateTranslationalEnergy();
 	float CalculateRotationalEnergy();
 	float CalculateTotalEnergy();
+
+	void ApplyForce(const glm::vec3& force, const glm::vec3& contactPoint);
 
 	std::vector<glm::vec3> GetVertices();
 

@@ -32,35 +32,36 @@ World::World()
 
 	// Define the variables for object1
 	//glm::vec3 position1 = glm::vec3(0.0f, -2.5f, 0.0f);
-	glm::vec3 position1 = glm::vec3(-2.5f, 0.f, 0.0f);
-	glm::quat rotation1 = glm::angleAxis(glm::radians(-75.0f), glm::vec3(1.0f, 1.0f, 0.0f));
+	glm::vec3 position1 = glm::vec3(-2.f, 0.f, 0.0f);
+	glm::quat rotation1 = glm::angleAxis(glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f));
 	//glm::quat rotation1 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
 	std::vector<glm::vec3> initialActingForces1 = std::vector<glm::vec3>();
 	float mass1 = 100.f;
 	float faceSize1 = 2.f;
 
-	std::string modelPath1 = "../Models/cube.txt";
+	std::string modelPath1 = "../Models/cube1.txt";
 
 	// Create object1 and add it to the world
 	testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, false, faceSize1, modelPath1);
+	//testObj1->GetMesh().ChangeSize(5.f);
 	AddObject(testObj1);
 
 	// Define the variables for object2
 	//glm::vec3 position2 = glm::vec3(0.f, 2.0f, 0.f);
-	glm::vec3 position2 = glm::vec3(2.f, 0.0f, 0.f);
+	glm::vec3 position2 = glm::vec3(1.f, 0.0f, 0.f);
 	//glm::quat rotation2 = glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); 
 	glm::quat rotation2 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
 	std::vector<glm::vec3> initialActingForces2 = std::vector<glm::vec3>();
 	float mass2 = 100.0f;
 	float faceSize2 = 2.0f;
 
-	std::string modelPath2 = "../Models/cube.txt";
+	std::string modelPath2 = "../Models/cube1.txt";
 
 	// Create object2 and add it to the world
 	//PhysicsObject* object2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotationAxis2, angle2, mass2, gravity2, false, faceSize2, meshLibrary.getCubeVertices(faceSize2));
 	testObj2 = new PhysicsObject(position2, initialActingForces2, rotation2, mass2, false, faceSize2, modelPath2);
 	// testObj2->SetVelocity(glm::vec3(0.0f, -0.5f, 0.0f));
-	 testObj2->SetVelocity(glm::vec3(-0.5f*2, 0.f, 0.0f));
+	testObj2->SetVelocity(glm::vec3(-0.5f*2, 0.f, 0.0f));
 	AddObject(testObj2);
 
 	//testObj2->GetMesh().ChangeSize(0.5f);
@@ -210,6 +211,45 @@ glm::vec3 calculateRelativeVelocities(glm::vec3 velA, glm::vec3 velB, glm::vec3 
 	return velB + glm::cross(angVelB, radiusB) - (velA + glm::cross(angVelA, radiusA));
 }
 
+// Apply continuous force to prevent sinking due to gravity
+void World::applyContactForces(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap) {
+	glm::vec3 posA = objA->GetCurrentPos();
+	glm::vec3 posB = objB->GetCurrentPos();
+	glm::vec3 velA = objA->GetCurrentVelocity();
+	glm::vec3 velB = objB->GetCurrentVelocity();
+	glm::vec3 angVelA = objA->GetCurrentAngularVelocity();
+	glm::vec3 angVelB = objB->GetCurrentAngularVelocity();
+
+	// Compute the velocities at the point of collision
+	glm::vec3 relativeVelocity = calculateRelativeVelocities(velA, velB, angVelA, angVelB, overlap.collisionPoint - posA, overlap.collisionPoint - posB);
+	float relativeNormalVelocity = glm::dot(relativeVelocity, overlap.axis);
+
+	// Check if in resting contact
+	if (glm::abs(relativeNormalVelocity) < contactThreshold) {
+		// Apply continuous normal force to cancel out gravity
+		glm::vec3 gravityForceA = objA->GetMass() * gravity;
+		glm::vec3 gravityForceB = objB->GetMass() * gravity;
+
+		// Project gravity onto the collision normal
+		float normalForceA = glm::dot(gravityForceA, overlap.axis);
+		float normalForceB = glm::dot(gravityForceB, overlap.axis);
+		// Static friction to prevent sliding
+		glm::vec3 relativeTangentVelocity = relativeVelocity - glm::dot(relativeVelocity, overlap.axis) * overlap.axis;
+		if (glm::length(relativeTangentVelocity) < contactThreshold) {
+			float frictionForceMagnitudeA = mu_static * normalForceA;
+			float frictionForceMagnitudeB = mu_static * normalForceB;
+
+			glm::vec3 frictionForceA = -glm::normalize(relativeTangentVelocity) * frictionForceMagnitudeA;
+			glm::vec3 frictionForceB = glm::normalize(relativeTangentVelocity) * frictionForceMagnitudeB;
+
+			// Apply static friction
+			objA->ApplyForce(frictionForceA, overlap.collisionPoint);
+			objB->ApplyForce(frictionForceB, overlap.collisionPoint);
+		}
+	}
+}
+
+// Apply impulse to object
 void applyImpulse(PhysicsObject* obj, glm::vec3 force, glm::vec3 rel) {
 	glm::vec3 newVelocity = obj->GetCurrentVelocity() + force / obj->GetMass();
 	obj->SetVelocity(newVelocity);
@@ -218,7 +258,8 @@ void applyImpulse(PhysicsObject* obj, glm::vec3 force, glm::vec3 rel) {
 	obj->SetAngularVelocity(newAngularVelocity);
 }
 
-void World::resolveImpulses(PhysicsObject * objA, PhysicsObject * objB, const Overlap & overlap) {
+// Resolve impulses between two colliding objects
+void World::resolveImpulses(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap) {
 	glm::vec3 posA = objA->GetCurrentPos();
 	glm::vec3 posB = objB->GetCurrentPos();
 	glm::quat rotA = objA->GetCurrentRot();
@@ -237,9 +278,7 @@ void World::resolveImpulses(PhysicsObject * objA, PhysicsObject * objB, const Ov
 	// Compute the velocities at the point of collision, including rotational components
 	glm::vec3 velocityA = calculateCompoundVelocity(posA, collisionPoint, velA, angVelA, rotA);
 	glm::vec3 velocityB = calculateCompoundVelocity(posB, collisionPoint, velB, angVelB, rotB);
-	//glm::vec3 relativeVelocity = velocityA - velocityB;
 	glm::vec3 relativeVelocity = velocityA - velocityB;
-
 
 	// Compute the radii from the collision points to the center of masses
 	glm::vec3 collisionRadiusA = collisionPoint - posA;
@@ -261,14 +300,8 @@ void World::resolveImpulses(PhysicsObject * objA, PhysicsObject * objB, const Ov
 	float denominator = (1 / massA + 1 / massB) + denominator1 + denominator2;
 	float impulse = numerator / denominator;
 
-
-
 	// Apply the impulse to both objects
-	//applyImpulse(objA, impulse, collisionNormal, collisionPoint, collisionRadiusA);
-	//applyImpulse(objB, -impulse, collisionNormal, collisionPoint, collisionRadiusB);
-
 	glm::vec3 impulseForce = collisionNormal * impulse;
-
 	applyImpulse(objA, impulseForce, collisionRadiusA);
 	applyImpulse(objB, -impulseForce, collisionRadiusB);
 }
@@ -288,25 +321,23 @@ void World::resolveOverlap(PhysicsObject* objA, PhysicsObject* objB, const Overl
 
 	// Resolve overlap based on anchor status
 	if (isAnchoredA && !isAnchoredB) {
-		// Move only objB away from objA
 		objB->SetPos(posB + separation);
 	}
 	else if (!isAnchoredA && isAnchoredB) {
-		// Move only objA away from objB
 		objA->SetPos(posA - separation);
 	}
 	else if (!isAnchoredA && !isAnchoredB) {
-		// Move both objects apart equally
 		objA->SetPos(posA - separation * 0.5f);
 		objB->SetPos(posB + separation * 0.5f);
 	}
 	// If both are anchored, do nothing, as neither can move
 }
 
-// Resolve collision between two objects using impulse-based collision resolution
+// Resolve collision between two objects using impulse-based collision resolution and continuous forces
 void World::resolveCollision(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap) {
 	resolveOverlap(objA, objB, overlap);
 	resolveImpulses(objA, objB, overlap);
+	//applyContactForces(objA, objB, overlap);
 }
 
 

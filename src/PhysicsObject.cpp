@@ -14,7 +14,6 @@ void PrintVec3(const glm::vec3& vec) {
 	std::cout << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")" << std::endl;
 }
 
-
 PhysicsObject::PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, bool isAnchored, float faceSize, std::string& modelPath)
 	: pos(initialPosition),
 	rot(initialRot),
@@ -26,7 +25,6 @@ PhysicsObject::PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> i
 	angularVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
 	angularAcceleration = glm::vec3(0.0f, 0.0f, 0.0f);
 
-	std::cout << "Side: " << sideLength << std::endl;
 	momentOfInertia = Mass * pow(sideLength, 2) / 6;
 	glm::mat3 mat = glm::mat3(
 		1, 0.0f, 0.0f,
@@ -34,8 +32,8 @@ PhysicsObject::PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> i
 		0.0f, 0.0f, 1
 	);
 	inertiaTensor = momentOfInertia * mat;
-	//PrintMat3(inertiaTensor);
-	//CalculateInertiaTensor(inertiaTensor);
+	PrintMat3(inertiaTensor);
+	CalculateInertiaTensor(inertiaTensor);
 	//PrintMat3(inertiaTensor);
 
 	inverseInertiaTensor = glm::inverse(inertiaTensor);
@@ -48,51 +46,75 @@ PhysicsObject::PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> i
 }
 
 glm::vec3 PhysicsObject::CalculateCOM() {
-	glm::vec3 com(0.0f);
-	std::vector<Vertex> vertices = Model.vertices;
-	for (const auto& vertex : vertices) {
-		com += glm::vec3(vertex.x, vertex.y, vertex.z);
+	std::vector<Vertex>& vertices = Model.vertices;
+	float totalMass = Mass; // Total mass of the object
+	glm::vec3 centerOfMass(0.0f); // To store the center of mass
+
+	// Uniformly distributed mass for each vertex
+	float vertexMass = totalMass / vertices.size();
+
+	// Sum of position vectors weighted by vertex mass
+	for (size_t i = 0; i < vertices.size(); ++i) {
+		glm::vec3 position = glm::vec3(vertices[i].x, vertices[i].y, vertices[i].z);
+		centerOfMass += position * vertexMass;
 	}
-	return com / static_cast<float>(vertices.size());
+
+	// Divide by total mass to get the center of mass
+	centerOfMass /= totalMass;
+
+	return centerOfMass;
 }
+
 
 // WIP
 void PhysicsObject::CalculateInertiaTensor(glm::mat3& tensor) {
-	std::vector<Vertex> vertices = Model.vertices;
-	size_t N = vertices.size();
+	std::vector<Vertex>& vertices = Model.vertices;
+	std::vector<unsigned int>& indices = Model.indices;
 
-	// Calculate the centroid
-	glm::vec3 centroid(0.0f);
-	for (const auto& vertex : vertices) {
-		centroid += glm::vec3(vertex.x, vertex.y, vertex.z);
+	glm::mat3 IT = glm::mat3(0.0f);
+
+	// Center of the cube (assuming vertices are centered at origin)
+	//glm::vec3 centerOfMass(0.0f, 0.0f, 0.0f); // Adjust if not centered
+	glm::vec3 centerOfMass = CalculateCOM(); // Adjust if not centered
+
+	// Iterate through vertices
+	for (size_t i = 0; i < vertices.size(); ++i) {
+		Vertex& v = vertices[i];
+
+		// Extract vertex position
+		glm::vec3 position = glm::vec3(v.x, v.y, v.z);
+
+		// Calculate the distance from the center of mass
+		glm::vec3 r = position - centerOfMass;
+
+		// Each vertex contributes to the total mass
+		float mass = Mass / (vertices.size() * 3); // Uniform distribution
+
+		// Calculate components of inertia tensor
+		IT[0][0] += mass * (r.y * r.y + r.z * r.z); // Ixx
+		IT[1][1] += mass * (r.x * r.x + r.z * r.z); // Iyy
+		IT[2][2] += mass * (r.x * r.x + r.y * r.y); // Izz
+
+		IT[0][1] -= mass * r.x * r.y; // Ixy
+		IT[0][2] -= mass * r.x * r.z; // Ixz
+		IT[1][2] -= mass * r.y * r.z; // Iyz
 	}
-	centroid /= static_cast<float>(N);
 
-	// Initialize inertia tensor components
-	float Ixx = 0.0f, Iyy = 0.0f, Izz = 0.0f;
-	float Ixy = 0.0f, Ixz = 0.0f, Iyz = 0.0f;
+	// Ensure symmetry for the products of inertia
+	IT[1][0] = IT[0][1];
+	IT[2][0] = IT[0][2];
+	IT[2][1] = IT[1][2];
 
-	// Calculate inertia tensor components
-	for (const auto& vertex : vertices) {
-		glm::vec3 r = glm::vec3(vertex.x, vertex.y, vertex.z) - centroid; // Position relative to the centroid
-		float m_i = Mass / static_cast<float>(N); // Mass of each vertex
+	PrintMat3(IT);
 
-		Ixx += m_i * (r.y * r.y + r.z * r.z);
-		Iyy += m_i * (r.x * r.x + r.z * r.z);
-		Izz += m_i * (r.x * r.x + r.y * r.y);
-		Ixy -= m_i * (r.x * r.y);
-		Ixz -= m_i * (r.x * r.z);
-		Iyz -= m_i * (r.y * r.z);
-	}
-
-	// Construct the inertia tensor
-	glm::mat3 inertiaTensor = glm::mat3(Ixx, Ixy, Ixz,
-		Ixy, Iyy, Iyz,
-		Ixz, Iyz, Izz);
-
-	PrintMat3(inertiaTensor);
+	tensor = IT;
 }
 
+void PhysicsObject::ScaleSize(float scale) {
+	Model.ChangeSize(scale);
+	CalculateInertiaTensor(inertiaTensor);
+	inverseInertiaTensor = glm::inverse(inertiaTensor);
+}
 
 // Force Manipulation Functions
 
@@ -155,6 +177,27 @@ float PhysicsObject::CalculateRotationalEnergy() {
 }
 float PhysicsObject::CalculateTotalEnergy() {
 	return CalculateTranslationalEnergy() + CalculateRotationalEnergy();
+}
+
+void PhysicsObject::ApplyForce(const glm::vec3& force, const glm::vec3& contactPoint)
+{
+	if (Anchored) {
+		// Do nothing if the object is anchored
+		return;
+	}
+
+	// Apply linear force to update the object's linear acceleration
+	acceleration += force / Mass;
+
+	//// Calculate the point of application relative to the center of mass (CoM)
+	//PrintVec3(contactPoint);
+	//glm::vec3 radius = contactPoint - (pos + CalculateCOM());
+
+	//// Compute the torque generated by the force
+	//glm::vec3 torque = glm::cross(radius, force);
+
+	//// Update angular acceleration using the inverse inertia tensor (angular version of F = ma)
+	//angularAcceleration += inverseInertiaTensor * torque;
 }
 
 // Collision

@@ -56,6 +56,7 @@ Mesh::Mesh(glm::vec3 initialPosition, float faceSize, std::string &modelPath)
 
     SetupMesh();
     vertexCount = vertices.size(); // There are five components to each in the vector
+
 }
 
 void Mesh::SetupMeshU()
@@ -189,8 +190,6 @@ void Mesh::parseVertexData(const std::string& filepath, std::vector<Vertex>& ver
 
     file.close();
 }
-
-
 
 void Mesh::ChangeSize(float scale)
 {

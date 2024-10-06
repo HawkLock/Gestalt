@@ -23,7 +23,9 @@ class World {
 protected:
 	std::vector<PhysicsObject*> PhysicObjects;
 	Renderer renderer;
-	glm::vec3 Gravity = glm::vec3(0.0f, -0.98f, 0.0f);
+	glm::vec3 gravity = glm::vec3(0.0f, -9.8f, 0.0f);
+	float mu_static = 0.1f;
+	float contactThreshold = 0.5;
 	const float restitution = 1.f;
 
 public:
@@ -57,6 +59,7 @@ public:
 	// Collision
 	void resolveOverlap(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap);
 	void resolveImpulses(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap);
+	void applyContactForces(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap);
 	void resolveCollision(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap);
 	void generateSeparationAxes(std::vector<glm::vec3>& axes, std::vector<glm::vec3>& edges1, std::vector<glm::vec3>& edges2);
 	std::pair<float, float> getProjectionRange(const std::vector<Vertex>& vertices, glm::vec3& axis);
@@ -65,6 +68,6 @@ public:
 	bool checkSATCollision(const std::vector<Vertex>& vertices1, const std::vector<Vertex>& vertices2, std::vector<glm::vec3>& axes, Overlap& smallestOverlap);
 
 	Renderer GetRenderer() { return renderer; }
-	glm::vec3 GetGravity() { return Gravity; }
+	glm::vec3 GetGravity() { return gravity; }
 
 };
