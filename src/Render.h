@@ -13,6 +13,9 @@
 
 #include "Shader.h"
 
+#include "Module.h"
+#include "ObjectModule.h"
+
 #include "Camera.h"
 #include "PhysicsObject.h"
 
@@ -22,7 +25,9 @@
 class Renderer {
 
 public:
-
+    float value1 = 0.0f;
+    int value2 = 0;
+    bool enableFeature = 0.0f;
     unsigned int SCR_WIDTH = 800;
     unsigned int SCR_HEIGHT = 600;
 
@@ -80,7 +85,11 @@ public:
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
 
+    std::vector<Module*> modules; // effectively GUI windows
+
 	Renderer();
+
+    void CreateDefaultWindows();
 
     void RenderObjectTable(std::vector<PhysicsObject*> RenderObjects);
 	void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjects);

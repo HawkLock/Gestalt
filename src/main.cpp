@@ -48,10 +48,14 @@ int main()
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-    world.camera.ProcessMouseMovement(xpos, ypos);
+	ImGui_ImplGlfw_CursorPosCallback(window, xpos, ypos);
+	if (world.cursorCaptured) {
+		world.camera.ProcessMouseMovement(xpos, ypos);
+	}
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
+	ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
     world.ProcessMouseScroll(yoffset);
 }

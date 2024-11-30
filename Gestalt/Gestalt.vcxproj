@@ -56,6 +56,8 @@
     <ClInclude Include="..\src\GJKAlgorithm.h" />
     <ClInclude Include="..\src\Mesh.h" />
     <ClInclude Include="..\src\MeshLibrary.h" />
+    <ClInclude Include="..\src\Module.h" />
+    <ClInclude Include="..\src\ObjectModule.h" />
     <ClInclude Include="..\src\PhysicsObject.h" />
     <ClInclude Include="..\src\PhysicsUtility.h" />
     <ClInclude Include="..\src\Render.h" />

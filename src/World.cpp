@@ -803,89 +803,99 @@ void World::AddObject(PhysicsObject* object)
 
 void World::ProcessInput()
 {
-	float cameraSpeed = 7.5f * renderer.deltaTime;
-	float boxSpeed = 1.5f * renderer.deltaTime;
-	float rotSpeed = 25.f * renderer.deltaTime;
+	if (cursorCaptured) {
+		float cameraSpeed = 7.5f * renderer.deltaTime;
+		float boxSpeed = 1.5f * renderer.deltaTime;
+		float rotSpeed = 25.f * renderer.deltaTime;
 
-	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
-	{
-		PhysicObjects[1]->SetPos(glm::vec3(2.f, 0.0f, 0.f));
+		if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+		{
+			PhysicObjects[1]->SetPos(glm::vec3(2.f, 0.0f, 0.f));
+		}
+
+		// WASD Movement
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		{
+			camera.cameraPos += cameraSpeed * camera.cameraFront;
+		}
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		{
+			camera.cameraPos -= cameraSpeed * camera.cameraFront;
+		}
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		{
+			camera.cameraPos -= glm::normalize(glm::cross(camera.cameraFront, camera.cameraUp)) * cameraSpeed;
+		}
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		{
+			camera.cameraPos += glm::normalize(glm::cross(camera.cameraFront, camera.cameraUp)) * cameraSpeed;
+		}
+
+		// Altitude Movement
+		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+		{
+			camera.cameraPos -= cameraSpeed * glm::vec3(0, 1, 0);
+		}
+		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+		{
+			camera.cameraPos += cameraSpeed * glm::vec3(0, 1, 0);
+		}
+
+		// Program Controls
+		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		{
+			glfwSetWindowShouldClose(window, true);
+		}
+
+		// Debuging Controls
+		//if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		//{
+		//	testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(-1, 0, 0));
+		//}
+		//if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		//{
+		//	testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(1, 0, 0));
+		//}
+		//if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		//{
+		//	testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, 0, -1));
+		//}
+		//if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		//{
+		//	testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, 0, 1));
+		//}
+
+		if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
+		{
+			testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, -1, 0));
+		}
+		if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
+		{
+			testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, 1, 0));
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
+		{
+			glm::quat rot = glm::angleAxis(glm::radians(rotSpeed), glm::vec3(0.0f, 0.0f, 1.0f));
+			testObj2->AddRotation(rot);
+		}
+		if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
+		{
+			glm::quat rot = glm::angleAxis(glm::radians(-rotSpeed), glm::vec3(0.0f, 0.0f, 1.0f));
+			testObj2->AddRotation(rot);
+		}
 	}
 
-	// WASD Movement
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-	{
-		camera.cameraPos += cameraSpeed * camera.cameraFront;
-	}
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-	{
-		camera.cameraPos -= cameraSpeed * camera.cameraFront;
-	}
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-	{
-		camera.cameraPos -= glm::normalize(glm::cross(camera.cameraFront, camera.cameraUp)) * cameraSpeed;
-	}
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-	{
-		camera.cameraPos += glm::normalize(glm::cross(camera.cameraFront, camera.cameraUp)) * cameraSpeed;
-	}
 
-	// Altitude Movement
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-	{
-		camera.cameraPos -= cameraSpeed * glm::vec3(0, 1, 0);
-	}
-	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-	{
-		camera.cameraPos += cameraSpeed * glm::vec3(0, 1, 0);
-	}
+	std::chrono::high_resolution_clock::time_point currTime = std::chrono::high_resolution_clock::now();
 
-	// Program Controls
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-	{
-		glfwSetWindowShouldClose(window, true);
-	}
-
-	// Debuging Controls
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-	{
-		testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(-1, 0, 0));
-	}
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-	{
-		testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(1, 0, 0));
-	}
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-	{
-		testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, 0, -1));
-	}
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-	{
-		testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, 0, 1));
-	}
-	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
-	{
-		testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, -1, 0));
-	}
-	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
-	{
-		testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, 1, 0));
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
-	{
-		glm::quat rot = glm::angleAxis(glm::radians(rotSpeed), glm::vec3(0.0f, 0.0f, 1.0f));
-		testObj2->AddRotation(rot);
-	}
-	if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
-	{
-		glm::quat rot = glm::angleAxis(glm::radians(-rotSpeed), glm::vec3(0.0f, 0.0f, 1.0f));
-		testObj2->AddRotation(rot);
-	}
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(currTime - cursorToggleLastTime);
 
 	// Untrap Cursor with Spacebar
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && duration.count() >= cursorCooldownTime)
 	{
+		cursorToggleLastTime = currTime;
+
 		// Toggle cursor mode
 		cursorCaptured = !cursorCaptured;
 		if (cursorCaptured)
@@ -903,10 +913,14 @@ void World::ProcessInput()
 
 void World::ProcessMouseMovement(double xpos, double ypos)
 {
-	camera.ProcessMouseMovement(xpos, ypos);
+	if (cursorCaptured) {
+		camera.ProcessMouseMovement(xpos, ypos);
+	}
 }
 
 void World::ProcessMouseScroll(float yoffset)
 {
-	camera.ProcessMouseScroll(yoffset, renderer.deltaTime);
+	if (cursorCaptured) {
+		camera.ProcessMouseScroll(yoffset, renderer.deltaTime);
+	}
 }

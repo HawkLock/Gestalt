@@ -2,10 +2,18 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
+
 Renderer::Renderer()
 {
+    modules = std::vector<Module*>();
     Initialize();
     shader = Shader("../Shaders/VertexShader.vert", "../Shaders/FragmentShader.frag");
+}
+
+void Renderer::CreateDefaultWindows() {
+    ObjectModule* objModule = new ObjectModule();
+    modules.push_back(objModule);
+
 }
 
 void Renderer::Initialize()
@@ -25,7 +33,25 @@ void Renderer::Initialize()
     }
     glfwMakeContextCurrent(window);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+
+    // Set-up ImGUI
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io; // Getting IO object
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; 
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  
+
+
+    // Setup ImGui style
+    ImGui::StyleColorsDark();
+
+    // Setup platform/renderer bindings
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
+
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -104,19 +130,9 @@ void Renderer::Initialize()
     shader.setInt("texture1", 0);
     shader.setInt("texture2", 1);
 
-    // Set-up ImGUI
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io; // Getting IO object
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
-    // Setup ImGui style
-    ImGui::StyleColorsDark();
-
-    // Setup platform/renderer bindings
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 130");
-
+    // Windows initialize
+    CreateDefaultWindows();
 }
 
 void Renderer::Cleanup()
@@ -132,35 +148,36 @@ void Renderer::Cleanup()
 
 // For Debugging Energy Currently
 void Renderer::RenderObjectTable(std::vector<PhysicsObject*> objects) {
-    ImGui::BeginTable("Objects", 4); // 2 columns
-    ImGui::TableSetupColumn("Object Index");
-    ImGui::TableSetupColumn("Energy");
-    ImGui::TableSetupColumn("Lin");
-    ImGui::TableSetupColumn("Rot");
-    ImGui::TableHeadersRow();
+    if (ImGui::BeginTable("Objects", 4)) { // 2 columns
+        ImGui::TableSetupColumn("Object Index");
+        ImGui::TableSetupColumn("Energy");
+        ImGui::TableSetupColumn("Lin");
+        ImGui::TableSetupColumn("Rot");
+        ImGui::TableHeadersRow();
 
-    float totalEnergy = 0.f;
-    for (size_t i = 0; i < objects.size(); ++i) {
+        float totalEnergy = 0.f;
+        for (size_t i = 0; i < objects.size(); ++i) {
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::Text("%zu", i);
+            ImGui::TableNextColumn();
+            float energy = objects[i]->CalculateTotalEnergy();
+            totalEnergy += energy;
+            ImGui::Text("%.2f J", energy);
+            ImGui::TableNextColumn();
+            ImGui::Text("%.2f J", objects[i]->CalculateTranslationalEnergy());
+            ImGui::TableNextColumn();
+            ImGui::Text("%.2f J", objects[i]->CalculateRotationalEnergy());
+        }
+
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
-        ImGui::Text("%zu", i);
+        ImGui::Text("Total");
         ImGui::TableNextColumn();
-        float energy = objects[i]->CalculateTotalEnergy();
-        totalEnergy += energy;
-        ImGui::Text("%.2f J", energy);
-        ImGui::TableNextColumn();
-        ImGui::Text("%.2f J", objects[i]->CalculateTranslationalEnergy());
-        ImGui::TableNextColumn();
-        ImGui::Text("%.2f J", objects[i]->CalculateRotationalEnergy());
+        ImGui::Text("%.2f J", totalEnergy);
+
+        ImGui::EndTable();
     }
-
-    ImGui::TableNextRow();
-    ImGui::TableNextColumn();
-    ImGui::Text("Total");
-    ImGui::TableNextColumn();
-    ImGui::Text("%.2f J", totalEnergy);
-
-    ImGui::EndTable();
 }
 
 void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjects)
@@ -168,21 +185,14 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
-    timeAccumulator += deltaTime;
+    timeAccumulator += deltaTime;    
+
 
     // Start the ImGui frame
-    ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
+    ImGui_ImplOpenGL3_NewFrame();
     ImGui::NewFrame();
 
-    // ImGUI
-    ImGui::Begin("Real-Time Variables");
-    ImGui::SetWindowSize(ImVec2(200, 100));
-    ImGui::SetWindowPos(ImVec2(0, 0));
-    RenderObjectTable(RenderObjects);
-    ImGui::End();
-
-    ImGui::Render();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -208,6 +218,32 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     {
         object->RenderMesh(shader, texture1);
     }
+
+
+    PhysicsObject* obj = RenderObjects[0];
+
+    // ImGUI
+    ImGui::Begin("Real-Time Variables");
+    ImGui::Text("Move");
+    //ImGui::SetWindowSize(ImVec2(200, 400));
+    //ImGui::SetWindowPos(ImVec2(0, 0));
+    ImGui::SliderFloat("Obj X", &obj->velocity.x, 0.0f, 1.0f);
+    ImGui::SliderFloat("Obj Y", &obj->velocity.y, 0.0f, 1.0f);
+    ImGui::SliderFloat("Obj Z", &obj->velocity.z, 0.0f, 1.0f);
+    RenderObjectTable(RenderObjects);
+
+    for (auto& mod : modules) {
+        if (mod == nullptr) {
+            std::cout << "Module is null" << std::endl;
+            continue;
+        }
+        mod->UpdateObjects(RenderObjects);
+        mod->RenderWindow();
+    }
+
+    ImGui::End();
+
+    ImGui::Render();
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

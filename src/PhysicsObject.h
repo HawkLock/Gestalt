@@ -20,15 +20,7 @@ protected:
 	//glm::vec3 gravityVec = glm::vec3(0, -9.8, 0);
 	glm::vec3 gravityVec = glm::vec3(0.0f, 0.0f, 0.0f); // disabled gravity
 
-	glm::vec3 pos;
-	glm::quat rot;
 	float sideLength = 1;
-
-	glm::vec3 acceleration;
-	glm::vec3 velocity; // In m/s
-	glm::vec3 angularAcceleration;
-	glm::vec3 angularVelocity;
-
 	
 	float Mass; // In Kg
 	glm::mat3 inertiaTensor;
@@ -42,6 +34,13 @@ protected:
 	Mesh Model;
 
 public:
+	glm::vec3 pos;
+	glm::quat rot;
+
+	glm::vec3 acceleration;
+	glm::vec3 velocity; // In m/s
+	glm::vec3 angularAcceleration;
+	glm::vec3 angularVelocity;
 
 	PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, bool isAnchored, float faceSize, std::string& modelPath);
 

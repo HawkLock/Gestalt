@@ -26,7 +26,7 @@ protected:
 	glm::vec3 gravity = glm::vec3(0.0f, -9.8f, 0.0f);
 	float mu_static = 0.1f;
 	float contactThreshold = 0.5;
-	const float restitution = 1.f;
+	const float restitution = 0.f;
 
 public:
 
@@ -35,6 +35,8 @@ public:
 	GLFWwindow* window;
 	Camera camera;
 	bool cursorCaptured = true;
+	float cursorCooldownTime = 500; // Avoid activating every frame (ms)
+	std::chrono::high_resolution_clock::time_point cursorToggleLastTime = std::chrono::high_resolution_clock::now();
 
 	PhysicsObject* testObj1;
 	PhysicsObject* testObj2;
