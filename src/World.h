@@ -22,11 +22,12 @@ class World {
 
 protected:
 	std::vector<PhysicsObject*> PhysicObjects;
+	std::vector<TriggerObject*> TriggerObjects;
 	Renderer renderer;
 	glm::vec3 gravity = glm::vec3(0.0f, -9.8f, 0.0f);
 	float mu_static = 0.1f;
 	float contactThreshold = 0.5;
-	const float restitution = 0.f;
+	const float restitution = 1.f;
 
 public:
 
@@ -57,6 +58,7 @@ public:
 	void ProcessMouseScroll(float yoffset);
 
 	void AddObject(PhysicsObject* object);
+	void AddObject(TriggerObject* object);
 
 	// Collision
 	void resolveOverlap(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap);

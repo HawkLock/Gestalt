@@ -9,32 +9,18 @@ void PrintQuaternion(const glm::quat& q) {
 		<< std::endl;
 }
 
+void trigger(std::chrono::steady_clock::time_point currTime, std::chrono::steady_clock::time_point startTime) {
+	std::chrono::duration<double> elapsed = currTime - startTime;
+	std::cout << "Elapsed Time: " << elapsed.count() << std::endl;
+}
 
 World::World()
 {
 	startTime = std::chrono::high_resolution_clock::now();
 	window = renderer.GetWindow();
 
-	//// Define the variables for object1
-	//glm::vec3 position1 = glm::vec3(0.0f, -2.5f, 0.0f);
-	////glm::quat rotation1 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
-	//glm::quat rotation1 = glm::angleAxis(glm::radians(-75.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	//glm::vec3 velocity1 = glm::vec3(0.0f, 0.0f, 0.0f);
-	//std::vector<glm::vec3> initialActingForces1 = std::vector<glm::vec3>();
-	//float mass1 = 50.f;
-	//float faceSize1 = 1.f;
-
-	//std::string modelPath1 = "C:/Programming/Gestalt/Models/plane.txt";
-
-	//// Create object1 and add it to the world
-	//testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, true, faceSize1, modelPath1);
-	//AddObject(testObj1);	
-
-	// Define the variables for object1
-	//glm::vec3 position1 = glm::vec3(0.0f, -2.5f, 0.0f);
-	glm::vec3 position1 = glm::vec3(-2.f, 0.f, 0.0f);
+	glm::vec3 position1 = glm::vec3(0, 0.f, 0.0f);
 	glm::quat rotation1 = glm::angleAxis(glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f));
-	//glm::quat rotation1 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
 	std::vector<glm::vec3> initialActingForces1 = std::vector<glm::vec3>();
 	float mass1 = 100.f;
 	float faceSize1 = 2.f;
@@ -43,30 +29,20 @@ World::World()
 
 	// Create object1 and add it to the world
 	testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, false, faceSize1, modelPath1);
-	//testObj1->GetMesh().ChangeSize(5.f);
+	testObj1->SetVelocity(glm::vec3(1.f, 0.f, 0.f));
 	AddObject(testObj1);
 
-	// Define the variables for object2
-	//glm::vec3 position2 = glm::vec3(0.f, 2.0f, 0.f);
-	glm::vec3 position2 = glm::vec3(1.f, 0.0f, 0.f);
-	//glm::quat rotation2 = glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); 
-	glm::quat rotation2 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
-	std::vector<glm::vec3> initialActingForces2 = std::vector<glm::vec3>();
-	float mass2 = 100.0f;
-	float faceSize2 = 2.0f;
+	glm::vec3 positionT1 = glm::vec3(10.f, 0.f, 0.0f);
+	glm::quat rotationT1 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
+	float faceSizeT1 = 2.0f;
 
-	std::string modelPath2 = "../Models/cube1.txt";
+	std::string modelPathT1 = "../Models/cube1.txt";
 
-	// Create object2 and add it to the world
-	//PhysicsObject* object2 = new PhysicsObject(position2, velocity2, initialActingForces2, rotationAxis2, angle2, mass2, gravity2, false, faceSize2, meshLibrary.getCubeVertices(faceSize2));
-	testObj2 = new PhysicsObject(position2, initialActingForces2, rotation2, mass2, false, faceSize2, modelPath2);
-	// testObj2->SetVelocity(glm::vec3(0.0f, -0.5f, 0.0f));
-	testObj2->SetVelocity(glm::vec3(-0.5f*2, 0.f, 0.0f));
-	AddObject(testObj2);
-
-	//testObj2->GetMesh().ChangeSize(0.5f);
-	//testObj2->AddRotation(glm::angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f)));	
+	TriggerObject* testTObject = new TriggerObject(positionT1, rotationT1, faceSizeT1, modelPathT1);
+	testTObject->setTrigger(&trigger);
+	AddObject(testTObject);
 }
+
 
 void World::Update()
 {
@@ -115,6 +91,31 @@ void RemoveParallelVectors(std::vector<glm::vec3>& vectors, float tolerance = 1e
 }
 
 void ApplyObjectTransformation(std::vector<Vertex>& vertices, std::vector<glm::vec3>& normals, PhysicsObject* object) {
+	// Get the object's position and rotation
+	glm::vec3 objectPos = object->GetCurrentPos();
+	glm::quat objectRotation = object->GetCurrentRot();
+
+	// Transformation matrix
+	glm::mat4 transformationMatrix = glm::mat4(1.0f);
+	transformationMatrix = glm::translate(transformationMatrix, objectPos); // Apply translation
+	transformationMatrix *= glm::mat4_cast(objectRotation); // Apply rotation
+
+	// Apply transformation to vertices
+	for (Vertex& vertex : vertices) {
+		glm::vec4 transformedVertex = transformationMatrix * glm::vec4(vertex.x, vertex.y, vertex.z, 1.0f);
+		vertex.x = transformedVertex.x;
+		vertex.y = transformedVertex.y;
+		vertex.z = transformedVertex.z;
+	}
+
+	// Apply rotation to normals (no translation)
+	glm::mat3 normalMatrix = glm::mat3(glm::transpose(glm::inverse(transformationMatrix)));
+	for (glm::vec3& normal : normals) {
+		normal = glm::normalize(normalMatrix * normal);
+	}
+}
+
+void ApplyObjectTransformation(std::vector<Vertex>& vertices, std::vector<glm::vec3>& normals, TriggerObject* object) {
 	// Get the object's position and rotation
 	glm::vec3 objectPos = object->GetCurrentPos();
 	glm::quat objectRotation = object->GetCurrentRot();
@@ -268,10 +269,13 @@ void World::resolveImpulses(PhysicsObject* objA, PhysicsObject* objB, const Over
 	glm::vec3 velB = objB->GetCurrentVelocity();
 	glm::vec3 angVelA = objA->GetCurrentAngularVelocity();
 	glm::vec3 angVelB = objB->GetCurrentAngularVelocity();
-	float massA = objA->GetMass();
-	float massB = objB->GetMass();
-	glm::mat3 IITA = objA->GetInverseInertiaTensor();
-	glm::mat3 IITB = objB->GetInverseInertiaTensor();
+
+	float massA = objA->IsAnchored() ? INFINITY : objA->GetMass();
+	float massB = objB->IsAnchored() ? INFINITY : objB->GetMass();
+
+	glm::mat3 IITA = objA->IsAnchored() ? glm::mat3(0.0f) : objA->GetInverseInertiaTensor();
+	glm::mat3 IITB = objB->IsAnchored() ? glm::mat3(0.0f) : objB->GetInverseInertiaTensor();
+
 	glm::vec3 collisionNormal = overlap.axis;
 	glm::vec3 collisionPoint = overlap.collisionPoint;
 
@@ -284,27 +288,42 @@ void World::resolveImpulses(PhysicsObject* objA, PhysicsObject* objB, const Over
 	glm::vec3 collisionRadiusA = collisionPoint - posA;
 	glm::vec3 collisionRadiusB = collisionPoint - posB;
 
+	float netRestitution = objA->GetRestitution() * objB->GetRestitution();
+
 	// Impulse calculation (courtesy of Chris Hecker's formula)
-	float numerator = -(1 + restitution) * glm::dot(relativeVelocity, collisionNormal);
+	float numerator = -(1 + netRestitution) * glm::dot(relativeVelocity, collisionNormal);
 
 	// Angular impulse components
 	glm::vec3 radiusCrossNormalA = glm::cross(collisionRadiusA, collisionNormal);
 	glm::vec3 radiusCrossNormalB = glm::cross(collisionRadiusB, collisionNormal);
+
 	glm::vec3 denominator1Vec = IITA * radiusCrossNormalA;
 	float denominator1 = glm::dot(radiusCrossNormalA, denominator1Vec);
 
 	glm::vec3 denominator2Vec = IITB * radiusCrossNormalB;
 	float denominator2 = glm::dot(radiusCrossNormalB, denominator2Vec);
 
+	// Adjust for infinite mass for anchored objects
+	float invMassA = objA->IsAnchored() ? 0.0f : 1.0f / massA;
+	float invMassB = objB->IsAnchored() ? 0.0f : 1.0f / massB;
+
 	// Combine linear and angular contributions to compute total impulse
-	float denominator = (1 / massA + 1 / massB) + denominator1 + denominator2;
+	float denominator = invMassA + invMassB + denominator1 + denominator2;
+	if (denominator == 0.0f) return; // Prevent division by zero
+
 	float impulse = numerator / denominator;
 
 	// Apply the impulse to both objects
 	glm::vec3 impulseForce = collisionNormal * impulse;
-	applyImpulse(objA, impulseForce, collisionRadiusA);
-	applyImpulse(objB, -impulseForce, collisionRadiusB);
+
+	if (!objA->IsAnchored()) {
+		applyImpulse(objA, impulseForce, collisionRadiusA);
+	}
+	if (!objB->IsAnchored()) {
+		applyImpulse(objB, -impulseForce, collisionRadiusB);
+	}
 }
+
 
 // Resolve overlap between two colliding objects
 void World::resolveOverlap(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap) {
@@ -319,6 +338,9 @@ void World::resolveOverlap(PhysicsObject* objA, PhysicsObject* objB, const Overl
 	// Calculate separation vector based on the overlap depth and the collision normal
 	glm::vec3 separation = overlap.axis * overlap.depth;
 
+	// Ignore negligible overlaps
+	if (glm::length(separation) < 0.001f) return;
+
 	// Resolve overlap based on anchor status
 	if (isAnchoredA && !isAnchoredB) {
 		objB->SetPos(posB + separation);
@@ -327,10 +349,15 @@ void World::resolveOverlap(PhysicsObject* objA, PhysicsObject* objB, const Overl
 		objA->SetPos(posA - separation);
 	}
 	else if (!isAnchoredA && !isAnchoredB) {
-		objA->SetPos(posA - separation * 0.5f);
-		objB->SetPos(posB + separation * 0.5f);
+		// Mass-based proportional correction
+		float totalMass = objA->GetMass() + objB->GetMass();
+		float ratioA = objB->GetMass() / totalMass; // Heavier object moves less
+		float ratioB = objA->GetMass() / totalMass;
+
+		objA->SetPos(posA - separation * ratioA);
+		objB->SetPos(posB + separation * ratioB);
 	}
-	// If both are anchored, do nothing, as neither can move
+	// If both are anchored, do nothing
 }
 
 // Resolve collision between two objects using impulse-based collision resolution and continuous forces
@@ -474,6 +501,7 @@ static bool AABBIntersect(const ConvexShape& shape1, const ConvexShape& shape2, 
 }
 
 void World::CollisionUpdate() {
+	// Physics Collision Check
 	for (int i = 0; i < PhysicObjects.size(); i++) {
 		for (int z = i + 1; z < PhysicObjects.size(); z++) {
 			// Extract vertices and normals from the meshes
@@ -490,7 +518,6 @@ void World::CollisionUpdate() {
 			ApplyObjectTransformation(obj1Vertices, normals1, PhysicObjects[i]);
 			ApplyObjectTransformation(obj2Vertices, normals2, PhysicObjects[z]);
 
-
 			std::vector<glm::vec3> vertices1 = ConvertVertexToGLM(obj1Vertices);
 			std::vector<glm::vec3> vertices2 = ConvertVertexToGLM(obj2Vertices);
 
@@ -502,7 +529,8 @@ void World::CollisionUpdate() {
 			Simplex simplex;
 			bool isColliding = false;
 			bool degenrateCase = false;
-			// Degenerate case checking (collinearity) 
+
+			// Degenerate case checking (only for collinearity rn) 
 			degenrateCase = AreObjectsAligned(shape1.GetOrientation(), shape2.GetOrientation(), shape1.GetPos(), shape2.GetPos());
 			if (degenrateCase) {
 				isColliding = AABBIntersect(shape1, shape2, smallestOverlap);
@@ -520,11 +548,56 @@ void World::CollisionUpdate() {
 				std::chrono::high_resolution_clock::time_point currTime = std::chrono::high_resolution_clock::now();
 				std::chrono::duration<double> elapsed = currTime - startTime;
 
-				/*std::cout << "Time: " << elapsed.count() << " -- Collision Depth: " << smallestOverlap.depth
-					<< " -- Axis: " << smallestOverlap.axis.x << ", " << smallestOverlap.axis.y << ", " << smallestOverlap.axis.z 
-					<< "-- POC: " << smallestOverlap.collisionPoint.x << ", " << smallestOverlap.collisionPoint.y << ", " << smallestOverlap.collisionPoint.z << std::endl;*/
-
 				resolveCollision(PhysicObjects[i], PhysicObjects[z], smallestOverlap);
+			}
+		}
+	}
+
+	for (int i = 0; i < PhysicObjects.size(); i++) {
+		for (int z = 0; z < TriggerObjects.size(); z++) {
+			// Extract vertices and normals from the meshes
+			std::vector<Vertex> obj1Vertices = PhysicObjects[i]->GetMesh().vertices;
+			std::vector<Vertex> obj2Vertices = TriggerObjects[z]->GetMesh().vertices;
+			std::vector<glm::vec3> normals1 = PhysicObjects[i]->GetMesh().normals;
+			std::vector<glm::vec3> normals2 = TriggerObjects[z]->GetMesh().normals;
+
+			glm::vec3 pos1 = PhysicObjects[i]->GetCurrentPos();
+			glm::vec3 pos2 = TriggerObjects[z]->GetCurrentPos();
+			glm::quat orientation1 = PhysicObjects[i]->GetCurrentRot();
+			glm::quat orientation2 = TriggerObjects[z]->GetCurrentRot();
+
+			ApplyObjectTransformation(obj1Vertices, normals1, PhysicObjects[i]);
+			ApplyObjectTransformation(obj2Vertices, normals2, TriggerObjects[z]);
+
+			std::vector<glm::vec3> vertices1 = ConvertVertexToGLM(obj1Vertices);
+			std::vector<glm::vec3> vertices2 = ConvertVertexToGLM(obj2Vertices);
+
+			ConvexShape shape1(vertices1, orientation1, pos1);
+			ConvexShape shape2(vertices2, orientation2, pos2);
+
+			// Perform GJK collision detection and overlap calculation
+			Overlap smallestOverlap;
+			Simplex simplex;
+			bool isColliding = false;
+			bool degenrateCase = false;
+
+			// Degenerate case checking (only for collinearity rn) 
+			degenrateCase = AreObjectsAligned(shape1.GetOrientation(), shape2.GetOrientation(), shape1.GetPos(), shape2.GetPos());
+			if (degenrateCase) {
+				isColliding = AABBIntersect(shape1, shape2, smallestOverlap);
+			}
+			else {
+				isColliding = GJKAlgorithm::GJK(shape1, shape2, smallestOverlap, simplex);
+			}
+
+			if (isColliding) {
+				// Collision response
+				if (!degenrateCase) {
+					smallestOverlap = EPAAlgorithm::EPA(simplex, shape1, shape2);
+				}
+				std::chrono::high_resolution_clock::time_point currTime = std::chrono::high_resolution_clock::now();
+
+				TriggerObjects[z]->Trigger(currTime, startTime);
 			}
 		}
 	}
@@ -793,12 +866,17 @@ void World::PhysicsUpdate()
 
 void World::Render()
 {
-	renderer.RenderLoop(&camera, PhysicObjects);
+	renderer.RenderLoop(&camera, PhysicObjects, TriggerObjects);
 }
 
 void World::AddObject(PhysicsObject* object)
 {
 	PhysicObjects.push_back(object);
+}
+
+void World::AddObject(TriggerObject* object)
+{
+	TriggerObjects.push_back(object);
 }
 
 void World::ProcessInput()

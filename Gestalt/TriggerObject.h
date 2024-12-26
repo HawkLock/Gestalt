@@ -4,35 +4,15 @@
 #include <vector>
 #include <stack>
 
-#include "PhysicsUtility.h"
 #include "Mesh.h"
 
-// The datatype for a force
-struct Force {
-	glm::vec3 ForceVector;
-	std::string ForceName;
-};
-
-class PhysicsObject {
+class TriggerObject {
 
 protected:
 
-	//glm::vec3 gravityVec = glm::vec3(0, -9.8, 0);
-	glm::vec3 gravityVec = glm::vec3(0.0f, 0.0f, 0.0f); // disabled gravity
-
 	float sideLength = 1;
-	
-	float Mass; // In Kg
-	glm::mat3 inertiaTensor;
-	glm::mat3 inverseInertiaTensor;
-	float momentOfInertia;
-
-	float restitution = 1.0f;
-	float staticFriction = 0.4f;
-	float kineticFriction = 0.2;
 
 	bool Anchored;
-	std::vector<Force> continuousForces;
 
 	Mesh Model;
 
@@ -63,7 +43,7 @@ public:
 		return rotationMatrix * inertiaTensor * glm::transpose(rotationMatrix);
 	}
 
-	glm::mat3 GetInverseInertiaTensor() { 
+	glm::mat3 GetInverseInertiaTensor() {
 		glm::mat3 rotationMatrix = glm::mat3_cast(rot);
 		glm::mat3 worldInertiaTensor = rotationMatrix * inertiaTensor * glm::transpose(rotationMatrix);
 		return glm::inverse(inertiaTensor);
@@ -108,9 +88,9 @@ public:
 
 	std::vector<glm::vec3> GetVertices();
 
-	void RenderMesh(const Shader& shader, GLuint textureID); 
+	void RenderMesh(const Shader& shader, GLuint textureID);
 
-private: 
+private:
 	void applyFriction(float modifier); // Decays the velocity to add the idea of friction
 
 };

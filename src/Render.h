@@ -18,6 +18,7 @@
 
 #include "Camera.h"
 #include "PhysicsObject.h"
+#include "TriggerObject.h"
 
 #include <iostream>
 #include <vector>
@@ -92,7 +93,7 @@ public:
     void CreateDefaultWindows();
 
     void RenderObjectTable(std::vector<PhysicsObject*> RenderObjects);
-	void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjects);
+    void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT);
     void Initialize();
     void Cleanup();
  

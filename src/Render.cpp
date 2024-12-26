@@ -81,11 +81,13 @@ void Renderer::Initialize()
     glGenTextures(1, &texture1);
     glBindTexture(GL_TEXTURE_2D, texture1);
     // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
     // set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
     // load image, create texture and generate mipmaps
     int width, height, nrChannels;
     stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
@@ -105,8 +107,9 @@ void Renderer::Initialize()
     glGenTextures(1, &texture2);
     glBindTexture(GL_TEXTURE_2D, texture2);
     // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
     // set texture filtering parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -180,7 +183,7 @@ void Renderer::RenderObjectTable(std::vector<PhysicsObject*> objects) {
     }
 }
 
-void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjects)
+void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT)
 {
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
@@ -214,13 +217,18 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
 
     // glBindVertexArray(VAO);
 
-    for (auto& object : RenderObjects)
+    for (auto& object : RenderObjectsP)
     {
         object->RenderMesh(shader, texture1);
     }
 
+    for (auto& object : RenderObjectsT)
+    {
+        object->RenderMesh(shader, texture2);
+    }
 
-    PhysicsObject* obj = RenderObjects[0];
+
+    PhysicsObject* obj = RenderObjectsP[0];
 
     // ImGUI
     ImGui::Begin("Real-Time Variables");
@@ -230,14 +238,14 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     ImGui::SliderFloat("Obj X", &obj->velocity.x, 0.0f, 1.0f);
     ImGui::SliderFloat("Obj Y", &obj->velocity.y, 0.0f, 1.0f);
     ImGui::SliderFloat("Obj Z", &obj->velocity.z, 0.0f, 1.0f);
-    RenderObjectTable(RenderObjects);
+    RenderObjectTable(RenderObjectsP);
 
     for (auto& mod : modules) {
         if (mod == nullptr) {
             std::cout << "Module is null" << std::endl;
             continue;
         }
-        mod->UpdateObjects(RenderObjects);
+        mod->UpdateObjects(RenderObjectsP);
         mod->RenderWindow();
     }
 

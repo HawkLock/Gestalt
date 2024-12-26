@@ -38,6 +38,7 @@
     <ClCompile Include="..\src\PhysicsUtility.cpp" />
     <ClCompile Include="..\src\Render.cpp" />
     <ClCompile Include="..\src\stb.cpp" />
+    <ClCompile Include="..\src\TriggerObject.cpp" />
     <ClCompile Include="..\src\World.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -63,6 +64,7 @@
     <ClInclude Include="..\src\Render.h" />
     <ClInclude Include="..\src\Shader.h" />
     <ClInclude Include="..\src\Simplex.h" />
+    <ClInclude Include="..\src\TriggerObject.h" />
     <ClInclude Include="..\src\World.h" />
   </ItemGroup>
   <ItemGroup>
