@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
 
 class Renderer {
 
@@ -79,7 +80,7 @@ public:
         -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
         -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
-    unsigned int texture1, texture2;
+    unsigned int texture1, texture2, redTexture, blueTexture;
 
     const float fixedTimeStep = 0.02f;
     float timeAccumulator = 0.0f;
@@ -92,8 +93,10 @@ public:
 
     void CreateDefaultWindows();
 
+    void GenerateTexture(std::string path, unsigned int& texture, bool includeAlpha);
+
     void RenderObjectTable(std::vector<PhysicsObject*> RenderObjects);
-    void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT);
+    void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, bool renderArrows);
     void Initialize();
     void Cleanup();
  

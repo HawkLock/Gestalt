@@ -4,8 +4,11 @@
 #include <vector>
 #include <stack>
 
+#include "RenderUtils.h"
 #include "PhysicsUtility.h"
 #include "Mesh.h"
+
+#include <glm/glm/gtx/quaternion.hpp>
 
 // The datatype for a force
 struct Force {
@@ -35,6 +38,7 @@ protected:
 	std::vector<Force> continuousForces;
 
 	Mesh Model;
+	Mesh ArrowModel;
 
 public:
 	glm::vec3 pos;
@@ -45,7 +49,7 @@ public:
 	glm::vec3 angularAcceleration;
 	glm::vec3 angularVelocity;
 
-	PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, bool isAnchored, float faceSize, std::string& modelPath);
+	PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, bool isAnchored, float faceSize, std::string& modelPath, std::string& arrowModelPath);
 
 	// Getters and Setters
 	glm::vec3 GetCurrentPos() { return pos; }
@@ -109,6 +113,7 @@ public:
 	std::vector<glm::vec3> GetVertices();
 
 	void RenderMesh(const Shader& shader, GLuint textureID); 
+	void RenderArrows(const Shader& shader, GLuint velocityTextureID, GLuint accelerationTextureID);
 
 private: 
 	void applyFriction(float modifier); // Decays the velocity to add the idea of friction

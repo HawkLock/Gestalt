@@ -14,14 +14,18 @@ void PrintVec3(const glm::vec3& vec) {
 	std::cout << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")" << std::endl;
 }
 
-PhysicsObject::PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, bool isAnchored, float faceSize, std::string& modelPath)
+PhysicsObject::PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, bool isAnchored, float faceSize, std::string& modelPath, std::string& arrowModelPath)
 	: pos(initialPosition),
 	rot(initialRot),
 	Mass(initialMass),
 	Anchored(isAnchored),
 	sideLength(faceSize),
-	Model(initialPosition, faceSize, modelPath) // Use parameterized constructor
+	Model(initialPosition, faceSize, modelPath), // Use parameterized constructor
+	ArrowModel(initialPosition, faceSize, arrowModelPath)
 {
+	// Scale size of arrows
+	ArrowModel.ChangeSize(2);
+
 	angularVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
 	angularAcceleration = glm::vec3(0.0f, 0.0f, 0.0f);
 
@@ -42,7 +46,6 @@ PhysicsObject::PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> i
 	gravity.ForceName = "Gravity";
 	gravity.ForceVector = gravityVec;
 	AddForce(gravity, true);
-
 }
 
 glm::vec3 PhysicsObject::CalculateCOM() {
@@ -251,30 +254,27 @@ std::vector<glm::vec3> PhysicsObject::GetVertices()
 // Rendering
 void PhysicsObject::RenderMesh(const Shader& shader, GLuint textureID)
 {
-	// Compute the model matrix
-	glm::mat4 modelMatrix = glm::mat4(1.0f); // Identity matrix
-	modelMatrix = glm::translate(modelMatrix, pos); // Apply translation
-	modelMatrix *= glm::mat4_cast(rot); // Apply rotation
-
-	// Optionally apply scale
-	// modelMatrix = glm::scale(modelMatrix, scale);
-
-	// Bind the VAO associated with the mesh
-	Model.Bind();
-
-	// Bind the texture
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, textureID);
-
-	// Bind the shader and set uniforms
-	shader.use();
-	shader.setMat4("model", modelMatrix);
-	shader.setInt("texture1", 0);  // Ensure the uniform sampler is set to the correct texture unit
-
-	// Draw elements using indices
-	glDrawElements(GL_TRIANGLES, Model.indices.size(), GL_UNSIGNED_INT, 0);
-
-	// Unbind the VAO (optional, but good practice)
-	glBindVertexArray(0);
+	RenderUtils::RenderMesh(shader, textureID, Model, pos, rot);
 }
 
+void PhysicsObject::RenderArrows(const Shader& shader, GLuint velocityTextureID, GLuint accelerationTextureID) {
+    // Default arrow model direction (assumes +Z axis)
+    glm::vec3 arrowDirection = glm::vec3(0.0f, 0.0f, 1.0f);
+
+    // Velocity arrow
+    if (glm::length(velocity) > 0.0f) {
+		glm::vec3 modifiedVelocity = glm::vec3(velocity.x, velocity.z, velocity.y);
+        glm::vec3 velocityDir = glm::normalize(modifiedVelocity);
+        glm::quat velocityRot = glm::rotation(arrowDirection, velocityDir);
+        glm::quat finalVelocityRot = rot * velocityRot; // Combine object rotation with arrow rotation
+        RenderUtils::RenderMesh(shader, velocityTextureID, ArrowModel, pos, finalVelocityRot);
+    }
+
+    // Acceleration arrow
+    if (glm::length(acceleration) > 0.0f) {
+        glm::vec3 accelerationDir = glm::normalize(acceleration);
+        glm::quat accelerationRot = glm::rotation(arrowDirection, accelerationDir);
+        glm::quat finalAccelerationRot = rot * accelerationRot; // Combine object rotation with arrow rotation
+        RenderUtils::RenderMesh(shader, accelerationTextureID, ArrowModel, pos, finalAccelerationRot);
+    }
+}

@@ -16,6 +16,8 @@ void trigger(std::chrono::steady_clock::time_point currTime, std::chrono::steady
 
 World::World()
 {
+	std::string arrowModelPath = "../Models/arrow.txt";
+
 	startTime = std::chrono::high_resolution_clock::now();
 	window = renderer.GetWindow();
 
@@ -28,7 +30,7 @@ World::World()
 	std::string modelPath1 = "../Models/cube1.txt";
 
 	// Create object1 and add it to the world
-	testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, false, faceSize1, modelPath1);
+	testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, false, faceSize1, modelPath1, arrowModelPath);
 	testObj1->SetVelocity(glm::vec3(1.f, 0.f, 0.f));
 	AddObject(testObj1);
 
@@ -866,7 +868,7 @@ void World::PhysicsUpdate()
 
 void World::Render()
 {
-	renderer.RenderLoop(&camera, PhysicObjects, TriggerObjects);
+	renderer.RenderLoop(&camera, PhysicObjects, TriggerObjects, true);
 }
 
 void World::AddObject(PhysicsObject* object)
