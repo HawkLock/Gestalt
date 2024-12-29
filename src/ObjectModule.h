@@ -6,6 +6,13 @@
 #include "imgui/imgui_impl_opengl3.h"
 
 class ObjectModule : public Module {
+private: 
+    float velocityMin = -5;
+    float velocityMax = 5;
+
+    float accelerationMin = -3;
+    float accelerationMax = 3;
+
 public:
 
     ObjectModule() {
@@ -19,8 +26,8 @@ public:
 
         if (ImGui::TreeNode(title)) {
             GenerateVectorSubfolder("Pos", &object->pos);
-            GenerateVectorSubfolder("Velocity", &object->velocity);
-            GenerateVectorSubfolder("Acceleration", &object->acceleration);
+            GenerateVectorSubfolder("Velocity", &object->velocity, velocityMin, velocityMax);
+            GenerateVectorSubfolder("Acceleration", &object->acceleration, accelerationMin, accelerationMax);
 
             float energy = object->CalculateTotalEnergy();
             ImGui::Text("Energy: %.2f J", energy);

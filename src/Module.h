@@ -26,5 +26,14 @@ public:
         }
     }
 
+    void GenerateVectorSubfolder(const char* title, glm::vec3* vec, float min, float max) {
+        if (ImGui::TreeNode(title)) {
+            ImGui::SliderFloat("X", &vec->x, min, max);
+            ImGui::SliderFloat("Y", &vec->y, min, max);
+            ImGui::SliderFloat("Z", &vec->z, min, max);
+            ImGui::TreePop();
+        }
+    }
+
     virtual ~Module() = default; // Virtual destructor to ensure proper cleanup of derived classes
 };

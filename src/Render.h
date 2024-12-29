@@ -27,11 +27,8 @@
 class Renderer {
 
 public:
-    float value1 = 0.0f;
-    int value2 = 0;
-    bool enableFeature = 0.0f;
-    unsigned int SCR_WIDTH = 800;
-    unsigned int SCR_HEIGHT = 600;
+    unsigned int SCR_WIDTH = 1000;
+    unsigned int SCR_HEIGHT = 750;
 
     GLFWwindow* window;
     Shader shader;
@@ -97,6 +94,8 @@ public:
 
     void RenderObjectTable(std::vector<PhysicsObject*> RenderObjects);
     void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, bool renderArrows);
+    void InitImGUI(GLFWwindow *window);
+    void InitTextures();
     void Initialize();
     void Cleanup();
  

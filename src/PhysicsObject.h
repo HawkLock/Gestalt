@@ -40,6 +40,7 @@ protected:
 	Mesh Model;
 	Mesh ArrowModel;
 
+	float minimumArrowLength = 1; // It can be zero, but if it is anything above zero, it should still poke out of the model
 	float arrowModelOffset;
 
 public:
@@ -113,6 +114,8 @@ public:
 	void ApplyForce(const glm::vec3& force, const glm::vec3& contactPoint);
 
 	std::vector<glm::vec3> GetVertices();
+
+	void ScaleArrowModel(float size);
 
 	void RenderMesh(const Shader& shader, GLuint textureID); 
 	void RenderArrows(const Shader& shader, GLuint velocityTextureID, GLuint accelerationTextureID);

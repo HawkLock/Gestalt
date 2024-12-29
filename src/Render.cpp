@@ -49,52 +49,36 @@ void Renderer::GenerateTexture(std::string path, unsigned int& texture, bool inc
     stbi_image_free(data);
 }
 
-
-void Renderer::Initialize()
-{
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
-    window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return;
-    }
-    glfwMakeContextCurrent(window);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-
+void Renderer::InitImGUI(GLFWwindow *window) {
     // Set-up ImGUI
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io; // Getting IO object
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; 
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
 
     // Setup ImGui style
     ImGui::StyleColorsDark();
 
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.WindowRounding = 5.0f;
+    style.FrameRounding = 4.0f;
+    style.FrameBorderSize = 1.0f;
+    style.ItemSpacing = ImVec2(8, 6);
+
+    ImFontConfig fontConfig;
+    fontConfig.OversampleH = 3; // Horizontal oversampling
+    fontConfig.OversampleV = 3; // Vertical oversampling
+    fontConfig.PixelSnapH = false; // Prevent snapping for better smoothing
+    io.Fonts->AddFontFromFileTTF("../Fonts/JetBrains-Mono.ttf", 16.0f);
+    io.FontGlobalScale = 1.0f; // Adjust global scaling if needed
+
     // Setup platform/renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
+}
 
-
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return;
-    }
-
-    glEnable(GL_DEPTH_TEST);
-
+void Renderer::InitTextures() {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 
@@ -110,22 +94,46 @@ void Renderer::Initialize()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    // texture 1
-    // ---------
     GenerateTexture("../Textures/CrateTexture.jpg", texture1, false);
-    // "../Textures/CrateTexture.jpg"
-    // texture 2
-    // ---------
     GenerateTexture("../Textures/sus.png", texture2, true);
-    //"../Textures/sus.png"
 
     GenerateTexture("../Textures/red.png", redTexture, true);
     GenerateTexture("../Textures/blue.png", blueTexture, true);
+}
+
+void Renderer::Initialize()
+{
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
+    window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Gestalt", NULL, NULL);
+    if (window == NULL)
+    {
+        std::cout << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return;
+    }
+    glfwMakeContextCurrent(window);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+        return;
+    }
+
+    glEnable(GL_DEPTH_TEST);
+
+    InitImGUI(window);
+
+    InitTextures();
 
     shader.use();
-    //shader.setInt("texture1", 0);
-    //shader.setInt("texture2", 1);
-
 
     // Windows initialize
     CreateDefaultWindows();

@@ -56,6 +56,7 @@ Mesh::Mesh(glm::vec3 initialPosition, float faceSize, std::string &modelPath)
 
     SetupMesh();
     vertexCount = vertices.size(); // There are five components to each in the vector
+    originalVertices = vertices;
 
 }
 
@@ -198,6 +199,18 @@ void Mesh::ChangeSize(float scale)
         vertices[i].x *= scale;     // Scale x
         vertices[i].y *= scale;   // Scale y
         vertices[i].z *= scale;   // Scale z
+    }
+
+    SetupMesh();
+}
+
+void Mesh::ChangeSizeFromOriginal(float scale)
+{
+    // Generate the vertices for the cube
+    for (size_t i = 0; i < vertices.size(); i++) {
+        vertices[i].x = originalVertices[i].x * scale;   // Scale x
+        vertices[i].y = originalVertices[i].y * scale;   // Scale y
+        vertices[i].z = originalVertices[i].z * scale;   // Scale z
     }
 
     SetupMesh();

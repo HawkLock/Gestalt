@@ -33,6 +33,7 @@ public:
 	float faceLength;
 	std::vector<float> verticesU;
 	std::vector<Vertex> vertices;
+	std::vector<Vertex> originalVertices;
 	std::vector<glm::vec3> normals;
 	std::vector<unsigned int> indices;
 	std::vector<glm::vec3> edges;
@@ -52,6 +53,7 @@ public:
 
 	void Move(glm::vec3 newPos) { pos = newPos; }
 	void ChangeSize(float scale);
+	void ChangeSizeFromOriginal(float scale);
 
 	int GetVertexCount() { return vertexCount; }
 

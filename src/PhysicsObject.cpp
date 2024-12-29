@@ -258,6 +258,13 @@ void PhysicsObject::RenderMesh(const Shader& shader, GLuint textureID)
 	RenderUtils::RenderMesh(shader, textureID, Model, pos, rot);
 }
 
+// NEEDS OPTIMIZATION
+// CURRENTLY RECALCULATES VERTICES MULTIPLE TIMES A FRAME REGARDLESS OF WHETHER THERE WERE CHANGES OR NOT
+void PhysicsObject::ScaleArrowModel(float size) {
+	ArrowModel.ChangeSizeFromOriginal(minimumArrowLength + size);
+	arrowModelOffset = RenderUtils::CalculateExtent(ArrowModel, [](const Vertex& v) { return v.z; });
+}
+
 void PhysicsObject::RenderArrows(const Shader& shader, GLuint velocityTextureID, GLuint accelerationTextureID) {
 	// Default arrow model direction (assumes +Z axis)
 	glm::vec3 arrowDirection = glm::vec3(0.0f, 0.0f, 1.0f);
@@ -265,6 +272,7 @@ void PhysicsObject::RenderArrows(const Shader& shader, GLuint velocityTextureID,
 	// Velocity arrow
 	if (glm::length(velocity) > 0.0f) {
 		glm::vec3 modifiedVelocity = glm::vec3(velocity.x, -velocity.z, velocity.y);
+		ScaleArrowModel(glm::length(modifiedVelocity));
 		glm::vec3 velocityDir = glm::normalize(modifiedVelocity);
 		glm::quat velocityRot = glm::rotation(arrowDirection, velocityDir);
 		glm::quat finalVelocityRot = rot * velocityRot; // Combine object rotation with arrow rotation
@@ -281,7 +289,9 @@ void PhysicsObject::RenderArrows(const Shader& shader, GLuint velocityTextureID,
 
 	// Acceleration arrow
 	if (glm::length(acceleration) > 0.0f) {
-		glm::vec3 accelerationDir = glm::normalize(acceleration);
+		glm::vec3 modifiedAcceleration = glm::vec3(acceleration.x, -acceleration.z, acceleration.y);
+		ScaleArrowModel(glm::length(modifiedAcceleration));
+		glm::vec3 accelerationDir = glm::normalize(modifiedAcceleration);
 		glm::quat accelerationRot = glm::rotation(arrowDirection, accelerationDir);
 		glm::quat finalAccelerationRot = rot * accelerationRot; // Combine object rotation with arrow rotation
 
