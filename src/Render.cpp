@@ -119,11 +119,9 @@ void Renderer::Initialize()
     GenerateTexture("../Textures/sus.png", texture2, true);
     //"../Textures/sus.png"
 
-    GenerateTexture("../Textures/red.png", redTexture, false);
-    GenerateTexture("../Textures/blue.png", blueTexture, false);
+    GenerateTexture("../Textures/red.png", redTexture, true);
+    GenerateTexture("../Textures/blue.png", blueTexture, true);
 
-    // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
-    // -------------------------------------------------------------------------------------------
     shader.use();
     //shader.setInt("texture1", 0);
     //shader.setInt("texture2", 1);

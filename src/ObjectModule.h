@@ -7,23 +7,6 @@
 
 class ObjectModule : public Module {
 public:
-    // Graphics Settings
-    bool enableAntiAliasing = false;   // Enable Anti-Aliasing
-    int textureQuality = 3;             // Texture Quality (1 - 5)
-    float gamma = 2.2f;                 // Gamma Correction (0.1 - 3.0)
-
-    // Audio Settings
-    float masterVolume = 1.0f;          // Master Volume (0.0 - 1.0)
-    float musicVolume = 1.0f;           // Music Volume (0.0 - 1.0)
-    float sfxVolume = 1.0f;             // SFX Volume (0.0 - 1.0)
-
-    // Advanced Settings
-    bool enableFeatureA = false;        // Enable Feature A
-    int option1 = 50;                   // Option 1 (0 - 100)
-
-    bool enableFeatureB = false;        // Enable Feature B
-    int option2 = 50;                   // Option 2 (0 - 100)
-
 
     ObjectModule() {
     }
@@ -37,6 +20,7 @@ public:
         if (ImGui::TreeNode(title)) {
             GenerateVectorSubfolder("Pos", &object->pos);
             GenerateVectorSubfolder("Velocity", &object->velocity);
+            GenerateVectorSubfolder("Acceleration", &object->acceleration);
 
             float energy = object->CalculateTotalEnergy();
             ImGui::Text("Energy: %.2f J", energy);

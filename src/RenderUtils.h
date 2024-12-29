@@ -1,8 +1,12 @@
 #pragma once
 #include <glm/glm/glm.hpp>
+
 #include <iostream>
 #include <vector>
 #include <stack>
+#include <algorithm>
+#include <functional>
+#include <cstdio>
 
 #include "PhysicsUtility.h"
 #include "Mesh.h"
@@ -37,6 +41,47 @@ public:
 
 		// Unbind the VAO (optional, but good practice)
 		glBindVertexArray(0);
+	}
+
+	/*
+	Call with: 
+		RenderUtils::PrintExtent(ArrowModel, [](const Vertex& v) { return v.ATTRIBUTE; });
+	*/
+	static void PrintExtent(Mesh& model, std::function<float(const Vertex&)> accessor) {
+		if (model.vertices.empty()) {
+			printf("The mesh is empty.\n");
+			return;
+		}
+
+		auto minmax = std::minmax_element(model.vertices.begin(), model.vertices.end(),
+			[&accessor](const Vertex& a, const Vertex& b) {
+				return accessor(a) < accessor(b);
+			});
+
+		float minExtent = accessor(*minmax.first);
+		float maxExtent = accessor(*minmax.second);
+
+		// Output results.
+		printf("Min extent: %f\n", minExtent);
+		printf("Max extent: %f\n", maxExtent);
+	}
+
+	static float CalculateExtent(Mesh& model, std::function<float(const Vertex&)> accessor) {
+		if (model.vertices.empty()) {
+			printf("The mesh is empty.\n");
+			return -1;
+		}
+
+		auto minmax = std::minmax_element(model.vertices.begin(), model.vertices.end(),
+			[&accessor](const Vertex& a, const Vertex& b) {
+				return accessor(a) < accessor(b);
+			});
+
+		float minExtent = accessor(*minmax.first);
+		float maxExtent = accessor(*minmax.second);
+
+		// Output results.
+		return maxExtent - minExtent;
 	}
 
 

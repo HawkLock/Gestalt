@@ -40,6 +40,8 @@ protected:
 	Mesh Model;
 	Mesh ArrowModel;
 
+	float arrowModelOffset;
+
 public:
 	glm::vec3 pos;
 	glm::quat rot;
