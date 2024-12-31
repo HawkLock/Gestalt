@@ -10,10 +10,12 @@ Renderer::Renderer()
     shader = Shader("../Shaders/VertexShader.vert", "../Shaders/FragmentShader.frag");
 }
 
-void Renderer::CreateDefaultWindows() {
+void Renderer::CreateDefaultModules() {
     ObjectModule* objModule = new ObjectModule();
     modules.push_back(objModule);
 
+    SettingsModule* settModule = new SettingsModule();
+    modules.push_back(settModule);
 }
 
 void Renderer::GenerateTexture(std::string path, unsigned int& texture, bool includeAlpha) {
@@ -136,7 +138,7 @@ void Renderer::Initialize()
     shader.use();
 
     // Windows initialize
-    CreateDefaultWindows();
+    CreateDefaultModules();
 }
 
 void Renderer::Cleanup()
@@ -184,7 +186,7 @@ void Renderer::RenderObjectTable(std::vector<PhysicsObject*> objects) {
     }
 }
 
-void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, bool renderArrows)
+void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT)
 {
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
@@ -244,17 +246,20 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     ImGui::SliderFloat("Obj Y", &obj->velocity.y, 0.0f, 1.0f);
     ImGui::SliderFloat("Obj Z", &obj->velocity.z, 0.0f, 1.0f);
     RenderObjectTable(RenderObjectsP);
-
-    for (auto& mod : modules) {
-        if (mod == nullptr) {
-            std::cout << "Module is null" << std::endl;
-            continue;
-        }
-        mod->UpdateObjects(RenderObjectsP);
-        mod->RenderWindow();
-    }
-
     ImGui::End();
+
+
+    // Objects Module
+    modules[0]->UpdateData(RenderObjectsP);
+    modules[0]->RenderWindow();
+
+    // Settings Module (requires more nuanced control because I implemented it with templates for more flexibility)
+    std::pair<std::string, bool*> arrows("Render Arrows", &renderArrows);
+    ImGui::Begin("Settings");
+    modules[1]->UpdateData(arrows);
+    ImGui::End();
+
+    //ImGui::End();
 
     ImGui::Render();
 

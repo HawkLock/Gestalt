@@ -63,6 +63,7 @@
     <ClInclude Include="..\src\PhysicsUtility.h" />
     <ClInclude Include="..\src\Render.h" />
     <ClInclude Include="..\src\RenderUtils.h" />
+    <ClInclude Include="..\src\SettingsModule.h" />
     <ClInclude Include="..\src\Shader.h" />
     <ClInclude Include="..\src\Simplex.h" />
     <ClInclude Include="..\src\TriggerObject.h" />

@@ -868,7 +868,7 @@ void World::PhysicsUpdate()
 
 void World::Render()
 {
-	renderer.RenderLoop(&camera, PhysicObjects, TriggerObjects, true);
+	renderer.RenderLoop(&camera, PhysicObjects, TriggerObjects);
 }
 
 void World::AddObject(PhysicsObject* object)

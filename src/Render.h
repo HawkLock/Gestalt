@@ -15,6 +15,7 @@
 
 #include "Module.h"
 #include "ObjectModule.h"
+#include "SettingsModule.h"
 
 #include "Camera.h"
 #include "PhysicsObject.h"
@@ -85,15 +86,16 @@ public:
     float lastFrame = 0.0f;
 
     std::vector<Module*> modules; // effectively GUI windows
+    bool renderArrows = true;
 
 	Renderer();
 
-    void CreateDefaultWindows();
+    void CreateDefaultModules();
 
     void GenerateTexture(std::string path, unsigned int& texture, bool includeAlpha);
 
     void RenderObjectTable(std::vector<PhysicsObject*> RenderObjects);
-    void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, bool renderArrows);
+    void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT);
     void InitImGUI(GLFWwindow *window);
     void InitTextures();
     void Initialize();

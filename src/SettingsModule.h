@@ -5,46 +5,40 @@
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 
-class ObjectModule : public Module {
-private: 
-    float velocityMin = -5;
-    float velocityMax = 5;
-
-    float accelerationMin = -3;
-    float accelerationMax = 3;
+class SettingsModule : public Module {
+private:
+    std::vector<std::pair<std::string, bool*>> boolSettings;
 
 public:
 
-    ObjectModule() {
+    SettingsModule() {
+        boolSettings = std::vector<std::pair<std::string, bool*>>();
     }
 
-    void HandleData(const std::vector<PhysicsObject*>& data) {
-        objects = data;
+    virtual void HandleData(const std::pair<std::string, bool*> data) {
+        ImGui::Checkbox(data.first.c_str(), data.second);
     }
 
     void GenerateObjectHeader(const char* title, PhysicsObject* object) {
 
         if (ImGui::TreeNode(title)) {
-            GenerateVectorSubfolder("Pos", &object->pos);
-            GenerateVectorSubfolder("Velocity", &object->velocity, velocityMin, velocityMax);
-            GenerateVectorSubfolder("Acceleration", &object->acceleration, accelerationMin, accelerationMax);
-
-            float energy = object->CalculateTotalEnergy();
-            ImGui::Text("Energy: %.2f J", energy);
-
+            // Data To Show Goes Here (idk if this will ever be used)
             ImGui::TreePop();
         }
     }
 
+    void StartRender() {
+        ImGui::Begin("Settings Window");
+    }
+
+    void EndRender() {
+        ImGui::End();
+    }
+
     void RenderWindow() override {
-        ImGui::Begin("Objects");
-
-        for (int i = 0; i < objects.size(); i++) {
-            // Convert i to string and concatenate
-            std::string header = "Object " + std::to_string(i);
-            GenerateObjectHeader(header.c_str(), objects[i]);
-        }
-
+        ImGui::Begin("Settings Window");
+        
+        //ImGui::Checkbox("Show Arrows", &render->renderArrows);
 
         //// TreeNode for hierarchical folder structure
         //if (ImGui::TreeNode("Advanced Settings")) {

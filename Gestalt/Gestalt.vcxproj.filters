@@ -163,6 +163,9 @@
     <ClInclude Include="..\src\RenderUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SettingsModule.h">
+      <Filter>Header Files\Modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FragmentShader.frag">

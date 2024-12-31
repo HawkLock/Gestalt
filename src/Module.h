@@ -3,19 +3,16 @@
 #include <iostream>
 #include <cstdio> 
 
-#include "PhysicsObject.h" // Make sure to include PhysicsObject header
+#include "PhysicsObject.h" 
 
 class Module {
 public:
     std::vector<PhysicsObject*> objects;
 
-    virtual void RenderWindow() {
-    }
-
-    virtual void UpdateObjects(const std::vector<PhysicsObject*>& updatedObjects) {
-        // Avoid object slicing if you are using references or pointers
-        objects = updatedObjects;
-    }
+    virtual void RenderWindow() {}
+    // For more complex data handling
+    void StartRender() {}
+    void EndRender() {}
 
     void GenerateVectorSubfolder(const char* title, glm::vec3* vec) {
         if (ImGui::TreeNode(title)) {
@@ -35,5 +32,22 @@ public:
         }
     }
 
-    virtual ~Module() = default; // Virtual destructor to ensure proper cleanup of derived classes
+    template <typename... Args>
+    void UpdateData(Args&&... args) {
+        auto handle = [this](auto&& arg) {
+            using T = std::decay_t<decltype(arg)>;
+            this->HandleData(arg);
+            };
+
+        (handle(std::forward<Args>(args)), ...);
+    }
+
+    // Handlers for different types of data
+    virtual void HandleData(const std::vector<PhysicsObject*>& data) {}
+    virtual void HandleData(const int data) {}
+    virtual void HandleData(const bool data) {}
+    virtual void HandleData(const glm::vec3& data) {}
+    virtual void HandleData(const std::pair<std::string, bool*> data) {}
+
+    virtual ~Module() = default; 
 };
