@@ -21,13 +21,12 @@ glm::mat4 Camera::GetCameraView()
 }
 
 // Default position is in the middle of the screen
-float lastX = 400, lastY = 300;
 void Camera::ProcessMouseMovement(double xpos, double ypos)
 {
-	float xoffset = xpos - lastX;
-	float yoffset = lastY - ypos;
-	lastX = xpos;
-	lastY = ypos;
+	float xoffset = xpos - defaultX;
+	float yoffset = defaultY - ypos;
+	defaultX = xpos;
+	defaultY = ypos;
 
 	const float sensitivity = 0.1f;
 	xoffset *= sensitivity;

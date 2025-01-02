@@ -16,6 +16,7 @@ protected:
 	GLFWwindow* window;
 	float yaw;
 	float pitch;
+	float defaultX = 400, defaultY = 300;
 
 public:
 	Camera();
@@ -28,6 +29,7 @@ public:
 	glm::vec3 cameraUp;
 
 	glm::mat4 GetCameraView();
+	void SetDefaultCursorPos(float x, float y) { defaultX = x; defaultY = y; }
 	void ProcessMouseMovement(double xpos, double ypos);
 	void ProcessMouseScroll(float yoffset, float DeltaTime);
 	void UpdateCameraVectors();

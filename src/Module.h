@@ -6,6 +6,14 @@
 #include "PhysicsObject.h" 
 
 class Module {
+protected:
+    // For every object slider
+    float velocityMin = -5;
+    float velocityMax = 5;
+
+    float accelerationMin = -3;
+    float accelerationMax = 3;
+
 public:
     std::vector<PhysicsObject*> objects;
 
@@ -48,6 +56,7 @@ public:
     virtual void HandleData(const bool data) {}
     virtual void HandleData(const glm::vec3& data) {}
     virtual void HandleData(const std::pair<std::string, bool*> data) {}
+    virtual void HandleData(PhysicsObject* data) {}
 
     virtual ~Module() = default; 
 };

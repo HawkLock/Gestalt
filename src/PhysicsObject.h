@@ -17,6 +17,29 @@ struct Force {
 };
 
 class PhysicsObject {
+public: 
+	struct AABB {
+		glm::vec3 min;  // Minimum corner of the AABB (world-space coordinates)
+		glm::vec3 max;  // Maximum corner of the AABB (world-space coordinates)
+
+		// Constructor to initialize the AABB with min and max values
+		AABB(const glm::vec3& min = glm::vec3(0.0f), const glm::vec3& max = glm::vec3(0.0f))
+			: min(min), max(max) {}
+
+		// Function to check if a point is inside the AABB
+		bool contains(const glm::vec3& point) const {
+			return point.x >= min.x && point.x <= max.x &&
+				point.y >= min.y && point.y <= max.y &&
+				point.z >= min.z && point.z <= max.z;
+		}
+
+		// Function to check if two AABBs overlap
+		bool intersects(const AABB& other) const {
+			return !(max.x < other.min.x || min.x > other.max.x ||
+				max.y < other.min.y || min.y > other.max.y ||
+				max.z < other.min.z || min.z > other.max.z);
+		}
+	};
 
 protected:
 
@@ -77,11 +100,16 @@ public:
 	}
 
 	Mesh& GetMesh() { return Model; }
+	Mesh* GetMeshPtr() { return &Model; }
 	float GetFaceExtent() { return Model.faceLength; }
 	float IsAnchored() { return Anchored; }
 	float GetRestitution() { return restitution; }
 	float GetStaticFriction() { return staticFriction; }
 	float GetKineticFriction() { return kineticFriction; }
+	glm::vec3 CalculateCenter();
+	float CalculateRadius(const glm::vec3 center);
+	void CalculateBoundingSphere(glm::vec3& center, float& radius);
+	AABB GetWorldAABB();
 
 	void SetPos(glm::vec3 newPos) { pos = newPos; }
 	void SetRot(glm::quat newRot) { rot = newRot; }

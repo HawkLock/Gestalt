@@ -56,6 +56,7 @@ public:
 	void ChangeSizeFromOriginal(float scale);
 
 	int GetVertexCount() { return vertexCount; }
+	std::vector<glm::vec3> GetVertexPositions();
 
     // Helper function to create a unique edge identifier (sorted vertex indices)
 	std::pair<unsigned int, unsigned int> makeEdge(unsigned int v1, unsigned int v2);

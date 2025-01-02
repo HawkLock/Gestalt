@@ -8,6 +8,7 @@ Renderer::Renderer()
     modules = std::vector<Module*>();
     Initialize();
     shader = Shader("../Shaders/VertexShader.vert", "../Shaders/FragmentShader.frag");
+    crosshairShader = Shader("../Shaders/CrosshairVertexShader.vert", "../Shaders/CrosshairFragmentShader.frag");
 }
 
 void Renderer::CreateDefaultModules() {
@@ -16,6 +17,9 @@ void Renderer::CreateDefaultModules() {
 
     SettingsModule* settModule = new SettingsModule();
     modules.push_back(settModule);
+
+    FocusModule* focusModule = new FocusModule();
+    modules.push_back(focusModule);
 }
 
 void Renderer::GenerateTexture(std::string path, unsigned int& texture, bool includeAlpha) {
@@ -103,6 +107,21 @@ void Renderer::InitTextures() {
     GenerateTexture("../Textures/blue.png", blueTexture, true);
 }
 
+void Renderer::InitCrosshair() {
+    glGenVertexArrays(1, &crosshairVAO);
+    glGenBuffers(1, &crosshairVBO);
+    glBindVertexArray(crosshairVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, crosshairVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(crosshairVertices), crosshairVertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
 void Renderer::Initialize()
 {
     glfwInit();
@@ -132,8 +151,8 @@ void Renderer::Initialize()
     glEnable(GL_DEPTH_TEST);
 
     InitImGUI(window);
-
     InitTextures();
+    InitCrosshair();
 
     shader.use();
 
@@ -186,7 +205,7 @@ void Renderer::RenderObjectTable(std::vector<PhysicsObject*> objects) {
     }
 }
 
-void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT)
+void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, PhysicsObject* focusObject)
 {
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
@@ -234,6 +253,11 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
         object->RenderMesh(shader, texture2);
     }
 
+    // Render the Crosshair
+    crosshairShader.use();
+    glBindVertexArray(crosshairVAO);  // Set the VAO for the crosshair
+    glDrawArrays(GL_LINES, 0, 4);  // Draw the two lines that make the crosshair
+
 
     PhysicsObject* obj = RenderObjectsP[0];
 
@@ -258,6 +282,10 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     ImGui::Begin("Settings");
     modules[1]->UpdateData(arrows);
     ImGui::End();
+
+    // Focus Module
+    modules[2]->UpdateData(focusObject);
+    modules[2]->RenderWindow();
 
     //ImGui::End();
 

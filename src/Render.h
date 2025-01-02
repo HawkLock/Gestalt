@@ -16,6 +16,7 @@
 #include "Module.h"
 #include "ObjectModule.h"
 #include "SettingsModule.h"
+#include "FocusModule.h"
 
 #include "Camera.h"
 #include "PhysicsObject.h"
@@ -33,7 +34,9 @@ public:
 
     GLFWwindow* window;
     Shader shader;
+    Shader crosshairShader;
     unsigned int VBO, VAO;
+    unsigned int crosshairVAO, crosshairVBO;
 
     float vertices[180] = {
         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -88,6 +91,17 @@ public:
     std::vector<Module*> modules; // effectively GUI windows
     bool renderArrows = true;
 
+    float crosshairVertices[16] = {
+        // Horizontal line
+        -0.02f,  0.0f,
+         0.02f,  0.0f,
+
+         // Vertical line
+          0.0f,  0.02f,
+          0.0f, -0.02f,
+    };
+
+
 	Renderer();
 
     void CreateDefaultModules();
@@ -95,9 +109,10 @@ public:
     void GenerateTexture(std::string path, unsigned int& texture, bool includeAlpha);
 
     void RenderObjectTable(std::vector<PhysicsObject*> RenderObjects);
-    void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT);
+    void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, PhysicsObject* focusObject);
     void InitImGUI(GLFWwindow *window);
     void InitTextures();
+    void InitCrosshair();
     void Initialize();
     void Cleanup();
  

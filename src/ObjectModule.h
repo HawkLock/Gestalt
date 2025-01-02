@@ -7,11 +7,7 @@
 
 class ObjectModule : public Module {
 private: 
-    float velocityMin = -5;
-    float velocityMax = 5;
 
-    float accelerationMin = -3;
-    float accelerationMax = 3;
 
 public:
 

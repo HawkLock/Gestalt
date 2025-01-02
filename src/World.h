@@ -16,6 +16,7 @@
 #include "ConvexShape.h"
 #include "GJKAlgorithm.h"
 #include "EPAAlgorithm.h"
+#include "Raycast.h"
 
 
 class World {
@@ -28,6 +29,8 @@ protected:
 	float mu_static = 0.1f;
 	float contactThreshold = 0.5;
 	const float restitution = 1.f;
+
+	PhysicsObject* focusObject;
 
 public:
 
@@ -61,6 +64,8 @@ public:
 	void AddObject(TriggerObject* object);
 
 	// Collision
+	bool Raycast(PhysicsObject* object, const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& lambda);
+	PhysicsObject* castCameraRay(); // returns closest physics object in the direction the camera is facing
 	void resolveOverlap(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap);
 	void resolveImpulses(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap);
 	void applyContactForces(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap);

@@ -16,12 +16,14 @@ void trigger(std::chrono::steady_clock::time_point currTime, std::chrono::steady
 
 World::World()
 {
+	camera.SetDefaultCursorPos(renderer.SCR_WIDTH / 2, renderer.SCR_HEIGHT / 2);
+
 	std::string arrowModelPath = "../Models/arrow.txt";
 
 	startTime = std::chrono::high_resolution_clock::now();
 	window = renderer.GetWindow();
 
-	glm::vec3 position1 = glm::vec3(0, 0.f, 0.0f);
+	glm::vec3 position1 = glm::vec3(-2.f, 0.f, 0.0f);
 	glm::quat rotation1 = glm::angleAxis(glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f));
 	std::vector<glm::vec3> initialActingForces1 = std::vector<glm::vec3>();
 	float mass1 = 100.f;
@@ -31,18 +33,21 @@ World::World()
 
 	// Create object1 and add it to the world
 	testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, false, faceSize1, modelPath1, arrowModelPath);
-	testObj1->SetVelocity(glm::vec3(1.f, 0.f, 0.f));
 	AddObject(testObj1);
 
-	glm::vec3 positionT1 = glm::vec3(10.f, 0.f, 0.0f);
-	glm::quat rotationT1 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
-	float faceSizeT1 = 2.0f;
+	// Define the variables for object2
+	glm::vec3 position2 = glm::vec3(4.f, 0.0f, 0.f);
+	glm::quat rotation2 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
+	std::vector<glm::vec3> initialActingForces2 = std::vector<glm::vec3>();
+	float mass2 = 100.0f;
+	float faceSize2 = 2.0f;
 
-	std::string modelPathT1 = "../Models/cube1.txt";
+	std::string modelPath2 = "../Models/cube1.txt";
 
-	TriggerObject* testTObject = new TriggerObject(positionT1, rotationT1, faceSizeT1, modelPathT1);
-	testTObject->setTrigger(&trigger);
-	AddObject(testTObject);
+	// Create object2 and add it to the world
+	testObj2 = new PhysicsObject(position2, initialActingForces2, rotation2, mass2, false, faceSize2, modelPath2, arrowModelPath);
+	testObj2->SetVelocity(glm::vec3(-0.5f * 2, 0.f, 0.0f));
+	AddObject(testObj2);
 }
 
 
@@ -854,6 +859,72 @@ std::vector<float> World::ProjectVertices(std::vector<glm::vec3> vertices, glm::
 	return { min, max };
 }
 
+// DOESN'T WORK PROPERLY, BUT IT GETS THE JOB DONE
+bool World::Raycast(PhysicsObject* object, const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& lambda) {
+	// Get the AABB in world space
+	PhysicsObject::AABB worldAABB = object->GetWorldAABB();
+
+	glm::vec3 invDir = 1.0f / rayDir;
+
+	// Compute t_min and t_max for each of the 3 axes
+	float tmin = (worldAABB.min.x - rayOrigin.x) * invDir.x;
+	float tmax = (worldAABB.max.x - rayOrigin.x) * invDir.x;
+
+	if (tmin > tmax) std::swap(tmin, tmax);
+
+	float tymin = (worldAABB.min.y - rayOrigin.y) * invDir.y;
+	float tymax = (worldAABB.max.y - rayOrigin.y) * invDir.y;
+
+	if (tymin > tymax) std::swap(tymin, tymax);
+
+	// Check if the ray is outside the bounding box in the Y axis
+	if ((tmin > tymax) || (tymin > tmax)) {
+		return false;
+	}
+
+	// Update tmin and tmax with the Y intersection
+	if (tymin > tmin) tmin = tymin;
+	if (tymax < tmax) tmax = tymax;
+
+	float tzmin = (worldAABB.min.z - rayOrigin.z) * invDir.z;
+	float tzmax = (worldAABB.max.z - rayOrigin.z) * invDir.z;
+
+	if (tzmin > tzmax) std::swap(tzmin, tzmax);
+
+	// Check if the ray is outside the bounding box in the Z axis
+	if ((tmin > tzmax) || (tzmin > tmax)) {
+		return false;
+	}
+
+	// Update tmin and tmax with the Z intersection
+	if (tzmin > tmin) tmin = tzmin;
+	if (tzmax < tmax) tmax = tzmax;
+
+	// If tmin is positive, the ray hits the AABB at lambda
+	if (tmin > 0) {
+		lambda = tmin;
+		return true;
+	}
+
+	// If tmax is positive, the ray hits the AABB at lambda
+	if (tmax > 0) {
+		lambda = tmax;
+		return true;
+	}
+
+	return false;  // No intersection
+}
+
+
+PhysicsObject* World::castCameraRay() {
+	PhysicsObject* closestObject = nullptr;
+	Raycast::Ray cameraRay;
+	cameraRay.origin = camera.cameraPos;
+	cameraRay.direction = camera.cameraFront;
+	closestObject = Raycast::CheckRayIntersection(cameraRay, PhysicObjects);
+	return closestObject;
+}
+
 void World::PhysicsUpdate()
 {
 	// Handles Physics
@@ -868,7 +939,7 @@ void World::PhysicsUpdate()
 
 void World::Render()
 {
-	renderer.RenderLoop(&camera, PhysicObjects, TriggerObjects);
+	renderer.RenderLoop(&camera, PhysicObjects, TriggerObjects, focusObject);
 }
 
 void World::AddObject(PhysicsObject* object)
@@ -922,50 +993,21 @@ void World::ProcessInput()
 		}
 
 		// Program Controls
+
+		// Close 
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		{
 			glfwSetWindowShouldClose(window, true);
 		}
-
-		// Debuging Controls
-		//if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-		//{
-		//	testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(-1, 0, 0));
-		//}
-		//if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-		//{
-		//	testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(1, 0, 0));
-		//}
-		//if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-		//{
-		//	testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, 0, -1));
-		//}
-		//if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-		//{
-		//	testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, 0, 1));
-		//}
-
-		if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
+		// Focus Object
+		if (glfwGetMouseButton(window, 0) == GLFW_PRESS)
 		{
-			testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, -1, 0));
-		}
-		if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
-		{
-			testObj2->SetPos(testObj2->GetCurrentPos() + boxSpeed * glm::vec3(0, 1, 0));
-		}
-
-		if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
-		{
-			glm::quat rot = glm::angleAxis(glm::radians(rotSpeed), glm::vec3(0.0f, 0.0f, 1.0f));
-			testObj2->AddRotation(rot);
-		}
-		if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
-		{
-			glm::quat rot = glm::angleAxis(glm::radians(-rotSpeed), glm::vec3(0.0f, 0.0f, 1.0f));
-			testObj2->AddRotation(rot);
+			PhysicsObject* obj = castCameraRay();
+			if (obj != nullptr) {
+				focusObject = obj;
+			}
 		}
 	}
-
 
 	std::chrono::high_resolution_clock::time_point currTime = std::chrono::high_resolution_clock::now();
 

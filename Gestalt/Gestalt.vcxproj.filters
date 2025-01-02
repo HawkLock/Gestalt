@@ -166,12 +166,24 @@
     <ClInclude Include="..\src\SettingsModule.h">
       <Filter>Header Files\Modules</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\FocusModule.h">
+      <Filter>Header Files\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Raycast.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FragmentShader.frag">
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\VertexShader.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\CrosshairFragmentShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\CrosshairVertexShader.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

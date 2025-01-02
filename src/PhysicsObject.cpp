@@ -69,6 +69,59 @@ glm::vec3 PhysicsObject::CalculateCOM() {
 	return centerOfMass;
 }
 
+glm::vec3 PhysicsObject::CalculateCenter() {
+	glm::vec3 center = pos;
+	for (const auto& vertex : Model.vertices) {
+		center += glm::vec3(vertex.x, vertex.y, vertex.z);
+	}
+	return center / (float) Model.vertices.size();
+}
+
+float PhysicsObject::CalculateRadius(const glm::vec3 center) {
+	float maxRadius = 0.0;
+	for (const auto& vertex : Model.vertices) {
+		float distance = glm::length((glm::vec3(vertex.x, vertex.y, vertex.z) - center));
+		if (distance > maxRadius) {
+			maxRadius = distance;
+		}
+	}
+	return maxRadius;
+}
+
+void PhysicsObject::CalculateBoundingSphere(glm::vec3& center, float& radius) {
+	center = CalculateCenter();
+	radius = CalculateRadius(center);
+}
+
+PhysicsObject::AABB PhysicsObject::GetWorldAABB() {
+	glm::vec3 min = glm::vec3(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+	glm::vec3 max = glm::vec3(std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min());
+
+	for (Vertex vertex : Model.vertices) {
+		glm::vec3 vert = glm::vec3(vertex.x, vertex.y, vertex.z) + pos;
+		if (vert.x < min.x) {
+			min.x = vert.x;
+		}
+		if (vert.y < min.y) {
+			min.y = vert.y;
+		}
+		if (vert.z < min.z) {
+			min.z = vert.z;
+		}
+
+		if (vert.x > max.x) {
+			max.x = vert.x;
+		}
+		if (vert.y > max.y) {
+			max.y = vert.y;
+		}
+		if (vert.z > max.z) {
+			max.z = vert.z;
+		}
+	}
+	
+	return AABB(min, max);
+}
 
 // WIP
 void PhysicsObject::CalculateInertiaTensor(glm::mat3& tensor) {
@@ -275,7 +328,7 @@ void PhysicsObject::RenderArrows(const Shader& shader, GLuint velocityTextureID,
 		ScaleArrowModel(glm::length(modifiedVelocity));
 		glm::vec3 velocityDir = glm::normalize(modifiedVelocity);
 		glm::quat velocityRot = glm::rotation(arrowDirection, velocityDir);
-		glm::quat finalVelocityRot = rot * velocityRot; // Combine object rotation with arrow rotation
+		glm::quat finalVelocityRot = velocityRot; // Combine object rotation with arrow rotation
 
 		// Transform the local offset into world space
 		glm::vec3 arrowOffsetLocal = glm::vec3(0.0f, 0.0f, arrowModelOffset);
@@ -293,7 +346,7 @@ void PhysicsObject::RenderArrows(const Shader& shader, GLuint velocityTextureID,
 		ScaleArrowModel(glm::length(modifiedAcceleration));
 		glm::vec3 accelerationDir = glm::normalize(modifiedAcceleration);
 		glm::quat accelerationRot = glm::rotation(arrowDirection, accelerationDir);
-		glm::quat finalAccelerationRot = rot * accelerationRot; // Combine object rotation with arrow rotation
+		glm::quat finalAccelerationRot = accelerationRot; // Combine object rotation with arrow rotation
 
 		// Transform the local offset into world space
 		glm::vec3 arrowOffsetLocal = glm::vec3(0.0f, 0.0f, arrowModelOffset);

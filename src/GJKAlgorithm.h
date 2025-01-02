@@ -2,11 +2,16 @@
 
 #include "Simplex.h"
 #include "ConvexShape.h"
+#include "PhysicsObject.h"
 #include <iostream> // Include for printing warnings
 
 // GJK Algorithm class definition
 class GJKAlgorithm {
 public:
+    struct Ray {
+        glm::vec3 origin;
+        glm::vec3 direction;
+    };
 
     // Static wrapper function for GJK collision detection with Overlap struct
     static bool GJK(ConvexShape shape1, ConvexShape shape2, Overlap& overlap, Simplex& simplex)
@@ -26,6 +31,51 @@ public:
 
         return collisionDetected;
     }
+
+    static bool Raycast(PhysicsObject* object, const glm::vec3& rayOrigin, const glm::vec3& rayDirection, float& outLambda) {
+        // Initial setup
+        const float epsilon = 0.0001f; // Small threshold for numerical stability
+        float tMin = 0.0f; // Start of the ray
+        float tMax = 1000.0f; // Max distance for the ray
+
+        // Simplex data structure used in GJK (specific implementation may vary)
+        Simplex simplex;
+
+        // Initialize the direction for GJK iteration
+        glm::vec3 direction = rayDirection;
+
+        while (tMin <= tMax) {
+            // Get the support point from the object in the negative direction of the ray
+            glm::vec3 support = GetSupport(object, - direction);
+
+            // Project the support point onto the ray
+            float projection = glm::dot(support - rayOrigin, direction);
+
+            // Check if the projection is within the current ray bounds
+            if (projection < tMin || projection > tMax) {
+                return false; // No intersection
+            }
+
+            // Update the simplex and test for a collision
+            simplex.push_front(support);
+
+            if (simplex.containsOrigin()) {
+                outLambda = projection; // Distance to the collision point
+                return true; // Collision detected
+            }
+
+            // Update the search direction
+            direction = simplex.getNextSearchDirection();
+
+            // Avoid infinite loops if the direction becomes too small
+            if (glm::length(direction) < epsilon) {
+                break;
+            }
+        }
+
+        return false; // No collision within bounds
+    }
+
 
 private:
     // Static function to perform GJK collision detection
@@ -173,6 +223,28 @@ private:
 
         return true;
     }
+
+
+    // FOR RAYCAST
+    static glm::vec3 GetSupport(PhysicsObject* obj, const glm::vec3& direction) {
+        // This method returns the furthest point on the object's shape in the given direction
+        // For a convex object, this would typically be a method that returns the extreme point along a specific direction.
+
+        float maxDot = -std::numeric_limits<float>::infinity();
+        glm::vec3 supportPoint = glm::vec3(0.0f);
+
+        for (const glm::vec3& vertex : obj->GetMesh().GetVertexPositions()) { 
+            float dotProduct = glm::dot(vertex, direction);
+            if (dotProduct > maxDot) {
+                maxDot = dotProduct;
+                supportPoint = vertex;
+            }
+        }
+
+        return supportPoint;
+    }
+
 };
 
 // Code adapted from https://winter.dev/
+// Raycast algorithm referenced from Gino Van Den Bergen http://dtecta.com/papers/jgt04raycast.pdf
