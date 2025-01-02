@@ -46,7 +46,7 @@ World::World()
 
 	// Create object2 and add it to the world
 	testObj2 = new PhysicsObject(position2, initialActingForces2, rotation2, mass2, false, faceSize2, modelPath2, arrowModelPath);
-	testObj2->SetVelocity(glm::vec3(-0.5f * 2, 0.f, 0.0f));
+	testObj2->SetVelocity(glm::vec3(-1.f, 0.f, 0.0f));
 	AddObject(testObj2);
 }
 
@@ -68,6 +68,8 @@ void World::Update()
 		PhysicsUpdate();
 		renderer.timeAccumulator -= renderer.fixedTimeStep;
 	}
+
+	CameraUpdate();
 }
 
 bool AreParallel(const glm::vec3& v1, const glm::vec3& v2, float tolerance = 1e-6f) {
@@ -927,7 +929,6 @@ PhysicsObject* World::castCameraRay() {
 
 void World::PhysicsUpdate()
 {
-	// Handles Physics
 	for (int i = 0; i < PhysicObjects.size(); i++)
 	{
 		if (!PhysicObjects[i]->IsAnchored()) {
@@ -939,7 +940,12 @@ void World::PhysicsUpdate()
 
 void World::Render()
 {
-	renderer.RenderLoop(&camera, PhysicObjects, TriggerObjects, focusObject);
+	renderer.RenderLoop(&camera, PhysicObjects, TriggerObjects, focusObject, &followFocusedObject);
+}
+
+void World::CameraUpdate() {
+	// Allow for normal camera behavior
+	camera.CameraUpdate(followFocusedObject);
 }
 
 void World::AddObject(PhysicsObject* object)
@@ -1005,6 +1011,7 @@ void World::ProcessInput()
 			PhysicsObject* obj = castCameraRay();
 			if (obj != nullptr) {
 				focusObject = obj;
+				camera.UpdateFocusObject(obj);
 			}
 		}
 	}

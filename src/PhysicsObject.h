@@ -53,7 +53,7 @@ protected:
 	glm::mat3 inverseInertiaTensor;
 	float momentOfInertia;
 
-	float restitution = 1.0f;
+	float restitution = 0.2f;
 	float staticFriction = 0.4f;
 	float kineticFriction = 0.2;
 

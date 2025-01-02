@@ -1,8 +1,9 @@
 #pragma once
-#include <GLFW/glfw3.h>
 
 #include <glm/glm/glm.hpp>
 #include <glm/glm/gtc/matrix_transform.hpp>
+
+#include "PhysicsObject.h"
 
 // Default values
 const float YAW = -90.0f;
@@ -17,6 +18,18 @@ protected:
 	float yaw;
 	float pitch;
 	float defaultX = 400, defaultY = 300;
+	float currX = defaultX, currY = defaultY;
+	const float sensitivity = 0.1f;
+
+	// For focus object orbiting
+	PhysicsObject* focusObject;
+	bool followFocusedObject = false;
+	const float defaultOrbitRadius = 5;
+	const glm::vec3 defaultOrbitOffset = glm::vec3(0, 0, 1) * defaultOrbitRadius;
+	const float minOrbitRadius = 1;
+
+	float orbitRadius = defaultOrbitRadius;
+	glm::vec3 orbitOffset = defaultOrbitOffset;
 
 public:
 	Camera();
@@ -33,4 +46,7 @@ public:
 	void ProcessMouseMovement(double xpos, double ypos);
 	void ProcessMouseScroll(float yoffset, float DeltaTime);
 	void UpdateCameraVectors();
+
+	void CameraUpdate(bool shouldFollow);
+	void UpdateFocusObject(PhysicsObject* obj);
 };

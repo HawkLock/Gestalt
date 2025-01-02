@@ -7,12 +7,10 @@
 
 class SettingsModule : public Module {
 private:
-    std::vector<std::pair<std::string, bool*>> boolSettings;
 
 public:
 
     SettingsModule() {
-        boolSettings = std::vector<std::pair<std::string, bool*>>();
     }
 
     virtual void HandleData(const std::pair<std::string, bool*> data) {

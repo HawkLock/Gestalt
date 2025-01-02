@@ -31,6 +31,7 @@ protected:
 	const float restitution = 1.f;
 
 	PhysicsObject* focusObject;
+	bool followFocusedObject = false;
 
 public:
 
@@ -55,6 +56,7 @@ public:
 	std::vector<float> ProjectVertices(std::vector<glm::vec3> vertices, glm::vec3 axis);
 	void PhysicsUpdate();
 	void Render();
+	void CameraUpdate();
 
 	void ProcessInput();
 	void ProcessMouseMovement(double xpos, double ypos);

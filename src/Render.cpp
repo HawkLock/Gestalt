@@ -205,7 +205,7 @@ void Renderer::RenderObjectTable(std::vector<PhysicsObject*> objects) {
     }
 }
 
-void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, PhysicsObject* focusObject)
+void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, PhysicsObject* focusObject, bool* followdFocusedObject)
 {
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
@@ -284,8 +284,14 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     ImGui::End();
 
     // Focus Module
-    modules[2]->UpdateData(focusObject);
-    modules[2]->RenderWindow();
+    if (focusObject != nullptr) {
+        std::pair<std::string, bool*> follow("Follow With Camera", followdFocusedObject);
+        ImGui::Begin("Focus Object");
+        modules[2]->UpdateData(follow);
+        modules[2]->UpdateData(focusObject);
+        modules[2]->RenderWindowBody();
+        ImGui::End();
+    }
 
     //ImGui::End();
 

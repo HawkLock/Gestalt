@@ -58,5 +58,7 @@ public:
     virtual void HandleData(const std::pair<std::string, bool*> data) {}
     virtual void HandleData(PhysicsObject* data) {}
 
+    virtual void RenderWindowBody() {}
+
     virtual ~Module() = default; 
 };

@@ -12,7 +12,6 @@ Camera::Camera()
 	ScrollSpeed = SCROLLSPEED;
 
 	UpdateCameraVectors();
-
 }
 
 glm::mat4 Camera::GetCameraView()
@@ -23,12 +22,11 @@ glm::mat4 Camera::GetCameraView()
 // Default position is in the middle of the screen
 void Camera::ProcessMouseMovement(double xpos, double ypos)
 {
-	float xoffset = xpos - defaultX;
-	float yoffset = defaultY - ypos;
-	defaultX = xpos;
-	defaultY = ypos;
+	float xoffset = xpos - currX;
+	float yoffset = currY - ypos;
+	currX = xpos;
+	currY = ypos;
 
-	const float sensitivity = 0.1f;
 	xoffset *= sensitivity;
 	yoffset *= sensitivity;
 
@@ -44,7 +42,19 @@ void Camera::ProcessMouseMovement(double xpos, double ypos)
 		pitch = -89.0f;
 	}
 
-	UpdateCameraVectors();
+	if (!followFocusedObject) {
+
+		UpdateCameraVectors();
+	}
+	else {
+
+		// Calculate new orbitOffset using spherical coordinates
+		orbitOffset.x = orbitRadius * cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+		orbitOffset.y = orbitRadius * sin(glm::radians(pitch));
+		orbitOffset.z = orbitRadius * cos(glm::radians(pitch)) * sin(glm::radians(yaw));
+
+		UpdateCameraVectors();
+	}
 }
 
 void Camera::UpdateCameraVectors()
@@ -58,5 +68,33 @@ void Camera::UpdateCameraVectors()
 
 void Camera::ProcessMouseScroll(float yoffset, float DeltaTime)
 {
-	cameraPos += (float)yoffset * cameraFront;
+	// Normal Behavior
+	if (!followFocusedObject) {
+		cameraPos += (float)yoffset * cameraFront;
+	}
+	else {
+		orbitRadius -= (float)yoffset;
+		if (orbitRadius < minOrbitRadius) {
+			orbitRadius = minOrbitRadius;
+		}
+	}
+}
+
+void Camera::CameraUpdate(bool shouldFollow) {
+	followFocusedObject = shouldFollow;
+	if (focusObject == nullptr || !followFocusedObject) {
+		return;
+	}
+	orbitOffset = glm::normalize(orbitOffset) * orbitRadius;
+
+	cameraPos = focusObject->pos + orbitOffset; // Position
+	cameraFront = glm::normalize(focusObject->pos - cameraPos);
+}
+
+
+void Camera::UpdateFocusObject(PhysicsObject* obj) {
+	focusObject = obj;
+	if (obj == nullptr) {
+		orbitRadius = defaultOrbitRadius;
+	}
 }

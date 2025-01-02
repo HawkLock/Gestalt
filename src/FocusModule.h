@@ -14,6 +14,10 @@ public:
     FocusModule() {
     }
 
+    virtual void HandleData(const std::pair<std::string, bool*> data) {
+        ImGui::Checkbox(data.first.c_str(), data.second);
+    }
+
     virtual void HandleData(PhysicsObject* data) {
         focusObject = data;
     }
@@ -30,6 +34,19 @@ public:
 
             ImGui::TreePop();
         }
+    }
+
+    void RenderWindowBody() override {
+        if (focusObject == nullptr) {
+            return;
+        }
+
+        GenerateVectorSubfolder("Pos", &focusObject->pos);
+        GenerateVectorSubfolder("Velocity", &focusObject->velocity, velocityMin, velocityMax);
+        GenerateVectorSubfolder("Acceleration", &focusObject->acceleration, accelerationMin, accelerationMax);
+
+        float energy = focusObject->CalculateTotalEnergy();
+        ImGui::Text("Energy: %.2f J", energy);
     }
 
     void RenderWindow() override {

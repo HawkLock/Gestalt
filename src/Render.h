@@ -109,7 +109,7 @@ public:
     void GenerateTexture(std::string path, unsigned int& texture, bool includeAlpha);
 
     void RenderObjectTable(std::vector<PhysicsObject*> RenderObjects);
-    void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, PhysicsObject* focusObject);
+    void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, PhysicsObject* focusObject, bool* followdFocusedObject);
     void InitImGUI(GLFWwindow *window);
     void InitTextures();
     void InitCrosshair();
