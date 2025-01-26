@@ -1,4 +1,8 @@
 #pragma once
+#include <iostream>
+#include <vector>
+#include <string>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stb/stb_image.h>
@@ -22,9 +26,7 @@
 #include "PhysicsObject.h"
 #include "TriggerObject.h"
 
-#include <iostream>
-#include <vector>
-#include <string>
+#include "SettingsBus.h"
 
 class Renderer {
 
@@ -32,11 +34,19 @@ public:
     unsigned int SCR_WIDTH = 1000;
     unsigned int SCR_HEIGHT = 750;
 
+    glm::vec3 backgroundColor = glm::vec3(43, 43, 68);
+    glm::vec3 gridColor = glm::vec3(78, 133, 120);
+    glm::vec3 xColor = glm::vec3(255, 99, 71);
+    glm::vec3 yColor = glm::vec3(50, 205, 50);
+    glm::vec3 zColor = glm::vec3(30, 144, 255);
+
     GLFWwindow* window;
     Shader shader;
+    Shader gridShader;
     Shader crosshairShader;
     unsigned int VBO, VAO;
     unsigned int crosshairVAO, crosshairVBO;
+    unsigned int gridVAO, gridVBO;
 
     float vertices[180] = {
         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -82,6 +92,7 @@ public:
         -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
     unsigned int texture1, texture2, redTexture, blueTexture;
+    unsigned int gridTexture;
 
     const float fixedTimeStep = 0.02f;
     float timeAccumulator = 0.0f;
@@ -89,7 +100,6 @@ public:
     float lastFrame = 0.0f;
 
     std::vector<Module*> modules; // effectively GUI windows
-    bool renderArrows = true;
 
     float crosshairVertices[16] = {
         // Horizontal line
@@ -101,18 +111,22 @@ public:
           0.0f, -0.02f,
     };
 
+    int GRID_SIZE = 40;
+    float GRID_SPACING = 2;
 
 	Renderer();
 
     void CreateDefaultModules();
 
-    void GenerateTexture(std::string path, unsigned int& texture, bool includeAlpha);
+    static void GenerateTexture(std::string path, unsigned int& texture, bool includeAlpha);
 
     void RenderObjectTable(std::vector<PhysicsObject*> RenderObjects);
-    void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, PhysicsObject* focusObject, bool* followdFocusedObject);
+    void RenderGrid(int gridSize, float gridSpacing, const glm::mat4& view, const glm::mat4& projection);
+    void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, SettingsBus settingsBus);
     void InitImGUI(GLFWwindow *window);
     void InitTextures();
     void InitCrosshair();
+    void InitGrid();
     void Initialize();
     void Cleanup();
  

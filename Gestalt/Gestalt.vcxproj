@@ -65,9 +65,11 @@
     <ClInclude Include="..\src\Raycast.h" />
     <ClInclude Include="..\src\Render.h" />
     <ClInclude Include="..\src\RenderUtils.h" />
+    <ClInclude Include="..\src\SettingsBus.h" />
     <ClInclude Include="..\src\SettingsModule.h" />
     <ClInclude Include="..\src\Shader.h" />
     <ClInclude Include="..\src\Simplex.h" />
+    <ClInclude Include="..\src\TextureUtils.h" />
     <ClInclude Include="..\src\TriggerObject.h" />
     <ClInclude Include="..\src\World.h" />
   </ItemGroup>
@@ -75,6 +77,8 @@
     <None Include="..\Shaders\CrosshairFragmentShader.frag" />
     <None Include="..\Shaders\CrosshairVertexShader.vert" />
     <None Include="..\Shaders\FragmentShader.frag" />
+    <None Include="..\Shaders\GridFragmentShader.frag" />
+    <None Include="..\Shaders\GridVertexShader.vert" />
     <None Include="..\Shaders\VertexShader.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

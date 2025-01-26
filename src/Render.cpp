@@ -105,6 +105,8 @@ void Renderer::InitTextures() {
 
     GenerateTexture("../Textures/red.png", redTexture, true);
     GenerateTexture("../Textures/blue.png", blueTexture, true);
+
+    GenerateTexture("../Textures/blue.png", gridTexture, true);
 }
 
 void Renderer::InitCrosshair() {
@@ -121,6 +123,30 @@ void Renderer::InitCrosshair() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
+
+void Renderer::InitGrid() {
+    float gridVertices[] = {
+        0.0f, -100.0f, 0.0f,  // Line starts
+        0.0f,  100.0f, 0.0f   // Line ends
+    };
+
+    glGenVertexArrays(1, &gridVAO);
+    glGenBuffers(1, &gridVBO);
+
+    glBindVertexArray(gridVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, gridVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(gridVertices), gridVertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    gridShader = Shader("../Shaders/GridVertexShader.vert", "../Shaders/GridFragmentShader.frag");
+}
+
 
 void Renderer::Initialize()
 {
@@ -153,6 +179,7 @@ void Renderer::Initialize()
     InitImGUI(window);
     InitTextures();
     InitCrosshair();
+    InitGrid();
 
     shader.use();
 
@@ -205,7 +232,119 @@ void Renderer::RenderObjectTable(std::vector<PhysicsObject*> objects) {
     }
 }
 
-void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, PhysicsObject* focusObject, bool* followdFocusedObject)
+void Renderer::RenderGrid(int gridSize, float gridSpacing, const glm::mat4& view, const glm::mat4& projection) {
+    // Grid lines
+    std::vector<float> gridVertices;
+    std::vector<float> xAxisVertices;
+    std::vector<float> zAxisVertices;
+
+    for (int i = -gridSize; i <= gridSize; ++i) {
+        if (i == 0) {
+            // Separate x-axis and z-axis vertices for distinct colors
+            // Horizontal (x-axis) line
+            xAxisVertices.push_back(-gridSize * gridSpacing);
+            xAxisVertices.push_back(0.0f);
+            xAxisVertices.push_back(0.0f);
+
+            xAxisVertices.push_back(gridSize * gridSpacing);
+            xAxisVertices.push_back(0.0f);
+            xAxisVertices.push_back(0.0f);
+
+            // Vertical (z-axis) line
+            zAxisVertices.push_back(0.0f);
+            zAxisVertices.push_back(0.0f);
+            zAxisVertices.push_back(-gridSize * gridSpacing);
+
+            zAxisVertices.push_back(0.0f);
+            zAxisVertices.push_back(0.0f);
+            zAxisVertices.push_back(gridSize * gridSpacing);
+        }
+        else {
+            // Horizontal lines
+            gridVertices.push_back(-gridSize * gridSpacing);
+            gridVertices.push_back(0.0f);
+            gridVertices.push_back(i * gridSpacing);
+
+            gridVertices.push_back(gridSize * gridSpacing);
+            gridVertices.push_back(0.0f);
+            gridVertices.push_back(i * gridSpacing);
+
+            // Vertical lines
+            gridVertices.push_back(i * gridSpacing);
+            gridVertices.push_back(0.0f);
+            gridVertices.push_back(-gridSize * gridSpacing);
+
+            gridVertices.push_back(i * gridSpacing);
+            gridVertices.push_back(0.0f);
+            gridVertices.push_back(gridSize * gridSpacing);
+        }
+    }
+
+    // Generate and bind VAOs/VBOs for the grid, x-axis, and z-axis
+    unsigned int gridVAO, gridVBO, xAxisVAO, xAxisVBO, zAxisVAO, zAxisVBO;
+
+    // Grid lines
+    glGenVertexArrays(1, &gridVAO);
+    glGenBuffers(1, &gridVBO);
+    glBindVertexArray(gridVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, gridVBO);
+    glBufferData(GL_ARRAY_BUFFER, gridVertices.size() * sizeof(float), gridVertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // X-axis lines
+    glGenVertexArrays(1, &xAxisVAO);
+    glGenBuffers(1, &xAxisVBO);
+    glBindVertexArray(xAxisVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, xAxisVBO);
+    glBufferData(GL_ARRAY_BUFFER, xAxisVertices.size() * sizeof(float), xAxisVertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // Z-axis lines
+    glGenVertexArrays(1, &zAxisVAO);
+    glGenBuffers(1, &zAxisVBO);
+    glBindVertexArray(zAxisVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, zAxisVBO);
+    glBufferData(GL_ARRAY_BUFFER, zAxisVertices.size() * sizeof(float), zAxisVertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // Use shader
+    gridShader.use();
+    gridShader.setMat4("view", view);
+    gridShader.setMat4("projection", projection);
+
+    // Render grid lines
+    gridShader.setVec4("lineColor", glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)); // Gray for regular grid
+    glBindVertexArray(gridVAO);
+    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(gridVertices.size() / 3));
+    glBindVertexArray(0);
+
+    // Render x-axis lines
+    glm::vec3 xCol = TextureUtils::getRGB(xColor);
+    gridShader.setVec4("lineColor", glm::vec4(xCol.x, xCol.y, xCol.z, 1.0f)); // Red for x-axis
+    glBindVertexArray(xAxisVAO);
+    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(xAxisVertices.size() / 3));
+    glBindVertexArray(0);
+
+    // Render z-axis lines
+    glm::vec3 zCol = TextureUtils::getRGB(zColor);
+    gridShader.setVec4("lineColor", glm::vec4(zCol.x, zCol.y, zCol.z, 1.0f)); // Blue for z-axis
+    glBindVertexArray(zAxisVAO);
+    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(zAxisVertices.size() / 3));
+    glBindVertexArray(0);
+
+    // Cleanup
+    glDeleteVertexArrays(1, &gridVAO);
+    glDeleteBuffers(1, &gridVBO);
+    glDeleteVertexArrays(1, &xAxisVAO);
+    glDeleteBuffers(1, &xAxisVBO);
+    glDeleteVertexArrays(1, &zAxisVAO);
+    glDeleteBuffers(1, &zAxisVBO);
+}
+
+void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, SettingsBus settingsBus)
 {
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
@@ -220,7 +359,8 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glm::vec3 clearColor = TextureUtils::getRGB(backgroundColor);
+    glClearColor(clearColor.x, clearColor.y, clearColor.z, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glActiveTexture(GL_TEXTURE0);
@@ -237,20 +377,27 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     shader.setMat4("projection", projection); // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
     shader.setMat4("view", view);
 
-    // glBindVertexArray(VAO);
-
-    for (auto& object : RenderObjectsP)
-    {
-        object->RenderMesh(shader, texture1);
-
-        if (renderArrows) {
-            object->RenderArrows(shader, redTexture, blueTexture);
-        }
-    }
+    // Render the grid
+    RenderGrid(GRID_SIZE, GRID_SPACING, view, projection);
 
     for (auto& object : RenderObjectsT)
     {
         object->RenderMesh(shader, texture2);
+    }
+
+    for (auto& object : RenderObjectsP)
+    {
+        object->RenderMesh(shader);
+
+        if (*settingsBus.renderArrows == true) {
+            if (*settingsBus.renderArrowsOnTop) {
+                glDisable(GL_DEPTH_TEST);
+                object->RenderArrows(shader, redTexture, blueTexture, *settingsBus.decomposeArrows);
+                glEnable(GL_DEPTH_TEST);
+
+            }
+            object->RenderArrows(shader, redTexture, blueTexture, *settingsBus.decomposeArrows);
+        }
     }
 
     // Render the Crosshair
@@ -278,17 +425,21 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     modules[0]->RenderWindow();
 
     // Settings Module (requires more nuanced control because I implemented it with templates for more flexibility)
-    std::pair<std::string, bool*> arrows("Render Arrows", &renderArrows);
+    std::pair<std::string, bool*> arrows("Render Arrows", settingsBus.renderArrows);
+    std::pair<std::string, bool*> decompose("Decompose Velocity/Acceleration", settingsBus.decomposeArrows);
+    std::pair<std::string, bool*> onTop("Arrows On Top", settingsBus.renderArrowsOnTop);
     ImGui::Begin("Settings");
     modules[1]->UpdateData(arrows);
+    modules[1]->UpdateData(decompose);
+    modules[1]->UpdateData(onTop);
     ImGui::End();
 
     // Focus Module
-    if (focusObject != nullptr) {
-        std::pair<std::string, bool*> follow("Follow With Camera", followdFocusedObject);
+    if (settingsBus.focusObject != nullptr) {
+        std::pair<std::string, bool*> follow("Follow With Camera", settingsBus.followFocusedObject);
         ImGui::Begin("Focus Object");
         modules[2]->UpdateData(follow);
-        modules[2]->UpdateData(focusObject);
+        modules[2]->UpdateData(settingsBus.focusObject);
         modules[2]->RenderWindowBody();
         ImGui::End();
     }

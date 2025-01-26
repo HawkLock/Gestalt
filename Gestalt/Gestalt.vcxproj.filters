@@ -172,6 +172,12 @@
     <ClInclude Include="..\src\Raycast.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SettingsBus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TextureUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FragmentShader.frag">
@@ -184,6 +190,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\CrosshairVertexShader.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\GridFragmentShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\GridVertexShader.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

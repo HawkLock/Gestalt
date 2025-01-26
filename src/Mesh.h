@@ -13,6 +13,7 @@
 #include <glm/glm/gtc/matrix_transform.hpp>
 
 #include "Shader.h"
+#include "TextureUtils.h"
 
 struct VertexData {
     float x, y, z;   // Position
@@ -41,8 +42,10 @@ public:
 
 	unsigned int VAO, VBO, EBO;
 
+	GLuint texture;
+
 	Mesh(glm::vec3 initialPosition, float faceSize, std::vector<float> inputVertices);
-	Mesh(glm::vec3 initialPosition, float faceSize, std::string &modelPath);
+	Mesh(glm::vec3 initialPosition, float faceSize, std::string &modelPath, std::string &texturePath);
 
 	void SetupMeshU();
 	void SetupMesh();
@@ -54,6 +57,7 @@ public:
 	void Move(glm::vec3 newPos) { pos = newPos; }
 	void ChangeSize(float scale);
 	void ChangeSizeFromOriginal(float scale);
+	void ChangeSizeFromOriginalSingleDimension(float scale, char dimension);
 
 	int GetVertexCount() { return vertexCount; }
 	std::vector<glm::vec3> GetVertexPositions();

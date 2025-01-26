@@ -17,7 +17,7 @@ Mesh::Mesh(glm::vec3 initialPosition, float faceSize, std::vector<float> inputVe
 
 }
 
-Mesh::Mesh(glm::vec3 initialPosition, float faceSize, std::string &modelPath)
+Mesh::Mesh(glm::vec3 initialPosition, float faceSize, std::string &modelPath, std::string &texturePath)
 {
     pos = initialPosition;
     faceLength = faceSize;
@@ -28,35 +28,21 @@ Mesh::Mesh(glm::vec3 initialPosition, float faceSize, std::string &modelPath)
     vertices = std::vector<Vertex>();
     parseVertexData(modelPath, vertices, normals, indices, edges);
 
-    int i = 0;
-    //for (Vertex vertex : vertices) {
-    //    i++;
-    //    std::cout << "Vertex: " << i << ": " << vertex.x << ", " << vertex.y << ", " << vertex.z << std::endl;
-    //}
-    //i = 0;
-    //for (glm::vec3 normal : normals) {
-    //    i++;
-    //    std::cout << "Normal: " << i << ": " << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
-    //}
-    //i = 0;
-    //for (float index : indices) {
-    //    i++;
-    //    std::cout << "Index: " << i << ": " << index << std::endl;
-    //}
-    //std::cout << "Edges: " << edges.size() << std::endl;
-    //i = 0;
-    //for (glm::vec3 edge : edges) {
-    //    i++;
-    //    std::cout << i << ": " << edge.x << ", " << edge.y << ", " << edge.z << std::endl;
-    //}
-    //std::cout << std::endl;
-
     extractEdgesFromIndices(indices, vertices, edges);
 
 
     SetupMesh();
     vertexCount = vertices.size(); // There are five components to each in the vector
     originalVertices = vertices;
+
+    std::cout << texturePath[texturePath.length() - 3] << std::endl;
+    if (texturePath[texturePath.length() - 3] == 'p') {
+        TextureUtils::GenerateTexture(texturePath, texture, true);
+    }
+    else {
+        TextureUtils::GenerateTexture(texturePath, texture, false);
+
+    }
 
 }
 
@@ -215,6 +201,33 @@ void Mesh::ChangeSizeFromOriginal(float scale)
 
     SetupMesh();
 }
+
+void Mesh::ChangeSizeFromOriginalSingleDimension(float scale, char dimension)
+{
+    // Generate the vertices for the mesh
+    for (size_t i = 0; i < vertices.size(); i++) {
+        switch (dimension) {
+        case 'x': 
+            vertices[i].x = originalVertices[i].x * scale;
+            break;
+
+        case 'y': 
+            vertices[i].y = originalVertices[i].y * scale;
+            break;
+
+        case 'z': 
+            vertices[i].z = originalVertices[i].z * scale;
+            break;
+
+        default:
+            std::cerr << "Error: Invalid dimension specified. Use 'x', 'y', or 'z'.\n";
+            return;
+        }
+    }
+
+    SetupMesh();
+}
+
 
 std::pair<unsigned int, unsigned int> Mesh::makeEdge(unsigned int v1, unsigned int v2) {
     if (v1 > v2) std::swap(v1, v2);

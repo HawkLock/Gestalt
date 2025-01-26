@@ -14,14 +14,14 @@ void PrintVec3(const glm::vec3& vec) {
 	std::cout << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")" << std::endl;
 }
 
-PhysicsObject::PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, bool isAnchored, float faceSize, std::string& modelPath, std::string& arrowModelPath)
+PhysicsObject::PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, bool isAnchored, float faceSize, std::string& modelPath, std::string &texturePath, std::string& arrowModelPath)
 	: pos(initialPosition),
 	rot(initialRot),
 	Mass(initialMass),
 	Anchored(isAnchored),
 	sideLength(faceSize),
-	Model(initialPosition, faceSize, modelPath), // Use parameterized constructor
-	ArrowModel(initialPosition, faceSize, arrowModelPath)
+	Model(initialPosition, faceSize, modelPath, texturePath), // Use parameterized constructor
+	ArrowModel(initialPosition, faceSize, arrowModelPath, texturePath)
 {
 	// Scale size of arrows
 	ArrowModel.ChangeSize(1.5f);
@@ -306,55 +306,66 @@ std::vector<glm::vec3> PhysicsObject::GetVertices()
 }
 
 // Rendering
-void PhysicsObject::RenderMesh(const Shader& shader, GLuint textureID)
+void PhysicsObject::RenderMesh(const Shader& shader)
 {
-	RenderUtils::RenderMesh(shader, textureID, Model, pos, rot);
+	RenderUtils::RenderMesh(shader, Model.texture, Model, pos, rot);
 }
 
 // NEEDS OPTIMIZATION
 // CURRENTLY RECALCULATES VERTICES MULTIPLE TIMES A FRAME REGARDLESS OF WHETHER THERE WERE CHANGES OR NOT
 void PhysicsObject::ScaleArrowModel(float size) {
-	ArrowModel.ChangeSizeFromOriginal(minimumArrowLength + size);
+	ArrowModel.ChangeSizeFromOriginal(size * arrowLengthScale);
+	//ArrowModel.ChangeSizeFromOriginalSingleDimension(size * arrowLengthScale, 'z');
 	arrowModelOffset = RenderUtils::CalculateExtent(ArrowModel, [](const Vertex& v) { return v.z; });
 }
 
-void PhysicsObject::RenderArrows(const Shader& shader, GLuint velocityTextureID, GLuint accelerationTextureID) {
+void PhysicsObject::RenderArrow(const Shader& shader, GLuint textureID, glm::vec3 dispVec) {
 	// Default arrow model direction (assumes +Z axis)
 	glm::vec3 arrowDirection = glm::vec3(0.0f, 0.0f, 1.0f);
 
-	// Velocity arrow
-	if (glm::length(velocity) > 0.0f) {
-		glm::vec3 modifiedVelocity = glm::vec3(velocity.x, -velocity.z, velocity.y);
-		ScaleArrowModel(glm::length(modifiedVelocity));
-		glm::vec3 velocityDir = glm::normalize(modifiedVelocity);
-		glm::quat velocityRot = glm::rotation(arrowDirection, velocityDir);
-		glm::quat finalVelocityRot = velocityRot; // Combine object rotation with arrow rotation
+	if (glm::length(dispVec) > 0.0f) {
+		glm::vec3 modifiedVec = glm::vec3(dispVec.x, dispVec.y, dispVec.z);
+		ScaleArrowModel(glm::length(modifiedVec));
+		glm::vec3 vecDir = glm::normalize(modifiedVec);
+		glm::quat vecRot = glm::rotation(arrowDirection, vecDir);
+		glm::quat finalVecRot = vecRot; // Combine object rotation with arrow rotation
 
 		// Transform the local offset into world space
 		glm::vec3 arrowOffsetLocal = glm::vec3(0.0f, 0.0f, arrowModelOffset);
-		glm::vec3 arrowOffsetWorld = finalVelocityRot * arrowOffsetLocal;
+		glm::vec3 arrowOffsetWorld = finalVecRot * arrowOffsetLocal;
 
 		// Calculate the correct position
 		glm::vec3 offsetPos = pos + arrowOffsetWorld;
 
-		RenderUtils::RenderMesh(shader, velocityTextureID, ArrowModel, offsetPos, finalVelocityRot);
+		RenderUtils::RenderMesh(shader, textureID, ArrowModel, offsetPos, finalVecRot);
 	}
+}
 
-	// Acceleration arrow
-	if (glm::length(acceleration) > 0.0f) {
-		glm::vec3 modifiedAcceleration = glm::vec3(acceleration.x, -acceleration.z, acceleration.y);
-		ScaleArrowModel(glm::length(modifiedAcceleration));
-		glm::vec3 accelerationDir = glm::normalize(modifiedAcceleration);
-		glm::quat accelerationRot = glm::rotation(arrowDirection, accelerationDir);
-		glm::quat finalAccelerationRot = accelerationRot; // Combine object rotation with arrow rotation
+void PhysicsObject::RenderArrowDecomposed(const Shader& shader, GLuint textureID, glm::vec3 dispVec) {
+	RenderArrow(shader, textureID, glm::vec3(dispVec.x, 0, 0));
+	RenderArrow(shader, textureID, glm::vec3(0, dispVec.y, 0));
+	RenderArrow(shader, textureID, glm::vec3(0, 0, dispVec.z));
+}
 
-		// Transform the local offset into world space
-		glm::vec3 arrowOffsetLocal = glm::vec3(0.0f, 0.0f, arrowModelOffset);
-		glm::vec3 arrowOffsetWorld = finalAccelerationRot * arrowOffsetLocal;
-
-		// Calculate the correct position
-		glm::vec3 offsetPos = pos + arrowOffsetWorld;
-
-		RenderUtils::RenderMesh(shader, accelerationTextureID, ArrowModel, offsetPos, finalAccelerationRot);
+void PhysicsObject::RenderArrows(const Shader& shader, GLuint velocityTextureID, GLuint accelerationTextureID, bool decomposed) {
+	if (!decomposed) {
+		RenderArrowsComposed(shader, velocityTextureID, accelerationTextureID);
 	}
+	else {
+		RenderArrowsDecomposed(shader, velocityTextureID, accelerationTextureID);
+	}
+}
+
+// Renders the absolute velocity and acceleration
+void PhysicsObject::RenderArrowsComposed(const Shader& shader, GLuint velocityTextureID, GLuint accelerationTextureID) {
+	// Default arrow model direction (assumes +Z axis)
+	RenderArrow(shader, velocityTextureID, velocity);
+
+	RenderArrow(shader, accelerationTextureID, acceleration);
+}
+
+// Renders the velocity and acceleration as its (x, y, z) components
+void PhysicsObject::RenderArrowsDecomposed(const Shader& shader, GLuint velocityTextureID, GLuint accelerationTextureID) {
+	RenderArrowDecomposed(shader, velocityTextureID, velocity);
+	RenderArrowDecomposed(shader, accelerationTextureID, acceleration);
 }

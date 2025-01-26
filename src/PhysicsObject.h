@@ -63,7 +63,8 @@ protected:
 	Mesh Model;
 	Mesh ArrowModel;
 
-	float minimumArrowLength = 1; // It can be zero, but if it is anything above zero, it should still poke out of the model
+	float minimumArrowLength = 0.0f; 
+	float arrowLengthScale = 1.0f;
 	float arrowModelOffset;
 
 public:
@@ -75,7 +76,7 @@ public:
 	glm::vec3 angularAcceleration;
 	glm::vec3 angularVelocity;
 
-	PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, bool isAnchored, float faceSize, std::string& modelPath, std::string& arrowModelPath);
+	PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, bool isAnchored, float faceSize, std::string& modelPath, std::string &texturePath, std::string& arrowModelPath);
 
 	// Getters and Setters
 	glm::vec3 GetCurrentPos() { return pos; }
@@ -145,8 +146,12 @@ public:
 
 	void ScaleArrowModel(float size);
 
-	void RenderMesh(const Shader& shader, GLuint textureID); 
-	void RenderArrows(const Shader& shader, GLuint velocityTextureID, GLuint accelerationTextureID);
+	void RenderMesh(const Shader& shader); 
+	void RenderArrow(const Shader& shader, GLuint textureID, glm::vec3 dispVec);
+	void RenderArrowDecomposed(const Shader& shader, GLuint textureID, glm::vec3 dispVec);
+	void RenderArrows(const Shader& shader, GLuint velocityTextureID, GLuint accelerationTextureID, bool decomposed);
+	void RenderArrowsComposed(const Shader& shader, GLuint velocityTextureID, GLuint accelerationTextureID);
+	void RenderArrowsDecomposed(const Shader& shader, GLuint velocityTextureID, GLuint accelerationTextureID);
 
 private: 
 	void applyFriction(float modifier); // Decays the velocity to add the idea of friction

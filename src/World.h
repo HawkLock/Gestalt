@@ -18,6 +18,8 @@
 #include "EPAAlgorithm.h"
 #include "Raycast.h"
 
+#include "SettingsBus.h"
+
 
 class World {
 
@@ -32,6 +34,9 @@ protected:
 
 	PhysicsObject* focusObject;
 	bool followFocusedObject = false;
+	bool renderArrows = true;
+	bool renderArrowsDecomposed = false;
+	bool renderArrowsOnTop = false;
 
 public:
 

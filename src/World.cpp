@@ -30,9 +30,10 @@ World::World()
 	float faceSize1 = 2.f;
 
 	std::string modelPath1 = "../Models/cube1.txt";
+	std::string texturePath1 = "../Textures/CrateTexture.jpg";
 
 	// Create object1 and add it to the world
-	testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, false, faceSize1, modelPath1, arrowModelPath);
+	testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, false, faceSize1, modelPath1, texturePath1, arrowModelPath);
 	AddObject(testObj1);
 
 	// Define the variables for object2
@@ -43,9 +44,10 @@ World::World()
 	float faceSize2 = 2.0f;
 
 	std::string modelPath2 = "../Models/cube1.txt";
+	std::string texturePath2 = "../Textures/sus.png";
 
 	// Create object2 and add it to the world
-	testObj2 = new PhysicsObject(position2, initialActingForces2, rotation2, mass2, false, faceSize2, modelPath2, arrowModelPath);
+	testObj2 = new PhysicsObject(position2, initialActingForces2, rotation2, mass2, false, faceSize2, modelPath2, texturePath2, arrowModelPath);
 	testObj2->SetVelocity(glm::vec3(-1.f, 0.f, 0.0f));
 	AddObject(testObj2);
 }
@@ -940,7 +942,13 @@ void World::PhysicsUpdate()
 
 void World::Render()
 {
-	renderer.RenderLoop(&camera, PhysicObjects, TriggerObjects, focusObject, &followFocusedObject);
+	SettingsBus settingsBus = SettingsBus();
+	settingsBus.focusObject = focusObject;
+	settingsBus.followFocusedObject = &followFocusedObject;
+	settingsBus.renderArrows = &renderArrows;
+	settingsBus.decomposeArrows = &renderArrowsDecomposed;
+	settingsBus.renderArrowsOnTop = &renderArrowsOnTop;
+	renderer.RenderLoop(&camera, PhysicObjects, TriggerObjects, settingsBus);
 }
 
 void World::CameraUpdate() {
@@ -1044,6 +1052,7 @@ void World::ProcessMouseMovement(double xpos, double ypos)
 {
 	if (cursorCaptured) {
 		camera.ProcessMouseMovement(xpos, ypos);
+		glfwSetCursorPos(window, renderer.SCR_WIDTH / 2, renderer.SCR_HEIGHT / 2);
 	}
 }
 

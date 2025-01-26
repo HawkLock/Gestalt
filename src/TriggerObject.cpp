@@ -1,11 +1,11 @@
 #include "TriggerObject.h"
 
 
-TriggerObject::TriggerObject(glm::vec3 initialPosition, glm::quat initialRot, float faceSize, std::string& modelPath)
+TriggerObject::TriggerObject(glm::vec3 initialPosition, glm::quat initialRot, float faceSize, std::string& modelPath, std::string &texturePath)
 	: pos(initialPosition),
 	rot(initialRot),
 	sideLength(faceSize),
-	Model(initialPosition, faceSize, modelPath) // Use parameterized constructor
+	Model(initialPosition, faceSize, modelPath, texturePath) // Use parameterized constructor
 {
 	angularVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
 	angularAcceleration = glm::vec3(0.0f, 0.0f, 0.0f);
