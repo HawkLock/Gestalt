@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdio> 
 
+#include "GlobalData.h"
 #include "PhysicsObject.h" 
 
 class Module {

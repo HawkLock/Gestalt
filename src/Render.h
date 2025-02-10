@@ -21,12 +21,15 @@
 #include "ObjectModule.h"
 #include "SettingsModule.h"
 #include "FocusModule.h"
+#include "ScenarioModule.h"
 
 #include "Camera.h"
 #include "PhysicsObject.h"
 #include "TriggerObject.h"
 
 #include "SettingsBus.h"
+
+#include "GlobalData.h"
 
 class Renderer {
 
@@ -42,6 +45,7 @@ public:
 
     GLFWwindow* window;
     Shader shader;
+    Shader arrowShader;
     Shader gridShader;
     Shader crosshairShader;
     unsigned int VBO, VAO;
@@ -120,14 +124,19 @@ public:
 
     static void GenerateTexture(std::string path, unsigned int& texture, bool includeAlpha);
 
+    glm::vec2 WorldToScreen(glm::vec3 worldPos, const glm::mat4& view, const glm::mat4& projection, int screenWidth, int screenHeight);
+    
     void RenderObjectTable(std::vector<PhysicsObject*> RenderObjects);
-    void RenderGrid(int gridSize, float gridSpacing, const glm::mat4& view, const glm::mat4& projection);
+    void RenderArrowLabels(PhysicsObject* obj, const glm::mat4& view, const glm::mat4& projection, int screenWidth, int screenHeight);
+    void RenderGrid(int gridSize, float gridSpacing, const glm::mat4& view, const glm::mat4& projection, Camera* camera);
     void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, SettingsBus settingsBus);
+    
     void InitImGUI(GLFWwindow *window);
     void InitTextures();
     void InitCrosshair();
     void InitGrid();
     void Initialize();
+
     void Cleanup();
  
     GLFWwindow* GetWindow() { return window; }

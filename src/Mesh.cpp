@@ -35,7 +35,7 @@ Mesh::Mesh(glm::vec3 initialPosition, float faceSize, std::string &modelPath, st
     vertexCount = vertices.size(); // There are five components to each in the vector
     originalVertices = vertices;
 
-    std::cout << texturePath[texturePath.length() - 3] << std::endl;
+    //std::cout << texturePath[texturePath.length() - 3] << std::endl;
     if (texturePath[texturePath.length() - 3] == 'p') {
         TextureUtils::GenerateTexture(texturePath, texture, true);
     }
@@ -51,8 +51,6 @@ void Mesh::SetupMeshU()
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     
-    std::cout << "VBO: " << VBO << std::endl;
-
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, verticesU.size() * sizeof(float), &verticesU[0], GL_STATIC_DRAW);

@@ -8,7 +8,9 @@ Renderer::Renderer()
     modules = std::vector<Module*>();
     Initialize();
     shader = Shader("../Shaders/VertexShader.vert", "../Shaders/FragmentShader.frag");
+    arrowShader = Shader("../Shaders/VertexShader.vert", "../Shaders/ArrowFragmentShader.frag");
     crosshairShader = Shader("../Shaders/CrosshairVertexShader.vert", "../Shaders/CrosshairFragmentShader.frag");
+    gridShader = Shader("../Shaders/GridVertexShader.vert", "../Shaders/GridFragmentShader.frag");
 }
 
 void Renderer::CreateDefaultModules() {
@@ -20,6 +22,10 @@ void Renderer::CreateDefaultModules() {
 
     FocusModule* focusModule = new FocusModule();
     modules.push_back(focusModule);
+
+    ScenarioModule* sceneModule = new ScenarioModule();
+    modules.push_back(sceneModule);
+
 }
 
 void Renderer::GenerateTexture(std::string path, unsigned int& texture, bool includeAlpha) {
@@ -61,7 +67,6 @@ void Renderer::InitImGUI(GLFWwindow *window) {
     ImGuiIO& io = ImGui::GetIO(); (void)io; // Getting IO object
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-
 
     // Setup ImGui style
     ImGui::StyleColorsDark();
@@ -143,10 +148,7 @@ void Renderer::InitGrid() {
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-
-    gridShader = Shader("../Shaders/GridVertexShader.vert", "../Shaders/GridFragmentShader.frag");
 }
-
 
 void Renderer::Initialize()
 {
@@ -185,6 +187,8 @@ void Renderer::Initialize()
 
     // Windows initialize
     CreateDefaultModules();
+
+
 }
 
 void Renderer::Cleanup()
@@ -232,52 +236,95 @@ void Renderer::RenderObjectTable(std::vector<PhysicsObject*> objects) {
     }
 }
 
-void Renderer::RenderGrid(int gridSize, float gridSpacing, const glm::mat4& view, const glm::mat4& projection) {
+glm::vec2 Renderer::WorldToScreen(glm::vec3 worldPos, const glm::mat4& view, const glm::mat4& projection, int screenWidth, int screenHeight) {
+    glm::vec4 clipSpacePos = projection * view * glm::vec4(worldPos, 1.0f);
+
+    // Perspective divide to get normalized device coordinates
+    glm::vec3 ndc = glm::vec3(clipSpacePos) / clipSpacePos.w;
+
+    // Convert to screen coordinates
+    glm::vec2 screenPos;
+    screenPos.x = (ndc.x * 0.5f + 0.5f) * screenWidth;
+    screenPos.y = (1.0f - (ndc.y * 0.5f + 0.5f)) * screenHeight; // Invert Y for ImGui
+
+    return screenPos;
+}
+
+void Renderer::RenderArrowLabels(PhysicsObject* obj, const glm::mat4& view, const glm::mat4& projection, int screenWidth, int screenHeight) {
+    glm::vec3 velocityTip = obj->pos + obj->velocity;
+    glm::vec3 accelerationTip = obj->pos + obj->acceleration;
+
+    glm::vec2 velocityScrPos = WorldToScreen(velocityTip, view, projection, screenWidth, screenHeight);
+    glm::vec2 accelerationScrPos = WorldToScreen(accelerationTip, view, projection, screenWidth, screenHeight);
+
+    ImGui::SetNextWindowPos(ImVec2(velocityScrPos.x, velocityScrPos.y), ImGuiCond_Always);
+    std::string velLabelTextHead = "VelocityLabel";
+    std::string labelID = std::to_string(reinterpret_cast<uintptr_t>(& obj));
+    std::string velLabel = velLabelTextHead + labelID;
+    ImGui::Begin(velLabel.c_str(), nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+    std::string velTextHead = "Vel: ";
+    std::string velLength = std::to_string(glm::length(obj->velocity));
+    std::string velText = velTextHead + velLength;
+    ImGui::Text(velText.c_str());
+    ImGui::End();
+
+    ImGui::SetNextWindowPos(ImVec2(accelerationScrPos.x, accelerationScrPos.y), ImGuiCond_Always);
+    std::string acelLabelTextHead = "VelocityLabel";
+    std::string acelLabel = acelLabelTextHead + labelID;
+    ImGui::Begin(acelLabel.c_str(), nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+    std::string acelTextHead = "Acel: ";
+    std::string acelLength = std::to_string(glm::length(obj->acceleration));
+    std::string acelText = acelTextHead + acelLength;
+    ImGui::Text(acelText.c_str());
+    ImGui::End();
+
+}
+
+void Renderer::RenderGrid(int gridSize, float gridSpacing, const glm::mat4& view, const glm::mat4& projection, Camera* camera) {
     // Grid lines
     std::vector<float> gridVertices;
     std::vector<float> xAxisVertices;
     std::vector<float> zAxisVertices;
 
-    for (int i = -gridSize; i <= gridSize; ++i) {
-        if (i == 0) {
-            // Separate x-axis and z-axis vertices for distinct colors
-            // Horizontal (x-axis) line
-            xAxisVertices.push_back(-gridSize * gridSpacing);
-            xAxisVertices.push_back(0.0f);
-            xAxisVertices.push_back(0.0f);
+    int xOffset = round(camera->cameraPos.x / gridSpacing) * gridSpacing;
+    int zOffset = round(camera->cameraPos.z / gridSpacing) * gridSpacing;
 
-            xAxisVertices.push_back(gridSize * gridSpacing);
-            xAxisVertices.push_back(0.0f);
-            xAxisVertices.push_back(0.0f);
+    xAxisVertices.push_back(-gridSize * gridSpacing + xOffset);
+    xAxisVertices.push_back(0.0f);
+    xAxisVertices.push_back(0.0f);
 
-            // Vertical (z-axis) line
-            zAxisVertices.push_back(0.0f);
-            zAxisVertices.push_back(0.0f);
-            zAxisVertices.push_back(-gridSize * gridSpacing);
+    xAxisVertices.push_back(gridSize * gridSpacing + xOffset);
+    xAxisVertices.push_back(0.0f);
+    xAxisVertices.push_back(0.0f);
 
-            zAxisVertices.push_back(0.0f);
-            zAxisVertices.push_back(0.0f);
-            zAxisVertices.push_back(gridSize * gridSpacing);
-        }
-        else {
+    // Vertical (z-axis) line
+    zAxisVertices.push_back(0.0f);
+    zAxisVertices.push_back(0.0f);
+    zAxisVertices.push_back(-gridSize * gridSpacing + zOffset);
+
+    zAxisVertices.push_back(0.0f);
+    zAxisVertices.push_back(0.0f);
+    zAxisVertices.push_back(gridSize * gridSpacing + zOffset);
+
+    for (int i = -gridSize; i <= gridSize; i++) {
+
             // Horizontal lines
-            gridVertices.push_back(-gridSize * gridSpacing);
+            gridVertices.push_back(-gridSize * gridSpacing + xOffset);
             gridVertices.push_back(0.0f);
-            gridVertices.push_back(i * gridSpacing);
+            gridVertices.push_back(i * gridSpacing + zOffset);
 
-            gridVertices.push_back(gridSize * gridSpacing);
+            gridVertices.push_back(gridSize * gridSpacing + xOffset);
             gridVertices.push_back(0.0f);
-            gridVertices.push_back(i * gridSpacing);
+            gridVertices.push_back(i * gridSpacing + zOffset);
 
             // Vertical lines
-            gridVertices.push_back(i * gridSpacing);
+            gridVertices.push_back(i * gridSpacing + xOffset);
             gridVertices.push_back(0.0f);
-            gridVertices.push_back(-gridSize * gridSpacing);
+            gridVertices.push_back(-gridSize * gridSpacing + zOffset);
 
-            gridVertices.push_back(i * gridSpacing);
+            gridVertices.push_back(i * gridSpacing + xOffset);
             gridVertices.push_back(0.0f);
-            gridVertices.push_back(gridSize * gridSpacing);
-        }
+            gridVertices.push_back(gridSize * gridSpacing + zOffset);
     }
 
     // Generate and bind VAOs/VBOs for the grid, x-axis, and z-axis
@@ -321,6 +368,9 @@ void Renderer::RenderGrid(int gridSize, float gridSpacing, const glm::mat4& view
     glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(gridVertices.size() / 3));
     glBindVertexArray(0);
 
+    glDisable(GL_DEPTH_TEST);
+
+
     // Render x-axis lines
     glm::vec3 xCol = TextureUtils::getRGB(xColor);
     gridShader.setVec4("lineColor", glm::vec4(xCol.x, xCol.y, xCol.z, 1.0f)); // Red for x-axis
@@ -334,6 +384,9 @@ void Renderer::RenderGrid(int gridSize, float gridSpacing, const glm::mat4& view
     glBindVertexArray(zAxisVAO);
     glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(zAxisVertices.size() / 3));
     glBindVertexArray(0);
+
+    glEnable(GL_DEPTH_TEST);
+
 
     // Cleanup
     glDeleteVertexArrays(1, &gridVAO);
@@ -369,16 +422,16 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     glBindTexture(GL_TEXTURE_2D, texture2);
 
     shader.use();
+    shader.setBool("isPaused", GlobalData::paused);
 
     glm::mat4 view = camera->GetCameraView();
     glm::mat4 projection = glm::perspective(glm::radians(camera->fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-    // pass transformation matrices to the shader
-    shader.setMat4("projection", projection); // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
+    shader.setMat4("projection", projection); 
     shader.setMat4("view", view);
 
     // Render the grid
-    RenderGrid(GRID_SIZE, GRID_SPACING, view, projection);
+    RenderGrid(GRID_SIZE, GRID_SPACING, view, projection, camera);
 
     for (auto& object : RenderObjectsT)
     {
@@ -388,15 +441,25 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     for (auto& object : RenderObjectsP)
     {
         object->RenderMesh(shader);
+    }
 
-        if (*settingsBus.renderArrows == true) {
-            if (*settingsBus.renderArrowsOnTop) {
-                glDisable(GL_DEPTH_TEST);
-                object->RenderArrows(shader, redTexture, blueTexture, *settingsBus.decomposeArrows);
-                glEnable(GL_DEPTH_TEST);
-
-            }
-            object->RenderArrows(shader, redTexture, blueTexture, *settingsBus.decomposeArrows);
+    arrowShader.use();
+    arrowShader.setMat4("projection", projection);
+    arrowShader.setMat4("view", view);
+    if (*settingsBus.renderArrows == true) {
+        for (auto& object : RenderObjectsP)
+        {
+                if (*settingsBus.renderArrowsOnTop) {
+                    glDisable(GL_DEPTH_TEST);
+                    object->RenderArrows(arrowShader, redTexture, blueTexture, *settingsBus.decomposeArrows);
+                    glEnable(GL_DEPTH_TEST);
+                }
+                else {
+                    object->RenderArrows(arrowShader, redTexture, blueTexture, *settingsBus.decomposeArrows);
+                }
+                if (*settingsBus.renderArrowLabels) {
+                    RenderArrowLabels(object, view, projection, SCR_WIDTH, SCR_HEIGHT);
+                }
         }
     }
 
@@ -425,13 +488,17 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     modules[0]->RenderWindow();
 
     // Settings Module (requires more nuanced control because I implemented it with templates for more flexibility)
+    std::pair<std::string, bool*> pause("Paused", &GlobalData::paused);
     std::pair<std::string, bool*> arrows("Render Arrows", settingsBus.renderArrows);
     std::pair<std::string, bool*> decompose("Decompose Velocity/Acceleration", settingsBus.decomposeArrows);
     std::pair<std::string, bool*> onTop("Arrows On Top", settingsBus.renderArrowsOnTop);
+    std::pair<std::string, bool*> labels("Arrows Labels", settingsBus.renderArrowLabels);
     ImGui::Begin("Settings");
+    modules[1]->UpdateData(pause);
     modules[1]->UpdateData(arrows);
     modules[1]->UpdateData(decompose);
     modules[1]->UpdateData(onTop);
+    modules[1]->UpdateData(labels);
     ImGui::End();
 
     // Focus Module
@@ -443,6 +510,9 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
         modules[2]->RenderWindowBody();
         ImGui::End();
     }
+
+    // Scenario Module
+    modules[3]->RenderWindow();
 
     //ImGui::End();
 

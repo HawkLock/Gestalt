@@ -23,6 +23,10 @@ PhysicsObject::PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> i
 	Model(initialPosition, faceSize, modelPath, texturePath), // Use parameterized constructor
 	ArrowModel(initialPosition, faceSize, arrowModelPath, texturePath)
 {
+	this->modelPath = modelPath;
+	this->texturePath = texturePath;
+	this->arrowPath = arrowModelPath;
+
 	// Scale size of arrows
 	ArrowModel.ChangeSize(1.5f);
 	arrowModelOffset = RenderUtils::CalculateExtent(ArrowModel, [](const Vertex& v) { return v.z; });
@@ -37,7 +41,7 @@ PhysicsObject::PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> i
 		0.0f, 0.0f, 1
 	);
 	inertiaTensor = momentOfInertia * mat;
-	PrintMat3(inertiaTensor);
+	//PrintMat3(inertiaTensor);
 	CalculateInertiaTensor(inertiaTensor);
 	//PrintMat3(inertiaTensor);
 
@@ -162,7 +166,7 @@ void PhysicsObject::CalculateInertiaTensor(glm::mat3& tensor) {
 	IT[2][0] = IT[0][2];
 	IT[2][1] = IT[1][2];
 
-	PrintMat3(IT);
+	//PrintMat3(IT);
 
 	tensor = IT;
 }

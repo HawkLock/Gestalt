@@ -26,7 +26,6 @@ struct Vertex {
 	float u, v;      // UV coordinates
 };
 
-// Currently only a cube
 class Mesh {
 
 public:

@@ -35,23 +35,6 @@ public:
 
     void RenderWindow() override {
         ImGui::Begin("Settings Window");
-        
-        //ImGui::Checkbox("Show Arrows", &render->renderArrows);
-
-        //// TreeNode for hierarchical folder structure
-        //if (ImGui::TreeNode("Advanced Settings")) {
-        //    if (ImGui::TreeNode("Subfolder 1")) {
-        //        ImGui::Checkbox("Enable Feature A", &enableFeatureA);
-        //        ImGui::SliderInt("Option 1", &option1, 0, 100);
-        //        ImGui::TreePop();
-        //    }
-        //    if (ImGui::TreeNode("Subfolder 2")) {
-        //        ImGui::Checkbox("Enable Feature B", &enableFeatureB);
-        //        ImGui::SliderInt("Option 2", &option2, 0, 100);
-        //        ImGui::TreePop();
-        //    }
-        //    ImGui::TreePop();
-        //}
 
         ImGui::End();
     }

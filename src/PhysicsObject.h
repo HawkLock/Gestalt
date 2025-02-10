@@ -76,6 +76,11 @@ public:
 	glm::vec3 angularAcceleration;
 	glm::vec3 angularVelocity;
 
+	// For Serialization
+	std::string modelPath;
+	std::string texturePath;
+	std::string arrowPath;
+
 	PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> initialActingForcesVectors, glm::quat initialRot, float initialMass, bool isAnchored, float faceSize, std::string& modelPath, std::string &texturePath, std::string& arrowModelPath);
 
 	// Getters and Setters

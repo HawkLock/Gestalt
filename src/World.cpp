@@ -18,10 +18,23 @@ World::World()
 {
 	camera.SetDefaultCursorPos(renderer.SCR_WIDTH / 2, renderer.SCR_HEIGHT / 2);
 
-	std::string arrowModelPath = "../Models/arrow.txt";
-
 	startTime = std::chrono::high_resolution_clock::now();
 	window = renderer.GetWindow();
+
+	ScanForScenarios();
+	LoadWorld();
+}
+
+void World::ScanForScenarios() {
+	GlobalData::availableScenarios.clear();
+
+	for (const auto& entry : std::filesystem::directory_iterator(scenarioPath)) {
+		GlobalData::availableScenarios.push_back(entry.path().string());
+	}
+}
+
+void World::LoadWorld() {
+	std::string arrowModelPath = "../Models/arrow.txt";
 
 	glm::vec3 position1 = glm::vec3(-2.f, 0.f, 0.0f);
 	glm::quat rotation1 = glm::angleAxis(glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -44,14 +57,40 @@ World::World()
 	float faceSize2 = 2.0f;
 
 	std::string modelPath2 = "../Models/cube1.txt";
-	std::string texturePath2 = "../Textures/sus.png";
+	std::string texturePath2 = "../Textures/CrateTexture.jpg";
 
 	// Create object2 and add it to the world
 	testObj2 = new PhysicsObject(position2, initialActingForces2, rotation2, mass2, false, faceSize2, modelPath2, texturePath2, arrowModelPath);
 	testObj2->SetVelocity(glm::vec3(-1.f, 0.f, 0.0f));
 	AddObject(testObj2);
+
+	LoadScenario("../Scenarios/Scene1.txt", false);
+
+	Scenario::SaveScenarioToFile("../Scenarios/Debug.txt", "Debug", PhysicObjects, TriggerObjects, gravity);
 }
 
+void World::ClearWorld() {
+	for (auto obj : PhysicObjects) {
+		delete obj;
+	}
+	PhysicObjects.clear();
+
+	for (auto obj : TriggerObjects) {
+		delete obj;
+	}
+	TriggerObjects.clear();
+}
+
+void World::LoadScenario(const std::string& filepath, bool clearWorld) {
+	if (clearWorld) {
+		ClearWorld();
+	}
+	Scenario scene = Scenario();
+	scene.LoadScenarioFromFile(filepath);
+	for (int i = 0; i < scene.physicsObjects.size(); i++) {
+		AddObject(scene.physicsObjects[i]);
+	}
+}
 
 void World::Update()
 {
@@ -63,15 +102,25 @@ void World::Update()
 
 	// Physics Time Step
 	while (renderer.timeAccumulator >= renderer.fixedTimeStep) {
-		// Handles Collision
-		CollisionUpdate();
+		if (!GlobalData::paused) {
+			CollisionUpdate();
 
-		// Handles Other Physics
-		PhysicsUpdate();
+			PhysicsUpdate();
+		}
 		renderer.timeAccumulator -= renderer.fixedTimeStep;
 	}
 
 	CameraUpdate();
+
+	ScenarioUpdate();
+}
+
+void World::ScenarioUpdate() {
+	if (!GlobalData::shouldLoadScenario) {
+		return;
+	}
+	LoadScenario(GlobalData::availableScenarios[GlobalData::selectedScenario], true);
+	GlobalData::shouldLoadScenario = false;
 }
 
 bool AreParallel(const glm::vec3& v1, const glm::vec3& v2, float tolerance = 1e-6f) {
@@ -948,6 +997,7 @@ void World::Render()
 	settingsBus.renderArrows = &renderArrows;
 	settingsBus.decomposeArrows = &renderArrowsDecomposed;
 	settingsBus.renderArrowsOnTop = &renderArrowsOnTop;
+	settingsBus.renderArrowLabels = &renderArrowLabels;
 	renderer.RenderLoop(&camera, PhysicObjects, TriggerObjects, settingsBus);
 }
 
@@ -1062,3 +1112,4 @@ void World::ProcessMouseScroll(float yoffset)
 		camera.ProcessMouseScroll(yoffset, renderer.deltaTime);
 	}
 }
+

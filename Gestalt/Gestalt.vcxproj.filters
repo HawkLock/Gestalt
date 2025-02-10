@@ -86,6 +86,12 @@
     <ClCompile Include="..\src\TriggerObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Scenario.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\GlobalData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Camera.h">
@@ -178,6 +184,15 @@
     <ClInclude Include="..\src\TextureUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Scenario.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ScenarioModule.h">
+      <Filter>Header Files\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\GlobalData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FragmentShader.frag">
@@ -196,6 +211,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\GridVertexShader.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\ArrowFragmentShader.frag">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

@@ -1,0 +1,1 @@
+pObj -6.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0 100.0 0 2.0 ../Models/cube1.txt ../Textures/CrateTexture.jpg ../Models/arrow.txt 0

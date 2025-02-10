@@ -5,6 +5,7 @@
 #include <functional>
 #include <limits>
 #include <algorithm>
+#include <filesystem>
 
 #include <glm/glm/glm.hpp>
 #include <glm/glm/gtc/matrix_transform.hpp>
@@ -19,6 +20,12 @@
 #include "Raycast.h"
 
 #include "SettingsBus.h"
+
+#include "ScenarioModule.h"
+
+#include "Scenario.h"
+
+#include "GlobalData.h"
 
 
 class World {
@@ -37,6 +44,9 @@ protected:
 	bool renderArrows = true;
 	bool renderArrowsDecomposed = false;
 	bool renderArrowsOnTop = false;
+	bool renderArrowLabels = false;
+
+	const std::string scenarioPath = "../Scenarios/";
 
 public:
 
@@ -53,8 +63,11 @@ public:
 
 	std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock::now();
 
+	void ScanForScenarios();
+	void LoadWorld();
 
 	void Update();
+	void ScenarioUpdate();
 	void CollisionUpdate();
 	void CheckCollision(PhysicsObject& one, PhysicsObject& two, bool& result, glm::vec3& shortestOverlap);
 	std::vector<glm::vec3> CalculateCollisionVelocity(PhysicsObject one, PhysicsObject two);
@@ -69,6 +82,10 @@ public:
 
 	void AddObject(PhysicsObject* object);
 	void AddObject(TriggerObject* object);
+
+	void ClearWorld();
+
+	void LoadScenario(const std::string& filepath, bool clearWorld);
 
 	// Collision
 	bool Raycast(PhysicsObject* object, const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& lambda);
@@ -85,5 +102,7 @@ public:
 
 	Renderer GetRenderer() { return renderer; }
 	glm::vec3 GetGravity() { return gravity; }
+
+	void LoadScenario();
 
 };
