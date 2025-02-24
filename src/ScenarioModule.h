@@ -18,6 +18,18 @@ public:
 
     }
 
+    void generateScenarioName(std::string* raw) {
+        removeSubstring(raw, GlobalData::scenarioPath);
+        removeSubstring(raw, ".txt");
+    }
+
+    void removeSubstring(std::string* str, std::string substring) {
+        std::string::size_type index = str->find(substring);
+        if (index != std::string::npos) {
+            str->erase(index, substring.length());
+        }
+    }
+
     void RenderWindow() override {
         ImGui::Begin("Scenario Control");
 
@@ -27,16 +39,26 @@ public:
             ImGui::End();
             return;
         }
-        if (ImGui::BeginCombo("Select Scenario", availableScenarios[selectedScenario].c_str())) {
+
+        std::string sceneName = availableScenarios[GlobalData::selectedScenario];
+        generateScenarioName(&sceneName);
+
+        if (ImGui::BeginCombo("Select Scenario", sceneName.c_str())) {
             for (int i = 0; i < availableScenarios.size(); ++i) {
                 bool isSelected = (selectedScenario == i);
-                if (ImGui::Selectable(availableScenarios[i].c_str(), isSelected)) {
+                sceneName = availableScenarios[i];
+                generateScenarioName(&sceneName);
+                if (ImGui::Selectable(sceneName.c_str(), isSelected)) {
                     selectedScenario = i;
                 }
                 if (isSelected) ImGui::SetItemDefaultFocus();
             }
             ImGui::EndCombo();
         }
+
+        ImGui::SliderFloat("Time Modifier", &GlobalData::timeModifier, 0, 2);
+
+        ImGui::Checkbox("Paused", &GlobalData::paused);
 
         // Load scenario button
         if (ImGui::Button("Load Scenario")) {

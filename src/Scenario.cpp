@@ -2,9 +2,13 @@
 #include "Scenario.h"
 
 /*
-File Format:
+Scene File Format:
 // Scenario Data: sData 
             Name (std::string)
+
+// Lesson Data: lData
+            Title (std::string)
+            Lesson Text Path (std::string)
 
 //  Settings
             Gravity (glm::vec3)
@@ -29,10 +33,14 @@ File Format:
             Face Size (float)
             Model Path (std::string)
             Texture Path (std::string)
+
+Lesson File Format:
+            Title (std::string)
+            Lesson (std::string)
 */
 
 void errorMessage(std::string line, std::string specifier) {
-    std::cerr << "Error parsing physics object line for \"" << specifier << "\": " << line << std::endl;
+    std::cerr << "Error parsing line for \"" << specifier << "\": " << line << std::endl;
 }
 
 void Scenario::LoadScenarioFromFile(const std::string& filepath) {
@@ -53,6 +61,18 @@ void Scenario::LoadScenarioFromFile(const std::string& filepath) {
             if (!(iss >> name)) {
                 errorMessage(line, "Scenario name parsing failed");
             }
+        }
+
+        if (type == "lData") {
+            std::string lessonPath;
+
+            if (!(iss >> title)) {
+                errorMessage(line, "Lesson title parsing failed");
+            }
+            if (!(iss >> lessonPath)) {
+                errorMessage(line, "Lesson path parsing failed");
+            }
+            LoadLessonFromFile(lessonPath);
         }
 
         if (type == "pObj") {
@@ -119,6 +139,36 @@ void Scenario::LoadScenarioFromFile(const std::string& filepath) {
     }
 
     file.close();
+}
+
+void Scenario::LoadLessonFromFile(const std::string& filepath) {
+    std::ifstream file(filepath);
+
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file: " << filepath << std::endl;
+        return;
+    }
+
+    std::string line;
+    std::string strData[2];
+    int pointer = -1;
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        std::string type;
+        iss >> type;
+
+        if (line == "[Explanation]") {
+            pointer = 0;
+        }
+        if (line == "[Scenario]") {
+            pointer = 1;
+        }
+        if (pointer >= 0) {
+            strData[pointer] += "\n" + line;
+        }
+    }
+    explanation = strData[0];
+    scenario = strData[1];
 }
 
 void Scenario::SaveScenarioToFile(const std::string& filepath, const std::string& name, std::vector<PhysicsObject*> PhysicObjects, std::vector<TriggerObject*> TriggerObjects, glm::vec3 gravity) {

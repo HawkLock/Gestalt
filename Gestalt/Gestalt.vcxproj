@@ -59,6 +59,7 @@
     <ClInclude Include="..\src\FocusModule.h" />
     <ClInclude Include="..\src\GJKAlgorithm.h" />
     <ClInclude Include="..\src\GlobalData.h" />
+    <ClInclude Include="..\src\LessonModule.h" />
     <ClInclude Include="..\src\Mesh.h" />
     <ClInclude Include="..\src\MeshLibrary.h" />
     <ClInclude Include="..\src\Module.h" />

@@ -27,30 +27,36 @@ World::World()
 
 void World::ScanForScenarios() {
 	GlobalData::availableScenarios.clear();
-
-	for (const auto& entry : std::filesystem::directory_iterator(scenarioPath)) {
-		GlobalData::availableScenarios.push_back(entry.path().string());
+	for (const auto& entry : std::filesystem::directory_iterator(GlobalData::scenarioPath)) {
+		std::string str = entry.path().string();
+		std::string::size_type index = str.find(".txt");
+		if (index != std::string::npos) {
+			GlobalData::availableScenarios.push_back(str);
+		}
 	}
 }
 
 void World::LoadWorld() {
 	std::string arrowModelPath = "../Models/arrow.txt";
 
-	glm::vec3 position1 = glm::vec3(-2.f, 0.f, 0.0f);
+
+
+	glm::vec3 position1 = glm::vec3(0.f, -5.f, 0.0f);
 	glm::quat rotation1 = glm::angleAxis(glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f));
 	std::vector<glm::vec3> initialActingForces1 = std::vector<glm::vec3>();
 	float mass1 = 100.f;
 	float faceSize1 = 2.f;
 
-	std::string modelPath1 = "../Models/cube1.txt";
+	std::string modelPath1 = "../Models/plane.txt";
 	std::string texturePath1 = "../Textures/CrateTexture.jpg";
 
 	// Create object1 and add it to the world
-	testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, false, faceSize1, modelPath1, texturePath1, arrowModelPath);
+	testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, true, faceSize1, modelPath1, texturePath1, arrowModelPath);
 	AddObject(testObj1);
+	testObj1->ScaleSize(3);
 
 	// Define the variables for object2
-	glm::vec3 position2 = glm::vec3(4.f, 0.0f, 0.f);
+	glm::vec3 position2 = glm::vec3(0.f, 0.0f, 0.f);
 	glm::quat rotation2 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
 	std::vector<glm::vec3> initialActingForces2 = std::vector<glm::vec3>();
 	float mass2 = 100.0f;
@@ -61,12 +67,9 @@ void World::LoadWorld() {
 
 	// Create object2 and add it to the world
 	testObj2 = new PhysicsObject(position2, initialActingForces2, rotation2, mass2, false, faceSize2, modelPath2, texturePath2, arrowModelPath);
-	testObj2->SetVelocity(glm::vec3(-1.f, 0.f, 0.0f));
 	AddObject(testObj2);
 
-	LoadScenario("../Scenarios/Scene1.txt", false);
-
-	Scenario::SaveScenarioToFile("../Scenarios/Debug.txt", "Debug", PhysicObjects, TriggerObjects, gravity);
+	// Scenario::SaveScenarioToFile("../Scenarios/Debug.txt", "Debug", PhysicObjects, TriggerObjects, gravity);
 }
 
 void World::ClearWorld() {
@@ -85,10 +88,18 @@ void World::LoadScenario(const std::string& filepath, bool clearWorld) {
 	if (clearWorld) {
 		ClearWorld();
 	}
-	Scenario scene = Scenario();
+	scene = Scenario();
 	scene.LoadScenarioFromFile(filepath);
 	for (int i = 0; i < scene.physicsObjects.size(); i++) {
 		AddObject(scene.physicsObjects[i]);
+	}
+	ScaleWorld();
+}
+
+void World::ScaleWorld() {
+	for (int i = 0; i < scene.physicsObjects.size(); i++) {
+		scene.physicsObjects[i]->ScaleSize(GlobalData::scale);
+		scene.physicsObjects[i]->SetArrowBaseModeScalel(GlobalData::scale);
 	}
 }
 
@@ -101,13 +112,13 @@ void World::Update()
 	Render();
 
 	// Physics Time Step
-	while (renderer.timeAccumulator >= renderer.fixedTimeStep) {
+	while (renderer.timeAccumulator >= GlobalData::fixedTimeStep) {
 		if (!GlobalData::paused) {
 			CollisionUpdate();
 
 			PhysicsUpdate();
 		}
-		renderer.timeAccumulator -= renderer.fixedTimeStep;
+		renderer.timeAccumulator -= GlobalData::fixedTimeStep;
 	}
 
 	CameraUpdate();
@@ -255,17 +266,6 @@ glm::vec3 calculateCompoundVelocity(glm::vec3 pos, glm::vec3 relativePoint, glm:
 	return velocity + rotationalVelocity;
 }
 
-// Apply impulse to both linear and angular velocity of an object
-void applyImpulse(PhysicsObject* obj, float impulse, glm::vec3 normal, glm::vec3 collisionPoint, glm::vec3 radius) {
-	// Update linear velocity
-	glm::vec3 newVelocity = obj->GetCurrentVelocity() + (impulse / obj->GetMass()) * normal;
-	obj->SetVelocity(newVelocity);
-
-	// Update angular velocity
-	glm::vec3 torque = glm::cross(radius, impulse * normal);
-	glm::vec3 newAngularVelocity = obj->GetCurrentAngularVelocity() + obj->GetInverseInertiaTensor() * torque;
-	obj->SetAngularVelocity(newAngularVelocity);
-}
 
 // Calculate relative velocities considering both linear and angular components
 glm::vec3 calculateRelativeVelocities(glm::vec3 velA, glm::vec3 velB, glm::vec3 angVelA, glm::vec3 angVelB, glm::vec3 radiusA, glm::vec3 radiusB) {
@@ -315,8 +315,10 @@ void applyImpulse(PhysicsObject* obj, glm::vec3 force, glm::vec3 rel) {
 	glm::vec3 newVelocity = obj->GetCurrentVelocity() + force / obj->GetMass();
 	obj->SetVelocity(newVelocity);
 
-	glm::vec3 newAngularVelocity = obj->GetCurrentAngularVelocity() + obj->GetInverseInertiaTensor() * glm::cross(rel, force);
-	obj->SetAngularVelocity(newAngularVelocity);
+	if (!GlobalData::lockedRotation) {
+		glm::vec3 newAngularVelocity = obj->GetCurrentAngularVelocity() + obj->GetInverseInertiaTensor() * glm::cross(rel, force);
+		obj->SetAngularVelocity(newAngularVelocity);
+	}
 }
 
 // Resolve impulses between two colliding objects
@@ -333,49 +335,58 @@ void World::resolveImpulses(PhysicsObject* objA, PhysicsObject* objB, const Over
 	float massA = objA->IsAnchored() ? INFINITY : objA->GetMass();
 	float massB = objB->IsAnchored() ? INFINITY : objB->GetMass();
 
-	glm::mat3 IITA = objA->IsAnchored() ? glm::mat3(0.0f) : objA->GetInverseInertiaTensor();
-	glm::mat3 IITB = objB->IsAnchored() ? glm::mat3(0.0f) : objB->GetInverseInertiaTensor();
+	// Set inverse inertia to zero if rotation is locked
+	glm::mat3 IITA = (objA->IsAnchored() || GlobalData::lockedRotation) ? glm::mat3(0.0f) : objA->GetInverseInertiaTensor();
+	glm::mat3 IITB = (objB->IsAnchored() || GlobalData::lockedRotation) ? glm::mat3(0.0f) : objB->GetInverseInertiaTensor();
 
 	glm::vec3 collisionNormal = overlap.axis;
 	glm::vec3 collisionPoint = overlap.collisionPoint;
 
-	// Compute the velocities at the point of collision, including rotational components
+	// Compute velocity at collision point
 	glm::vec3 velocityA = calculateCompoundVelocity(posA, collisionPoint, velA, angVelA, rotA);
 	glm::vec3 velocityB = calculateCompoundVelocity(posB, collisionPoint, velB, angVelB, rotB);
 	glm::vec3 relativeVelocity = velocityA - velocityB;
 
-	// Compute the radii from the collision points to the center of masses
+	// Compute collision radii
 	glm::vec3 collisionRadiusA = collisionPoint - posA;
 	glm::vec3 collisionRadiusB = collisionPoint - posB;
 
-	float netRestitution = objA->GetRestitution() * objB->GetRestitution();
+	float netRestitution = GlobalData::useGlobalRestitution ? GlobalData::restitution
+		: std::max(objA->GetRestitution(), objB->GetRestitution());
 
-	// Impulse calculation (courtesy of Chris Hecker's formula)
+	// Impulse calculation (Hecker's formula)
 	float numerator = -(1 + netRestitution) * glm::dot(relativeVelocity, collisionNormal);
 
-	// Angular impulse components
-	glm::vec3 radiusCrossNormalA = glm::cross(collisionRadiusA, collisionNormal);
-	glm::vec3 radiusCrossNormalB = glm::cross(collisionRadiusB, collisionNormal);
+	// Compute angular impulse components (but ignore if rotation is locked)
+	float denominator1 = 0.0f;
+	float denominator2 = 0.0f;
 
-	glm::vec3 denominator1Vec = IITA * radiusCrossNormalA;
-	float denominator1 = glm::dot(radiusCrossNormalA, denominator1Vec);
+	if (!GlobalData::lockedRotation) {
+		glm::vec3 radiusCrossNormalA = glm::cross(collisionRadiusA, collisionNormal);
+		glm::vec3 denominator1Vec = IITA * radiusCrossNormalA;
+		denominator1 = glm::dot(radiusCrossNormalA, denominator1Vec);
+	}
 
-	glm::vec3 denominator2Vec = IITB * radiusCrossNormalB;
-	float denominator2 = glm::dot(radiusCrossNormalB, denominator2Vec);
+	if (!GlobalData::lockedRotation) {
+		glm::vec3 radiusCrossNormalB = glm::cross(collisionRadiusB, collisionNormal);
+		glm::vec3 denominator2Vec = IITB * radiusCrossNormalB;
+		denominator2 = glm::dot(radiusCrossNormalB, denominator2Vec);
+	}
 
-	// Adjust for infinite mass for anchored objects
+	// Adjust for infinite mass
 	float invMassA = objA->IsAnchored() ? 0.0f : 1.0f / massA;
 	float invMassB = objB->IsAnchored() ? 0.0f : 1.0f / massB;
 
-	// Combine linear and angular contributions to compute total impulse
+	// Final impulse denominator
 	float denominator = invMassA + invMassB + denominator1 + denominator2;
 	if (denominator == 0.0f) return; // Prevent division by zero
 
 	float impulse = numerator / denominator;
 
-	// Apply the impulse to both objects
+	// Compute the final linear impulse
 	glm::vec3 impulseForce = collisionNormal * impulse;
 
+	// Apply linear impulse
 	if (!objA->IsAnchored()) {
 		applyImpulse(objA, impulseForce, collisionRadiusA);
 	}
@@ -383,6 +394,7 @@ void World::resolveImpulses(PhysicsObject* objA, PhysicsObject* objB, const Over
 		applyImpulse(objB, -impulseForce, collisionRadiusB);
 	}
 }
+
 
 
 // Resolve overlap between two colliding objects
@@ -983,8 +995,7 @@ void World::PhysicsUpdate()
 	for (int i = 0; i < PhysicObjects.size(); i++)
 	{
 		if (!PhysicObjects[i]->IsAnchored()) {
-			//std::cout << "Object " << i << " velocity: " << PhysicsUtility::vec3ToString(PhysicObjects[i].GetCurrentVelocity()) << " units/unit" << std::endl;
-			PhysicObjects[i]->CalculatePhysics(renderer.fixedTimeStep);
+			PhysicObjects[i]->CalculatePhysics(GlobalData::fixedTimeStep * GlobalData::time, gravity * GlobalData::gravityScale);
 		}
 	}
 }
@@ -998,6 +1009,8 @@ void World::Render()
 	settingsBus.decomposeArrows = &renderArrowsDecomposed;
 	settingsBus.renderArrowsOnTop = &renderArrowsOnTop;
 	settingsBus.renderArrowLabels = &renderArrowLabels;
+	settingsBus.scene = &scene;
+
 	renderer.RenderLoop(&camera, PhysicObjects, TriggerObjects, settingsBus);
 }
 

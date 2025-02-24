@@ -1,0 +1,23 @@
+Lesson: Kinematics
+
+[Explanation]
+Kinematics is the study of motion without considering the forces that cause it.
+It involves key concepts such as displacement, velocity, acceleration, and time.
+
+Displacement (Δx) is the change in position of an object.
+Velocity (v) is the rate of change of displacement with time.
+Acceleration (a) is the rate of change of velocity with time.
+
+The kinematic equations for constant acceleration are:
+1. v = v0 + at
+2. x = x0 + v0t + (1/2)at^2
+3. v^2 = v0^2 + 2aΔx
+
+These equations predict how an object moves based on initial conditions.
+
+[Scenario]
+A ball is dropped from 10 meters. The simulation tracks:
+- Displacement over time
+- Velocity increasing due to gravity (g = 9.81 m/s²)
+- A graph of velocity vs. time
+- Simulated vs. calculated fall time (t = sqrt(2h/g))

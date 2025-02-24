@@ -26,6 +26,8 @@ void Renderer::CreateDefaultModules() {
     ScenarioModule* sceneModule = new ScenarioModule();
     modules.push_back(sceneModule);
 
+    LessonModule* lessonModule = new LessonModule();
+    modules.push_back(lessonModule);
 }
 
 void Renderer::GenerateTexture(std::string path, unsigned int& texture, bool includeAlpha) {
@@ -402,7 +404,7 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
-    timeAccumulator += deltaTime;    
+    timeAccumulator += deltaTime * GlobalData::timeModifier;    
 
 
     // Start the ImGui frame
@@ -472,49 +474,67 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     PhysicsObject* obj = RenderObjectsP[0];
 
     // ImGUI
-    ImGui::Begin("Real-Time Variables");
-    ImGui::Text("Move");
-    //ImGui::SetWindowSize(ImVec2(200, 400));
-    //ImGui::SetWindowPos(ImVec2(0, 0));
-    ImGui::SliderFloat("Obj X", &obj->velocity.x, 0.0f, 1.0f);
-    ImGui::SliderFloat("Obj Y", &obj->velocity.y, 0.0f, 1.0f);
-    ImGui::SliderFloat("Obj Z", &obj->velocity.z, 0.0f, 1.0f);
-    RenderObjectTable(RenderObjectsP);
-    ImGui::End();
+    ImGui::Begin("Modules");
 
+    if (ImGui::TreeNode("Object List")) {
+        // Update and render objects module
+        modules[0]->UpdateData(RenderObjectsP);
+        modules[0]->RenderWindow();
+        ImGui::TreePop();
+    }
 
-    // Objects Module
-    modules[0]->UpdateData(RenderObjectsP);
-    modules[0]->RenderWindow();
+    if (ImGui::TreeNode("Settings")) {
+        ImGui::Checkbox("Render Arrows", settingsBus.renderArrows);
+        ImGui::Checkbox("Decompose Velocity/Acceleration", settingsBus.decomposeArrows);
+        ImGui::Checkbox("Arrows On Top", settingsBus.renderArrowsOnTop);
+        ImGui::Checkbox("Arrows Labels", settingsBus.renderArrowLabels);
+        ImGui::Checkbox("Lock Rotations", &GlobalData::lockedRotation);
+        ImGui::Checkbox("Use Global Restitution", &GlobalData::useGlobalRestitution);
 
-    // Settings Module (requires more nuanced control because I implemented it with templates for more flexibility)
-    std::pair<std::string, bool*> pause("Paused", &GlobalData::paused);
-    std::pair<std::string, bool*> arrows("Render Arrows", settingsBus.renderArrows);
-    std::pair<std::string, bool*> decompose("Decompose Velocity/Acceleration", settingsBus.decomposeArrows);
-    std::pair<std::string, bool*> onTop("Arrows On Top", settingsBus.renderArrowsOnTop);
-    std::pair<std::string, bool*> labels("Arrows Labels", settingsBus.renderArrowLabels);
-    ImGui::Begin("Settings");
-    modules[1]->UpdateData(pause);
-    modules[1]->UpdateData(arrows);
-    modules[1]->UpdateData(decompose);
-    modules[1]->UpdateData(onTop);
-    modules[1]->UpdateData(labels);
-    ImGui::End();
+        // For float values, use sliders or input boxes for better control
+        ImGui::SliderFloat("Global Tick Speed", &GlobalData::fixedTimeStep, GlobalData::minimumFixedTimeStep, 0.1f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::SliderFloat("Global Restitution", &GlobalData::restitution, 0.0f, 1.0f);
+        ImGui::SliderFloat("Gravity Scale", &GlobalData::gravityScale, 0.0f, 1.0f);
 
-    // Focus Module
-    if (settingsBus.focusObject != nullptr) {
-        std::pair<std::string, bool*> follow("Follow With Camera", settingsBus.followFocusedObject);
-        ImGui::Begin("Focus Object");
-        modules[2]->UpdateData(follow);
-        modules[2]->UpdateData(settingsBus.focusObject);
-        modules[2]->RenderWindowBody();
+        ImGui::TreePop();
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    ImGui::Checkbox("Focused Object", &showFocusObject);
+    ImGui::Checkbox("Scenario Control", &showScenarioControl);
+    ImGui::Checkbox("Lesson Module", &showLessonModule);
+
+    if (showFocusObject) {
+        ImGui::Begin("Focused Object");
+        if (settingsBus.focusObject != nullptr) {
+            // Add focus object settings here
+            std::pair<std::string, bool*> follow("Follow With Camera", settingsBus.followFocusedObject);
+            modules[2]->UpdateData(follow);
+            modules[2]->UpdateData(settingsBus.focusObject);
+            modules[2]->RenderWindowBody();
+        }
+        else {
+            ImGui::Text("   *No Object In Focus");
+        }
         ImGui::End();
     }
 
-    // Scenario Module
-    modules[3]->RenderWindow();
+    if (showScenarioControl) {
+        modules[3]->RenderWindow();
+    }
 
-    //ImGui::End();
+    if (showLessonModule) {
+        if (settingsBus.scene != nullptr) {
+            modules[4]->UpdateData(settingsBus.scene);
+            modules[4]->RenderWindow();
+        }
+    }
+
+    ImGui::End();
+
 
     ImGui::Render();
 

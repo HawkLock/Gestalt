@@ -4,6 +4,7 @@
 #include <cstdio> 
 
 #include "PhysicsObject.h" 
+#include "Scenario.h"
 
 class SettingsBus {
 
@@ -19,5 +20,5 @@ public:
     bool* renderArrowLabels; // WIP
 
     // Scenarios
-
+    Scenario* scene;
 };

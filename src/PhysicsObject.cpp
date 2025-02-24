@@ -46,11 +46,6 @@ PhysicsObject::PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> i
 	//PrintMat3(inertiaTensor);
 
 	inverseInertiaTensor = glm::inverse(inertiaTensor);
-
-	Force gravity = Force();
-	gravity.ForceName = "Gravity";
-	gravity.ForceVector = gravityVec;
-	AddForce(gravity, true);
 }
 
 glm::vec3 PhysicsObject::CalculateCOM() {
@@ -129,53 +124,40 @@ PhysicsObject::AABB PhysicsObject::GetWorldAABB() {
 
 // WIP
 void PhysicsObject::CalculateInertiaTensor(glm::mat3& tensor) {
-	std::vector<Vertex>& vertices = Model.vertices;
-	std::vector<unsigned int>& indices = Model.indices;
+	float width = Model.faceLength;  // Assuming cube, adjust for non-cubes
+	float height = Model.faceLength;
+	float depth = Model.faceLength;
 
-	glm::mat3 IT = glm::mat3(0.0f);
+	float Ixx = (1.0f / 12.0f) * Mass * (height * height + depth * depth);
+	float Iyy = (1.0f / 12.0f) * Mass * (width * width + depth * depth);
+	float Izz = (1.0f / 12.0f) * Mass * (width * width + height * height);
 
-	// Center of the cube (assuming vertices are centered at origin)
-	//glm::vec3 centerOfMass(0.0f, 0.0f, 0.0f); // Adjust if not centered
-	glm::vec3 centerOfMass = CalculateCOM(); // Adjust if not centered
+	tensor = glm::mat3(
+		Ixx, 0.0f, 0.0f,
+		0.0f, Iyy, 0.0f,
+		0.0f, 0.0f, Izz
+	);
 
-	// Iterate through vertices
-	for (size_t i = 0; i < vertices.size(); ++i) {
-		Vertex& v = vertices[i];
-
-		// Extract vertex position
-		glm::vec3 position = glm::vec3(v.x, v.y, v.z);
-
-		// Calculate the distance from the center of mass
-		glm::vec3 r = position - centerOfMass;
-
-		// Each vertex contributes to the total mass
-		float mass = Mass / (vertices.size() * 3); // Uniform distribution
-
-		// Calculate components of inertia tensor
-		IT[0][0] += mass * (r.y * r.y + r.z * r.z); // Ixx
-		IT[1][1] += mass * (r.x * r.x + r.z * r.z); // Iyy
-		IT[2][2] += mass * (r.x * r.x + r.y * r.y); // Izz
-
-		IT[0][1] -= mass * r.x * r.y; // Ixy
-		IT[0][2] -= mass * r.x * r.z; // Ixz
-		IT[1][2] -= mass * r.y * r.z; // Iyz
-	}
-
-	// Ensure symmetry for the products of inertia
-	IT[1][0] = IT[0][1];
-	IT[2][0] = IT[0][2];
-	IT[2][1] = IT[1][2];
-
-	//PrintMat3(IT);
-
-	tensor = IT;
+	// Precompute the inverse inertia tensor
+	inverseInertiaTensor = glm::inverse(tensor);
 }
+
 
 void PhysicsObject::ScaleSize(float scale) {
+
 	Model.ChangeSize(scale);
+	Model.faceLength *= scale;
+
+	// Scale mass accordingly
+	Mass *= scale * scale * scale;  // Volume scales as s³
+
+	// Recompute inertia tensor with scaling rule
 	CalculateInertiaTensor(inertiaTensor);
+	inertiaTensor *= (scale * scale);  // Inertia scales as s²
+
 	inverseInertiaTensor = glm::inverse(inertiaTensor);
 }
+
 
 // Force Manipulation Functions
 
@@ -185,12 +167,14 @@ void PhysicsObject::AddForce(Force newForce, bool isContinuous) {
 	}
 }
 
-void PhysicsObject::CalculateAcceleration() {
+void PhysicsObject::CalculateAcceleration(glm::vec3 gravity) {
 	// Apply Continuous Forces
 	// All other forces will have been applied earlier in the physics pass
 	for (Force force : continuousForces) {
 		acceleration += force.ForceVector / Mass;
 	}
+	acceleration += gravity;
+	lastRecordedAcceleration = acceleration;
 }
 
 void PhysicsObject::CalculateVelocity(float deltaTime)
@@ -214,9 +198,9 @@ void PhysicsObject::CalculatePosition(float deltaTime)
 	rot = glm::normalize(rot);
 }
 
-void PhysicsObject::CalculatePhysics(float deltaTime)
+void PhysicsObject::CalculatePhysics(float deltaTime, glm::vec3 gravity)
 {
-	CalculateAcceleration();
+	CalculateAcceleration(gravity);
 	CalculatePosition(deltaTime);
 	CalculateVelocity(deltaTime); // Position is calculated first because velocity is only updated for the next pass
 
@@ -315,6 +299,11 @@ void PhysicsObject::RenderMesh(const Shader& shader)
 	RenderUtils::RenderMesh(shader, Model.texture, Model, pos, rot);
 }
 
+void PhysicsObject::SetArrowBaseModeScalel(float scale) {
+	arrowLengthScale = scale;
+	ScaleArrowModel(1.0f);
+}
+
 // NEEDS OPTIMIZATION
 // CURRENTLY RECALCULATES VERTICES MULTIPLE TIMES A FRAME REGARDLESS OF WHETHER THERE WERE CHANGES OR NOT
 void PhysicsObject::ScaleArrowModel(float size) {
@@ -365,11 +354,11 @@ void PhysicsObject::RenderArrowsComposed(const Shader& shader, GLuint velocityTe
 	// Default arrow model direction (assumes +Z axis)
 	RenderArrow(shader, velocityTextureID, velocity);
 
-	RenderArrow(shader, accelerationTextureID, acceleration);
+	RenderArrow(shader, accelerationTextureID, lastRecordedAcceleration);
 }
 
 // Renders the velocity and acceleration as its (x, y, z) components
 void PhysicsObject::RenderArrowsDecomposed(const Shader& shader, GLuint velocityTextureID, GLuint accelerationTextureID) {
 	RenderArrowDecomposed(shader, velocityTextureID, velocity);
-	RenderArrowDecomposed(shader, accelerationTextureID, acceleration);
+	RenderArrowDecomposed(shader, accelerationTextureID, lastRecordedAcceleration);
 }

@@ -5,6 +5,7 @@
 
 #include "GlobalData.h"
 #include "PhysicsObject.h" 
+#include "Scenario.h"
 
 class Module {
 protected:
@@ -37,6 +38,8 @@ public:
             ImGui::SliderFloat("X", &vec->x, min, max);
             ImGui::SliderFloat("Y", &vec->y, min, max);
             ImGui::SliderFloat("Z", &vec->z, min, max);
+            float mag = sqrt(pow(vec->x, 2)+ pow(vec->y, 2)+ pow(vec->z, 2));
+            ImGui::Text("%s", std::to_string(mag).c_str());
             ImGui::TreePop();
         }
     }
@@ -57,7 +60,10 @@ public:
     virtual void HandleData(const bool data) {}
     virtual void HandleData(const glm::vec3& data) {}
     virtual void HandleData(const std::pair<std::string, bool*> data) {}
+    virtual void HandleData(const std::pair<float, float> data) {}
+    virtual void HandleData(const std::pair<std::string, float*> data) {}
     virtual void HandleData(PhysicsObject* data) {}
+    virtual void HandleData(Scenario* data) {}
 
     virtual void RenderWindowBody() {}
 

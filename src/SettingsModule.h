@@ -7,7 +7,8 @@
 
 class SettingsModule : public Module {
 private:
-
+    float min;
+    float max;
 public:
 
     SettingsModule() {
@@ -15,6 +16,15 @@ public:
 
     virtual void HandleData(const std::pair<std::string, bool*> data) {
         ImGui::Checkbox(data.first.c_str(), data.second);
+    }
+
+    virtual void HandleData(const std::pair<float, float> data) {
+        min = data.first;
+        max = data.second;
+    }
+
+    virtual void HandleData(const std::pair<std::string, float*> data) {
+        ImGui::SliderFloat(data.first.c_str(), data.second, min, max);
     }
 
     void GenerateObjectHeader(const char* title, PhysicsObject* object) {

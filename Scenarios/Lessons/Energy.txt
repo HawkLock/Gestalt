@@ -1,0 +1,35 @@
+Lesson: Collision and Energy
+
+[Explanation]
+When objects collide, their energy and momentum change based on the type of collision. There are two main types of collisions:
+
+- Elastic Collisions: Both kinetic energy and momentum are conserved. Objects bounce off each other without losing energy.
+- Inelastic Collisions: Momentum is conserved, but some kinetic energy is lost as heat, sound, or deformation.
+- Perfectly Inelastic Collisions: The objects stick together after the collision, losing the most kinetic energy possible while still conserving momentum.
+
+The relationship between the velocities before and after the collision is determined by the conservation laws:
+
+Momentum Conservation:
+m1 * v1 + m2 * v2 = m1 * v1' + m2 * v2'
+
+Kinetic Energy Conservation (Elastic Collisions only):
+(1/2) * m1 * v1^2 + (1/2) * m2 * v2^2 = (1/2) * m1 * v1'^2 + (1/2) * m2 * v2'^2
+
+The coefficient of restitution (e) determines how "bouncy" a collision is:
+- e = 1 for elastic collisions
+- 0 < e < 1 for inelastic collisions
+- e = 0 for perfectly inelastic collisions
+
+[Scenario]
+Two cubes with different masses and velocities are set up to collide.
+
+- Sphere A: Mass = 20 kg, Initial Velocity = 3 m/s (right)
+- Sphere B: Mass = 10 kg, Initial Velocity = -2 m/s (left)
+- Coefficient of Restitution: 0.8 (partially elastic collision)
+
+Run the simulation to observe:
+- How their velocities change after impact.
+- How kinetic energy is distributed before and after collision.
+- The effect of changing the coefficient of restitution.
+
+Try modifying the coefficient of restitution to 1 (elastic) or 0 (perfectly inelastic) to see different behaviors.

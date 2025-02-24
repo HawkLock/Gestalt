@@ -43,9 +43,6 @@ public:
 
 protected:
 
-	//glm::vec3 gravityVec = glm::vec3(0, -9.8, 0);
-	glm::vec3 gravityVec = glm::vec3(0.0f, 0.0f, 0.0f); // disabled gravity
-
 	float sideLength = 1;
 	
 	float Mass; // In Kg
@@ -53,7 +50,7 @@ protected:
 	glm::mat3 inverseInertiaTensor;
 	float momentOfInertia;
 
-	float restitution = 0.2f;
+	float restitution = 1.0f;
 	float staticFriction = 0.4f;
 	float kineticFriction = 0.2;
 
@@ -72,6 +69,7 @@ public:
 	glm::quat rot;
 
 	glm::vec3 acceleration;
+	glm::vec3 lastRecordedAcceleration; // For display purposes
 	glm::vec3 velocity; // In m/s
 	glm::vec3 angularAcceleration;
 	glm::vec3 angularVelocity;
@@ -102,7 +100,7 @@ public:
 	glm::mat3 GetInverseInertiaTensor() { 
 		glm::mat3 rotationMatrix = glm::mat3_cast(rot);
 		glm::mat3 worldInertiaTensor = rotationMatrix * inertiaTensor * glm::transpose(rotationMatrix);
-		return glm::inverse(inertiaTensor);
+		return glm::inverse(worldInertiaTensor);
 	}
 
 	Mesh& GetMesh() { return Model; }
@@ -136,10 +134,10 @@ public:
 	void CalculateInertiaTensor(glm::mat3& tensor);
 
 	void AddForce(Force newForce, bool isContinuous);
-	void CalculateAcceleration();
+	void CalculateAcceleration(glm::vec3 gravity);
 	void CalculateVelocity(float deltaTime);
 	void CalculatePosition(float deltaTime);
-	void CalculatePhysics(float deltaTime);
+	void CalculatePhysics(float deltaTime, glm::vec3 gravity);
 
 	float CalculateTranslationalEnergy();
 	float CalculateRotationalEnergy();
@@ -149,6 +147,7 @@ public:
 
 	std::vector<glm::vec3> GetVertices();
 
+	void SetArrowBaseModeScalel(float scale);
 	void ScaleArrowModel(float size);
 
 	void RenderMesh(const Shader& shader); 

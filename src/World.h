@@ -34,10 +34,9 @@ protected:
 	std::vector<PhysicsObject*> PhysicObjects;
 	std::vector<TriggerObject*> TriggerObjects;
 	Renderer renderer;
-	glm::vec3 gravity = glm::vec3(0.0f, -9.8f, 0.0f);
+	glm::vec3 gravity = glm::vec3(0.0f, -9.8f*0.1, 0.0f);
 	float mu_static = 0.1f;
 	float contactThreshold = 0.5;
-	const float restitution = 1.f;
 
 	PhysicsObject* focusObject;
 	bool followFocusedObject = false;
@@ -46,7 +45,7 @@ protected:
 	bool renderArrowsOnTop = false;
 	bool renderArrowLabels = false;
 
-	const std::string scenarioPath = "../Scenarios/";
+	Scenario scene;
 
 public:
 
@@ -65,6 +64,7 @@ public:
 
 	void ScanForScenarios();
 	void LoadWorld();
+	void ScaleWorld();
 
 	void Update();
 	void ScenarioUpdate();
@@ -102,7 +102,4 @@ public:
 
 	Renderer GetRenderer() { return renderer; }
 	glm::vec3 GetGravity() { return gravity; }
-
-	void LoadScenario();
-
 };

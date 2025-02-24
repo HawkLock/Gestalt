@@ -23,7 +23,12 @@ public:
 	std::vector<TriggerObject*> triggerObjects;
 	glm::vec3 gravity;
 
+	std::string title;
+	std::string explanation;
+	std::string scenario;
+
 	void LoadScenarioFromFile(const std::string& filepath);
+	void LoadLessonFromFile(const std::string& filepath);
 
 	static void SaveScenarioToFile(const std::string& filepath, const std::string& name, std::vector<PhysicsObject*> PhysicObjects, std::vector<TriggerObject*> TriggerObjects, glm::vec3 gravity);
 };

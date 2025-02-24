@@ -22,6 +22,7 @@
 #include "SettingsModule.h"
 #include "FocusModule.h"
 #include "ScenarioModule.h"
+#include "LessonModule.h"
 
 #include "Camera.h"
 #include "PhysicsObject.h"
@@ -34,8 +35,8 @@
 class Renderer {
 
 public:
-    unsigned int SCR_WIDTH = 1000;
-    unsigned int SCR_HEIGHT = 750;
+    unsigned int SCR_WIDTH = 1500;
+    unsigned int SCR_HEIGHT = 1125;
 
     glm::vec3 backgroundColor = glm::vec3(43, 43, 68);
     glm::vec3 gridColor = glm::vec3(78, 133, 120);
@@ -98,12 +99,14 @@ public:
     unsigned int texture1, texture2, redTexture, blueTexture;
     unsigned int gridTexture;
 
-    const float fixedTimeStep = 0.02f;
     float timeAccumulator = 0.0f;
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
 
     std::vector<Module*> modules; // effectively GUI windows
+    bool showFocusObject = false;
+    bool showScenarioControl = false;
+    bool showLessonModule = false;
 
     float crosshairVertices[16] = {
         // Horizontal line
