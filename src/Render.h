@@ -105,8 +105,9 @@ public:
 
     std::vector<Module*> modules; // effectively GUI windows
     bool showFocusObject = false;
-    bool showScenarioControl = false;
-    bool showLessonModule = false;
+    bool showScenarioControl = true;
+    bool showLessonModule = true;
+    bool showLessonSubModule = true;
 
     float crosshairVertices[16] = {
         // Horizontal line
@@ -132,7 +133,7 @@ public:
     void RenderObjectTable(std::vector<PhysicsObject*> RenderObjects);
     void RenderArrowLabels(PhysicsObject* obj, const glm::mat4& view, const glm::mat4& projection, int screenWidth, int screenHeight);
     void RenderGrid(int gridSize, float gridSpacing, const glm::mat4& view, const glm::mat4& projection, Camera* camera);
-    void RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, SettingsBus settingsBus);
+    void RenderLoop(Camera* camera, SettingsBus settingsBus);
     
     void InitImGUI(GLFWwindow *window);
     void InitTextures();

@@ -34,7 +34,6 @@ protected:
 	std::vector<PhysicsObject*> PhysicObjects;
 	std::vector<TriggerObject*> TriggerObjects;
 	Renderer renderer;
-	glm::vec3 gravity = glm::vec3(0.0f, -9.8f*0.1, 0.0f);
 	float mu_static = 0.1f;
 	float contactThreshold = 0.5;
 
@@ -101,5 +100,4 @@ public:
 	bool checkSATCollision(const std::vector<Vertex>& vertices1, const std::vector<Vertex>& vertices2, std::vector<glm::vec3>& axes, Overlap& smallestOverlap);
 
 	Renderer GetRenderer() { return renderer; }
-	glm::vec3 GetGravity() { return gravity; }
 };

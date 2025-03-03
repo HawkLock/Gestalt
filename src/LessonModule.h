@@ -10,11 +10,16 @@
 class LessonModule : public Module {
 private: 
     Scenario* scene;
+    bool* showLessonSubmodule;
 
 public:
 
     virtual void HandleData(Scenario* data) {
         scene = data;
+    }
+
+    virtual void HandleData(bool* data) {
+        showLessonSubmodule = data;
     }
 
     LessonModule() {
@@ -23,6 +28,10 @@ public:
 
     void RenderWindow() {
         ImGui::Begin("Lesson");
+
+        if (showLessonSubmodule != nullptr) {
+            ImGui::Checkbox("Show Lesson Submodule", showLessonSubmodule);
+        }
 
         if (scene->title.empty()) {
             ImGui::Text("Error: Lesson could not be loaded.");

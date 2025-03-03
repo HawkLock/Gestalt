@@ -26,6 +26,9 @@ PhysicsObject::PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> i
 	this->modelPath = modelPath;
 	this->texturePath = texturePath;
 	this->arrowPath = arrowModelPath;
+	this->oriignalFaceSize = faceSize;
+
+	COM = CalculateCOM();
 
 	// Scale size of arrows
 	ArrowModel.ChangeSize(1.5f);
@@ -137,6 +140,7 @@ void PhysicsObject::CalculateInertiaTensor(glm::mat3& tensor) {
 		0.0f, Iyy, 0.0f,
 		0.0f, 0.0f, Izz
 	);
+	inertiaTensor = tensor;
 
 	// Precompute the inverse inertia tensor
 	inverseInertiaTensor = glm::inverse(tensor);
@@ -146,14 +150,11 @@ void PhysicsObject::CalculateInertiaTensor(glm::mat3& tensor) {
 void PhysicsObject::ScaleSize(float scale) {
 
 	Model.ChangeSize(scale);
+	std::cout << GetFaceExtent() << std::endl;
 	Model.faceLength *= scale;
-
-	// Scale mass accordingly
-	Mass *= scale * scale * scale;  // Volume scales as s³
 
 	// Recompute inertia tensor with scaling rule
 	CalculateInertiaTensor(inertiaTensor);
-	inertiaTensor *= (scale * scale);  // Inertia scales as s²
 
 	inverseInertiaTensor = glm::inverse(inertiaTensor);
 }
@@ -193,19 +194,20 @@ void PhysicsObject::CalculatePosition(float deltaTime)
 	pos += (velocity * deltaTime) + (0.5f * acceleration * deltaTime * deltaTime);
 	// Angular
 	glm::quat angularVelocityQuat(0.0f, angularVelocity.x, angularVelocity.y, angularVelocity.z);
-	glm::quat deltaRot = 0.5f * angularVelocityQuat * rot;
-	rot += deltaRot * deltaTime;
-	rot = glm::normalize(rot);
+	glm::quat deltaRot = glm::quat(0, angularVelocity * deltaTime * 0.5f);
+	rot += deltaRot * rot;
+	rot = glm::normalize(rot);	
 }
 
 void PhysicsObject::CalculatePhysics(float deltaTime, glm::vec3 gravity)
 {
 	CalculateAcceleration(gravity);
+	CalculateVelocity(deltaTime);
 	CalculatePosition(deltaTime);
-	CalculateVelocity(deltaTime); // Position is calculated first because velocity is only updated for the next pass
 
-	// Reset acceleration
+	// Reset accelerations
 	acceleration = glm::vec3();
+	angularAcceleration = glm::vec3(0.0f);
 }
 
 void PhysicsObject::applyFriction(float modifier)

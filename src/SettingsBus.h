@@ -9,6 +9,10 @@
 class SettingsBus {
 
 public:
+    // Objects
+    std::vector<PhysicsObject*> PhysicObjects;
+    std::vector<TriggerObject*> TriggerObjects;
+
     // Focus Object
     PhysicsObject* focusObject;
     bool* followFocusedObject;

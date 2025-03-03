@@ -1,4 +1,4 @@
-lData Scene1 ../Scenarios/Lessons/Scene1.txt
-pObj -2 0 0 0.707107 -0.707107 -0 -0 0 0 0 0 0 0 100 0 2 ../Models/cube1.txt ../Textures/CrateTexture.jpg ../Models/arrow.txt 0
-pObj 4 0 0 1 0 0 0 -1 0 0 0 0 0 100 0 2 ../Models/cube1.txt ../Textures/CrateTexture.jpg ../Models/arrow.txt 0
-pObj -6 0 0 0 0 0 1 0 0 0 0 0 0 100 0 2 ../Models/cube1.txt ../Textures/CrateTexture.jpg ../Models/arrow.txt 0
+sData 0 -0.98 0 0.4 1 
+pObj -2 0 0 0.707107 -0.707107 -0 -0 0 0 0 0 0 0 6.4 0 0.8 ../Models/cube1.txt ../Textures/CrateTexture.jpg ../Models/arrow.txt 0
+pObj 4 0 0 1 0 0 0 -1 0 0 0 0 0 6.4 0 0.8 ../Models/cube1.txt ../Textures/CrateTexture.jpg ../Models/arrow.txt 0
+pObj -6 0 0 0 0 0 1 0 0 0 0 0 0 6.4 0 0.8 ../Models/cube1.txt ../Textures/CrateTexture.jpg ../Models/arrow.txt 0

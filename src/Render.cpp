@@ -399,7 +399,7 @@ void Renderer::RenderGrid(int gridSize, float gridSpacing, const glm::mat4& view
     glDeleteBuffers(1, &zAxisVBO);
 }
 
-void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObjectsP, std::vector<TriggerObject*> RenderObjectsT, SettingsBus settingsBus)
+void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
 {
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
@@ -435,12 +435,12 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     // Render the grid
     RenderGrid(GRID_SIZE, GRID_SPACING, view, projection, camera);
 
-    for (auto& object : RenderObjectsT)
+    for (auto& object : settingsBus.TriggerObjects)
     {
         object->RenderMesh(shader, texture2);
     }
 
-    for (auto& object : RenderObjectsP)
+    for (auto& object : settingsBus.PhysicObjects)
     {
         object->RenderMesh(shader);
     }
@@ -449,7 +449,7 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     arrowShader.setMat4("projection", projection);
     arrowShader.setMat4("view", view);
     if (*settingsBus.renderArrows == true) {
-        for (auto& object : RenderObjectsP)
+        for (auto& object : settingsBus.PhysicObjects)
         {
                 if (*settingsBus.renderArrowsOnTop) {
                     glDisable(GL_DEPTH_TEST);
@@ -470,15 +470,12 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     glBindVertexArray(crosshairVAO);  // Set the VAO for the crosshair
     glDrawArrays(GL_LINES, 0, 4);  // Draw the two lines that make the crosshair
 
-
-    PhysicsObject* obj = RenderObjectsP[0];
-
     // ImGUI
     ImGui::Begin("Modules");
 
     if (ImGui::TreeNode("Object List")) {
         // Update and render objects module
-        modules[0]->UpdateData(RenderObjectsP);
+        modules[0]->UpdateData(settingsBus.PhysicObjects);
         modules[0]->RenderWindow();
         ImGui::TreePop();
     }
@@ -529,7 +526,17 @@ void Renderer::RenderLoop(Camera* camera, std::vector<PhysicsObject*> RenderObje
     if (showLessonModule) {
         if (settingsBus.scene != nullptr) {
             modules[4]->UpdateData(settingsBus.scene);
+            modules[4]->UpdateData(&showLessonSubModule);
             modules[4]->RenderWindow();
+        }
+        if (showLessonSubModule) {
+            if (settingsBus.scene->lessonModule != nullptr) {
+                // Uploads all data possible (if it doesn't need it, it will skip)
+                settingsBus.scene->lessonModule->UpdateData(settingsBus.PhysicObjects);
+                settingsBus.scene->lessonModule->UpdateData(settingsBus.TriggerObjects);
+
+                settingsBus.scene->lessonModule->RenderWindow();
+            }
         }
     }
 

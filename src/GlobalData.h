@@ -17,7 +17,11 @@ public:
     static std::string scenarioPath;
     static int selectedScenario;
     static bool shouldLoadScenario;
+    static bool shouldRescanScenarios;
     static std::vector<std::string> availableScenarios;
+
+    // Information Passing
+    static float totalEnergy;
 
     // Time
     static float time;
@@ -30,6 +34,7 @@ public:
     static float scale;
 
     // Settings
+    static glm::vec3 gravity;
     static float gravityScale;
     static bool lockedRotation;
 

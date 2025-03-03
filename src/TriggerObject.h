@@ -26,6 +26,9 @@ public:
 	glm::vec3 angularAcceleration;
 	glm::vec3 angularVelocity;
 
+	std::string modelPath;
+	std::string texturePath;
+
 	TriggerObject(glm::vec3 initialPosition, glm::quat initialRot, float faceSize, std::string& modelPath, std::string &texturePath);
 
 	// Getters and Setters

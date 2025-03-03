@@ -8,7 +8,6 @@ Mesh::Mesh(glm::vec3 initialPosition, float faceSize, std::vector<float> inputVe
     edges = std::vector<glm::vec3>();
 
 	// Generate the vertices for the cube
-    float verticeDistance = faceLength / 2;
     verticesU = inputVertices;
 
     SetupMeshU();
@@ -23,7 +22,6 @@ Mesh::Mesh(glm::vec3 initialPosition, float faceSize, std::string &modelPath, st
     faceLength = faceSize;
 
     // Generate the vertices for the cube
-    float verticeDistance = faceLength / 2;
 
     vertices = std::vector<Vertex>();
     parseVertexData(modelPath, vertices, normals, indices, edges);
@@ -184,6 +182,7 @@ void Mesh::ChangeSize(float scale)
         vertices[i].y *= scale;   // Scale y
         vertices[i].z *= scale;   // Scale z
     }
+    faceLength *= scale;
 
     SetupMesh();
 }
@@ -196,6 +195,8 @@ void Mesh::ChangeSizeFromOriginal(float scale)
         vertices[i].y = originalVertices[i].y * scale;   // Scale y
         vertices[i].z = originalVertices[i].z * scale;   // Scale z
     }
+    
+    faceLength *= scale;
 
     SetupMesh();
 }

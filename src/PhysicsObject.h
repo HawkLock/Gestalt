@@ -46,6 +46,7 @@ protected:
 	float sideLength = 1;
 	
 	float Mass; // In Kg
+	glm::vec3 COM;
 	glm::mat3 inertiaTensor;
 	glm::mat3 inverseInertiaTensor;
 	float momentOfInertia;
@@ -75,6 +76,8 @@ public:
 	glm::vec3 angularVelocity;
 
 	// For Serialization
+	float scale = 1;
+	float oriignalFaceSize;
 	std::string modelPath;
 	std::string texturePath;
 	std::string arrowPath;
@@ -90,6 +93,7 @@ public:
 	glm::vec3 GetCurrentNetForce() { return glm::vec3(); }
 
 	float GetMass() { return Mass; }
+	glm::vec3 GetCOM() { return COM; }
 	float GetMomentOfInertia() { return momentOfInertia; }
 
 	glm::mat3 GetInertiaTensor() {
@@ -102,6 +106,21 @@ public:
 		glm::mat3 worldInertiaTensor = rotationMatrix * inertiaTensor * glm::transpose(rotationMatrix);
 		return glm::inverse(worldInertiaTensor);
 	}
+	glm::mat3 GetInverseInertiaTensor(glm::vec3 collisionPoint) {
+		glm::mat3 rotationMatrix = glm::mat3_cast(rot);
+		glm::mat3 worldInverseInertiaTensor = rotationMatrix * inverseInertiaTensor * glm::transpose(rotationMatrix);
+
+		// Parallel Axis Correction
+		glm::mat3 identity(1.0f);
+		glm::vec3 d = collisionPoint - COM;
+		glm::mat3 outerProduct = glm::outerProduct(d, d);
+		glm::mat3 parallelAxisCorrection = Mass * (glm::dot(d, d) * identity - outerProduct);
+
+		glm::mat3 correctedWorldInertiaTensor = worldInverseInertiaTensor + parallelAxisCorrection;
+
+		return correctedWorldInertiaTensor;
+	}
+
 
 	Mesh& GetMesh() { return Model; }
 	Mesh* GetMeshPtr() { return &Model; }

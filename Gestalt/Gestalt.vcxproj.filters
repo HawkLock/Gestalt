@@ -25,6 +25,9 @@
     <Filter Include="Header Files\Modules">
       <UniqueIdentifier>{d45898b1-7081-476d-9889-3b825777af02}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Modules\LessonModules">
+      <UniqueIdentifier>{1ed81d20-ed69-455d-b0a3-7fb526b4d85e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Textures\CrateTexture.jpg">
@@ -196,6 +199,12 @@
     <ClInclude Include="..\src\LessonModule.h">
       <Filter>Header Files\Modules</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\EnergyLessonModule.h">
+      <Filter>Header Files\Modules\LessonModules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\BaseLessonModule.h">
+      <Filter>Header Files\Modules\LessonModules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FragmentShader.frag">
@@ -217,6 +226,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\ArrowFragmentShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\CubeShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\CubeShader.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

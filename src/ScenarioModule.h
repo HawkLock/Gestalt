@@ -56,6 +56,11 @@ public:
             ImGui::EndCombo();
         }
 
+        // Load scenario button
+        if (ImGui::Button("Scan Available Scenarios")) {
+            GlobalData::shouldRescanScenarios = true;
+        }
+
         ImGui::SliderFloat("Time Modifier", &GlobalData::timeModifier, 0, 2);
 
         ImGui::Checkbox("Paused", &GlobalData::paused);

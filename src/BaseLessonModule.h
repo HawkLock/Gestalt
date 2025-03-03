@@ -3,11 +3,13 @@
 #include <iostream>
 #include <cstdio> 
 
-#include "GlobalData.h"
-#include "PhysicsObject.h" 
-#include "Scenario.h"
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
 
-class Module {
+#include "GlobalData.h"
+
+class BaseLessonModule {
 protected:
     // For every object slider
     float velocityMin = -5;
@@ -17,7 +19,6 @@ protected:
     float accelerationMax = 3;
 
 public:
-    std::vector<PhysicsObject*> objects;
 
     virtual void RenderWindow() {}
     // For more complex data handling
@@ -38,7 +39,7 @@ public:
             ImGui::SliderFloat("X", &vec->x, min, max);
             ImGui::SliderFloat("Y", &vec->y, min, max);
             ImGui::SliderFloat("Z", &vec->z, min, max);
-            float mag = sqrt(pow(vec->x, 2)+ pow(vec->y, 2)+ pow(vec->z, 2));
+            float mag = sqrt(pow(vec->x, 2) + pow(vec->y, 2) + pow(vec->z, 2));
             ImGui::Text("%s", std::to_string(mag).c_str());
             ImGui::TreePop();
         }
@@ -55,18 +56,17 @@ public:
     }
 
     // Handlers for different types of data
-    virtual void HandleData(const std::vector<PhysicsObject*>& data) {}
     virtual void HandleData(const int data) {}
     virtual void HandleData(const bool data) {}
-    virtual void HandleData(bool* data) {}
     virtual void HandleData(const glm::vec3& data) {}
+    virtual void HandleData(float data) {}
+    virtual void HandleData(std::vector<PhysicsObject*> data) {}
+    virtual void HandleData(std::vector<TriggerObject*> data) {}
     virtual void HandleData(const std::pair<std::string, bool*> data) {}
     virtual void HandleData(const std::pair<float, float> data) {}
     virtual void HandleData(const std::pair<std::string, float*> data) {}
-    virtual void HandleData(PhysicsObject* data) {}
-    virtual void HandleData(Scenario* data) {}
 
     virtual void RenderWindowBody() {}
 
-    virtual ~Module() = default; 
+    virtual ~BaseLessonModule() = default;
 };

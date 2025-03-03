@@ -53,8 +53,10 @@
     <ClInclude Include="..\include\imgui\imstb_rectpack.h" />
     <ClInclude Include="..\include\imgui\imstb_textedit.h" />
     <ClInclude Include="..\include\imgui\imstb_truetype.h" />
+    <ClInclude Include="..\src\BaseLessonModule.h" />
     <ClInclude Include="..\src\Camera.h" />
     <ClInclude Include="..\src\ConvexShape.h" />
+    <ClInclude Include="..\src\EnergyLessonModule.h" />
     <ClInclude Include="..\src\EPAAlgorithm.h" />
     <ClInclude Include="..\src\FocusModule.h" />
     <ClInclude Include="..\src\GJKAlgorithm.h" />
@@ -83,6 +85,8 @@
     <None Include="..\Shaders\ArrowFragmentShader.frag" />
     <None Include="..\Shaders\CrosshairFragmentShader.frag" />
     <None Include="..\Shaders\CrosshairVertexShader.vert" />
+    <None Include="..\Shaders\CubeShader.frag" />
+    <None Include="..\Shaders\CubeShader.vert" />
     <None Include="..\Shaders\FragmentShader.frag" />
     <None Include="..\Shaders\GridFragmentShader.frag" />
     <None Include="..\Shaders\GridVertexShader.vert" />
