@@ -12,7 +12,7 @@ bool GlobalData::shouldRescanScenarios = false;
 std::vector<std::string> GlobalData::availableScenarios;
 
 float GlobalData::time = 1.0;
-bool GlobalData::paused = false;
+bool GlobalData::paused = true;
 float GlobalData::timeModifier = 1.0f;
 float GlobalData::minimumFixedTimeStep = 0.0001;
 float GlobalData::fixedTimeStep = 0.001f;

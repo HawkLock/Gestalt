@@ -192,6 +192,7 @@ void PhysicsObject::CalculatePosition(float deltaTime)
 {
 	// Linear
 	pos += (velocity * deltaTime) + (0.5f * acceleration * deltaTime * deltaTime);
+
 	// Angular
 	glm::quat angularVelocityQuat(0.0f, angularVelocity.x, angularVelocity.y, angularVelocity.z);
 	glm::quat deltaRot = glm::quat(0, angularVelocity * deltaTime * 0.5f);

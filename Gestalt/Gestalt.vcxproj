@@ -33,6 +33,7 @@
     <ClCompile Include="..\src\Camera.cpp" />
     <ClCompile Include="..\src\glad.c" />
     <ClCompile Include="..\src\GlobalData.cpp" />
+    <ClCompile Include="..\src\LessonStatics.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\Mesh.cpp" />
     <ClCompile Include="..\src\PhysicsObject.cpp" />
@@ -68,6 +69,7 @@
     <ClInclude Include="..\src\ObjectModule.h" />
     <ClInclude Include="..\src\PhysicsObject.h" />
     <ClInclude Include="..\src\PhysicsUtility.h" />
+    <ClInclude Include="..\src\ProjectileMotionLessonModule.h" />
     <ClInclude Include="..\src\Raycast.h" />
     <ClInclude Include="..\src\Render.h" />
     <ClInclude Include="..\src\RenderUtils.h" />

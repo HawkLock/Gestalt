@@ -8,6 +8,8 @@
 #include "imgui/imgui_impl_opengl3.h"
 
 #include "GlobalData.h"
+#include "PhysicsObject.h"
+#include "TriggerObject.h"
 
 class BaseLessonModule {
 protected:
@@ -58,10 +60,13 @@ public:
     // Handlers for different types of data
     virtual void HandleData(const int data) {}
     virtual void HandleData(const bool data) {}
-    virtual void HandleData(const glm::vec3& data) {}
     virtual void HandleData(float data) {}
+    virtual void HandleData(float* data) {}
+    virtual void HandleData(const glm::vec3& data) {}
     virtual void HandleData(std::vector<PhysicsObject*> data) {}
     virtual void HandleData(std::vector<TriggerObject*> data) {}
+    virtual void HandleData(PhysicsObject* data) {}
+    virtual void HandleData(TriggerObject* data) {}
     virtual void HandleData(const std::pair<std::string, bool*> data) {}
     virtual void HandleData(const std::pair<float, float> data) {}
     virtual void HandleData(const std::pair<std::string, float*> data) {}

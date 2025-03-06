@@ -39,37 +39,49 @@ void World::ScanForScenarios() {
 void World::LoadWorld() {
 	std::string arrowModelPath = "../Models/arrow.txt";
 
-	glm::vec3 position1 = glm::vec3(0.f, -5.f, 0.0f);
+	glm::vec3 position1 = glm::vec3(-10.f, 0.f, 0.0f);
 	glm::quat rotation1 = glm::angleAxis(glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f));
 	std::vector<glm::vec3> initialActingForces1 = std::vector<glm::vec3>();
 	float mass1 = 100.f;
 	float faceSize1 = 2.f;
 
-	std::string modelPath1 = "../Models/plane.txt";
+	std::string modelPath1 = "../Models/cube1.txt";
 	std::string texturePath1 = "../Textures/CrateTexture.jpg";
 
 	// Create object1 and add it to the world
-	testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, true, faceSize1, modelPath1, texturePath1, arrowModelPath);
+	float mag = 10.f;
+	float angle = 45.f;
+	glm::vec3 vel = glm::vec3(cos(angle) * mag, sin(angle) * mag, 0);
+	testObj1 = new PhysicsObject(position1, initialActingForces1, rotation1, mass1, false, faceSize1, modelPath1, texturePath1, arrowModelPath);
+	testObj1->SetVelocity(vel);
 	AddObject(testObj1);
-	testObj1->ScaleSize(3);
 
 	// Define the variables for object2
-	glm::vec3 position2 = glm::vec3(0.f, 0.0f, 0.f);
+	glm::vec3 position2 = glm::vec3(10.f, 0.0f, 0.f);
 	glm::quat rotation2 = glm::quat(glm::vec3(0.0f)); // Identity quaternion
+	rotation2 = glm::angleAxis(glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f));
 	std::vector<glm::vec3> initialActingForces2 = std::vector<glm::vec3>();
 	float mass2 = 100.0f;
 	float faceSize2 = 2.0f;
 
-	std::string modelPath2 = "../Models/cube1.txt";
-	std::string texturePath2 = "../Textures/CrateTexture.jpg";
+	std::string modelPath2 = "../Models/sliver.txt";
+	std::string texturePath2 = "../Textures/Blue.png";
 
 	// Create object2 and add it to the world
-	testObj2 = new PhysicsObject(position2, initialActingForces2, rotation2, mass2, false, faceSize2, modelPath2, texturePath2, arrowModelPath);
-	AddObject(testObj2);
+	TriggerObject* triggerObj = new TriggerObject(position2, rotation2, faceSize2, modelPath2, texturePath2);
+	triggerObj->setTrigger(trigger);
+	AddObject(triggerObj);
+	triggerObj->ScaleSize(0.5);
 
-	scene.gravity = GlobalData::gravity;
+	scene.gravity = glm::vec3(0.0, -9.8, 0.0);
+	scene.scale = 0.5;
+	scene.timeScale = 0.15;
+	scene.title = "Projectile-Motion";
+	scene.lessonPath = "../Scenarios/Lessons/Energy.txt";
+	scene.lessonModuleID = "Projectile_Motion";
 
-	//Scenario::SaveScenarioToFile("../Scenarios/Platform.txt", "Platform", PhysicObjects, TriggerObjects, scene);
+	Scenario::SaveScenarioToFile("../Scenarios/ProjectileMotion.txt", "Projectile-Motion", PhysicObjects, TriggerObjects, scene);
+	//LoadScenario("../Scenarios/ProjectileMotion.txt", true);
 }
 
 void World::ClearWorld() {
@@ -92,6 +104,9 @@ void World::LoadScenario(const std::string& filepath, bool clearWorld) {
 	scene.LoadScenarioFromFile(filepath);
 	for (int i = 0; i < scene.physicsObjects.size(); i++) {
 		AddObject(scene.physicsObjects[i]);
+	}
+	for (int i = 0; i < scene.triggerObjects.size(); i++) {
+		AddObject(scene.triggerObjects[i]);
 	}
 	ScaleWorld();
 	Scenario::SaveScenarioToFile(filepath, scene.name, PhysicObjects, TriggerObjects, scene);
@@ -448,58 +463,6 @@ void World::resolveCollision(PhysicsObject* objA, PhysicsObject* objB, const Ove
 	//applyContactForces(objA, objB, overlap);
 }
 
-
-//void World::CollisionUpdate() {
-//	for (int i = 0; i < PhysicObjects.size(); i++) {
-//		for (int z = i + 1; z < PhysicObjects.size(); z++) {
-//			// Extract vertices and normals from the meshes
-//			std::vector<Vertex> obj1Vertices = PhysicObjects[i]->GetMesh().vertices;
-//			std::vector<Vertex> obj2Vertices = PhysicObjects[z]->GetMesh().vertices;
-//			std::vector<glm::vec3> normals1 = PhysicObjects[i]->GetMesh().normals;
-//			std::vector<glm::vec3> normals2 = PhysicObjects[z]->GetMesh().normals;
-//
-//			ApplyObjectTransformation(obj1Vertices, normals1, PhysicObjects[i]);
-//			ApplyObjectTransformation(obj2Vertices, normals2, PhysicObjects[z]);
-//
-//			std::vector<glm::vec3> axes;
-//
-//			// Add normals as axes
-//			for (const auto& normal : normals1) {
-//				axes.push_back(normal);
-//			}
-//
-//			for (const auto& normal : normals2) {
-//				axes.push_back(normal);
-//			}
-//
-//			generateSeparationAxes(axes, PhysicObjects[i]->GetMesh().edges, PhysicObjects[z]->GetMesh().edges);
-//			RemoveParallelVectors(axes);
-//
-//			//int i = 0;
-//			//std::cout << "Axes: " << axes.size() << std::endl;
-//			//for (glm::vec3 axis : axes) {
-//			//	i++;
-//			//    std::cout << "Axis: " << i << ": " << axis.x << ", " << axis.y << ", " << axis.z << std::endl;
-//			//}
-//			//std::cout << std::endl;
-//
-//			Overlap smallestOverlap = Overlap();
-//			bool result = checkSATCollision(obj1Vertices, obj2Vertices, axes, smallestOverlap);
-//			if (result) {
-//				// Collision reaction
-//				std::chrono::high_resolution_clock::time_point currTime = std::chrono::high_resolution_clock::now();
-//				std::chrono::duration<double> elapsed = currTime - startTime;
-//
-//				//std::cout << "Time: " << elapsed.count() << " -- Collision Depth: " << smallestOverlap.depth << std::endl;
-//				std::cout << "Time: " << elapsed.count() << " -- Collision Depth: " << smallestOverlap.depth << " -- Axis: " << smallestOverlap.axis.x << ", " << smallestOverlap.axis.y << ", " << smallestOverlap.axis.z << std::endl;
-//
-//				resolveCollision(PhysicObjects[i], PhysicObjects[z], smallestOverlap);
-//				// PhysicObjects[i]->SetPos(PhysicObjects[i]->GetCurrentPos() + smallestOverlap.axis * smallestOverlap.depth);
-//			}
-//		}
-//	}
-//}
-
 static bool AreObjectsAligned(const glm::quat& orientation1, const glm::quat& orientation2, const glm::vec3& position1, const glm::vec3& position2, float tolerance = 0.001f) {
 	// Check if orientations are the same
 	glm::quat relativeRotation = glm::inverse(orientation1) * orientation2;
@@ -680,6 +643,7 @@ void World::CollisionUpdate() {
 
 				TriggerObjects[z]->Trigger(currTime, startTime);
 			}
+
 		}
 	}
 }
@@ -1004,7 +968,7 @@ void World::PhysicsUpdate()
 	for (int i = 0; i < PhysicObjects.size(); i++)
 	{
 		if (!PhysicObjects[i]->IsAnchored()) {
-			PhysicObjects[i]->CalculatePhysics(GlobalData::fixedTimeStep * GlobalData::time, scene.gravity * GlobalData::gravityScale);
+			PhysicObjects[i]->CalculatePhysics(GlobalData::fixedTimeStep * GlobalData::time, GlobalData::gravity * GlobalData::gravityScale);
 		}
 	}
 }

@@ -6,6 +6,7 @@
 #include <chrono>
 
 #include "Mesh.h"
+#include "RenderUtils.h"
 
 class TriggerObject {
 
@@ -26,6 +27,7 @@ public:
 	glm::vec3 angularAcceleration;
 	glm::vec3 angularVelocity;
 
+	float scale = 1;
 	std::string modelPath;
 	std::string texturePath;
 
@@ -62,7 +64,7 @@ public:
 
 	std::vector<glm::vec3> GetVertices();
 
-	void RenderMesh(const Shader& shader, GLuint textureID);
+	void RenderMesh(const Shader& shader);
 
 private:
 

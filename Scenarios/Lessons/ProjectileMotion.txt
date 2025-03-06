@@ -1,0 +1,37 @@
+Lesson: Projectile Motion  
+
+[Explanation]  
+Projectile motion describes the motion of an object moving through the air under the influence of gravity after being launched. The motion can be analyzed as two independent components:  
+
+- Horizontal Motion: The object moves with a constant velocity because there is no horizontal acceleration (ignoring air resistance).  
+- Vertical Motion: The object accelerates downward due to gravity (g = 9.81 m/s²).  
+
+The key equations governing projectile motion are:  
+
+- Horizontal displacement:  
+  x = v0 * cos(θ) * t  
+- Vertical displacement:  
+  y = v0 * sin(θ) * t - (1/2) * g * t^2  
+- Time of flight (for a projectile launched and landing at the same height):  
+  t = (2 * v0 * sin(θ)) / g  
+- Maximum height:  
+  h = (v0^2 * sin^2(θ)) / (2 * g)  
+- Range (horizontal distance traveled before landing):  
+  R = (v0^2 * sin(2θ)) / g  
+
+These equations show that the angle and initial velocity affect how far and high the projectile will go.  
+
+[Scenario]  
+A cannon fires a projectile at an angle with a given velocity.  
+
+- Initial Speed: 25 m/s  
+- Launch Angle: 45°  
+- Gravity: 9.81 m/s²  
+
+Run the simulation to observe:  
+- The projectile’s trajectory.  
+- The maximum height reached.  
+- The total time the projectile stays in the air.  
+- The horizontal distance (range) the projectile travels.  
+
+Try modifying the launch angle and initial velocity to see how they affect the projectile's motion. Experiment with angles like 30°, 60°, and 90° to compare the results.

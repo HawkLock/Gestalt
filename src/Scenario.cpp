@@ -75,6 +75,9 @@ void Scenario::LoadScenarioFromFile(const std::string& filepath) {
             if (!(iss >> lockedRotInt)) {
                 errorMessage(line, "Locked Rotation Bool parsing failed");
             }
+            if (!(iss >> timeScale)) {
+                errorMessage(line, "Time scale parsing failed");
+            }
             lockedRotation = static_cast<bool>(lockedRotInt);
 
             AssignScenarioSettings();
@@ -89,13 +92,6 @@ void Scenario::LoadScenarioFromFile(const std::string& filepath) {
             }
             if (!(iss >> lessonModuleID)) {
                 errorMessage(line, "Lesson module ID parsing failed");
-            }
-
-            if (lessonModuleID != "N/A") {
-                LoadLessonModule(lessonModuleID);
-            }
-            if (lessonPath != "N/A") {
-                LoadLessonFromFile(lessonPath);
             }
         }
 
@@ -167,6 +163,7 @@ void Scenario::LoadScenarioFromFile(const std::string& filepath) {
             glm::vec3 pos;
             glm::quat rot;
             float faceSize;
+            float scale;
             std::string modelPath;
             std::string texturePath;
 
@@ -179,16 +176,29 @@ void Scenario::LoadScenarioFromFile(const std::string& filepath) {
             if (!(iss >> faceSize)) {
                 errorMessage(line, "FaceSize parsing failed");
             }
+            if (!(iss >> scale)) {
+                errorMessage(line, "Scale parsing failed");
+            }
             if (!(iss >> modelPath >> texturePath)) {
                 errorMessage(line, "File paths (modelPath, texturePath) parsing failed");
             }
 
             TriggerObject* tObj = new TriggerObject(pos, rot, faceSize, modelPath, texturePath);
+            tObj->ScaleSize(scale);
             triggerObjects.push_back(tObj);
         }
         else {
             
         }
+
+    }
+
+    // Must load lessons after objects have loaded to avoid uninitialized object errors
+    if (lessonModuleID != "N/A") {
+        LoadLessonModule(lessonModuleID);
+    }
+    if (lessonPath != "N/A") {
+        LoadLessonFromFile(lessonPath);
     }
 
     file.close();
@@ -198,6 +208,7 @@ void Scenario::AssignScenarioSettings() {
     GlobalData::gravity = gravity;
     GlobalData::scale = scale;
     GlobalData::lockedRotation = lockedRotation;
+    GlobalData::time = timeScale;
 }
 
 void Scenario::LoadLessonFromFile(const std::string& filepath) {
@@ -234,6 +245,12 @@ void Scenario::LoadLessonModule(std::string id) {
     if (id == "Energy") {
         lessonModule = new EnergyLessonModule();
     }
+    if (id == "Projectile_Motion") {
+        lessonModule = new ProjectileMotionLessonModule();
+        ProjectileMotionLessonModule* projectileLesson = dynamic_cast<ProjectileMotionLessonModule*>(lessonModule);
+        std::cout << "Size: " << physicsObjects.size() << std::endl;
+        projectileLesson->Load(physicsObjects[0], triggerObjects[0]);
+    }
 }
 
 void Scenario::SaveScenarioToFile(const std::string& filepath, const std::string& name, std::vector<PhysicsObject*> PhysicObjects, std::vector<TriggerObject*> TriggerObjects, Scenario scene) {
@@ -249,7 +266,7 @@ void Scenario::SaveScenarioToFile(const std::string& filepath, const std::string
     file << name << " ";
     file << scene.gravity.x << " " << scene.gravity.y << " " << scene.gravity.z << " ";
     file << GlobalData::scale << " ";
-    file << static_cast<int>(GlobalData::lockedRotation) << "";
+    file << static_cast<int>(GlobalData::lockedRotation) << " " << scene.timeScale;
     file << std::endl;
 
     // Lesson (not always applicable)
@@ -287,7 +304,7 @@ void Scenario::SaveScenarioToFile(const std::string& filepath, const std::string
 
         file << tObj->pos.x << " " << tObj->pos.y << " " << tObj->pos.z << " ";
         file << tObj->rot.w << " " << tObj->rot.x << " " << tObj->rot.y << " " << tObj->rot.z << " ";
-        file << tObj->GetFaceExtent() << " ";
+        file << tObj->GetFaceExtent() << " " << tObj->scale << " ";
 
         file << tObj->modelPath << " " << tObj->texturePath << " ";
 

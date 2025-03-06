@@ -121,6 +121,7 @@ public:
 
     int GRID_SIZE = 40;
     float GRID_SPACING = 2;
+    float arrowAlpha = 0.5;
 
 	Renderer();
 

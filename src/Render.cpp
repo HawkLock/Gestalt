@@ -437,7 +437,7 @@ void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
 
     for (auto& object : settingsBus.TriggerObjects)
     {
-        object->RenderMesh(shader, texture2);
+        object->RenderMesh(shader);
     }
 
     for (auto& object : settingsBus.PhysicObjects)
@@ -448,6 +448,9 @@ void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
     arrowShader.use();
     arrowShader.setMat4("projection", projection);
     arrowShader.setMat4("view", view);
+    arrowShader.setFloat("alpha", arrowAlpha);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     if (*settingsBus.renderArrows == true) {
         for (auto& object : settingsBus.PhysicObjects)
         {

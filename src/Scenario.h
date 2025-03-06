@@ -21,6 +21,7 @@
 #include "BaseLessonModule.h"
 
 #include "EnergyLessonModule.h"
+#include "ProjectileMotionLessonModule.h"
 
 class Scenario {
 private:
@@ -33,6 +34,7 @@ public:
 	glm::vec3 gravity;
 	float scale;
 	bool lockedRotation;
+	float timeScale;
 
 	std::string title;
 	std::string lessonPath;

@@ -1,4 +1,4 @@
-sData Energy 0 0 0 0.4 0
+sData Energy 0 0 0 0.4 0 1
 lData Energy ../Scenarios/Lessons/Energy.txt Energy
 pObj -2 0 0 0.707107 -0.707107 -0 -0 3 0 0 0 0 0 10 0 2 1 ../Models/cube1.txt ../Textures/CrateTexture.jpg ../Models/arrow.txt 0
 pObj 3 0 0 1 0 0 0 -2 0 0 0 0 0 20 0 2 1 ../Models/cube1.txt ../Textures/CrateTexture.jpg ../Models/arrow.txt 0
