@@ -21,6 +21,8 @@ World::World()
 	startTime = std::chrono::high_resolution_clock::now();
 	window = renderer.GetWindow();
 
+	Recorder::clearFrameFolder();
+
 	ScanForScenarios();
 	LoadWorld();
 }

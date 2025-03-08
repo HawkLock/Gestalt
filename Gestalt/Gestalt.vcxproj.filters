@@ -98,6 +98,9 @@
     <ClCompile Include="..\src\LessonStatics.cpp">
       <Filter>Header Files\Modules\LessonModules</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Recorder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Camera.h">
@@ -210,6 +213,12 @@
     </ClInclude>
     <ClInclude Include="..\src\ProjectileMotionLessonModule.h">
       <Filter>Header Files\Modules\LessonModules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Recorder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\RecordModule.h">
+      <Filter>Header Files\Modules</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

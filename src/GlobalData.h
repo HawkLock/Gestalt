@@ -38,6 +38,8 @@ public:
     static float gravityScale;
     static bool lockedRotation;
 
+    static bool shouldRecord;
+
 
     GlobalData() {
     }

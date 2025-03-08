@@ -56,6 +56,7 @@ public:
 
     // Handlers for different types of data
     virtual void HandleData(const std::vector<PhysicsObject*>& data) {}
+    virtual void HandleData(unsigned int* data) {}
     virtual void HandleData(const int data) {}
     virtual void HandleData(const bool data) {}
     virtual void HandleData(bool* data) {}

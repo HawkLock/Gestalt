@@ -22,3 +22,5 @@ float GlobalData::scale = 0.4f;
 glm::vec3 GlobalData::gravity = glm::vec3(0.0, -9.8, 0.0);
 float GlobalData::gravityScale = 1.0f;
 bool GlobalData::lockedRotation = true;
+
+bool GlobalData::shouldRecord = false;

@@ -23,10 +23,13 @@
 #include "FocusModule.h"
 #include "ScenarioModule.h"
 #include "LessonModule.h"
+#include "RecordModule.h"
 
 #include "Camera.h"
 #include "PhysicsObject.h"
 #include "TriggerObject.h"
+
+#include "Recorder.h"
 
 #include "SettingsBus.h"
 
@@ -36,7 +39,9 @@ class Renderer {
 
 public:
     unsigned int SCR_WIDTH = 1500;
-    unsigned int SCR_HEIGHT = 1125;
+    unsigned int SCR_HEIGHT = 1120;
+
+    unsigned int frameCount = 0;
 
     glm::vec3 backgroundColor = glm::vec3(43, 43, 68);
     glm::vec3 gridColor = glm::vec3(78, 133, 120);
@@ -108,6 +113,7 @@ public:
     bool showScenarioControl = true;
     bool showLessonModule = true;
     bool showLessonSubModule = true;
+    bool showRecordSubModule = true;
 
     float crosshairVertices[16] = {
         // Horizontal line

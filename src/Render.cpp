@@ -28,6 +28,9 @@ void Renderer::CreateDefaultModules() {
 
     LessonModule* lessonModule = new LessonModule();
     modules.push_back(lessonModule);
+
+    RecordModule* recordModule = new RecordModule();
+    modules.push_back(recordModule);
 }
 
 void Renderer::GenerateTexture(std::string path, unsigned int& texture, bool includeAlpha) {
@@ -468,6 +471,10 @@ void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
         }
     }
 
+    if (GlobalData::shouldRecord) {
+        Recorder::captureFrame(SCR_WIDTH, SCR_HEIGHT, &frameCount);
+    }
+
     // Render the Crosshair
     crosshairShader.use();
     glBindVertexArray(crosshairVAO);  // Set the VAO for the crosshair
@@ -506,6 +513,7 @@ void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
     ImGui::Checkbox("Focused Object", &showFocusObject);
     ImGui::Checkbox("Scenario Control", &showScenarioControl);
     ImGui::Checkbox("Lesson Module", &showLessonModule);
+    ImGui::Checkbox("Recording Module", &showRecordSubModule);
 
     if (showFocusObject) {
         ImGui::Begin("Focused Object");
@@ -541,6 +549,11 @@ void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
                 settingsBus.scene->lessonModule->RenderWindow();
             }
         }
+    }
+
+    if (showRecordSubModule) {
+        modules[5]->UpdateData(&frameCount);
+        modules[5]->RenderWindow();
     }
 
     ImGui::End();
