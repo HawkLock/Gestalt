@@ -6,6 +6,7 @@
 #include "imgui/imgui_impl_opengl3.h"
 
 #include "Recorder.h"
+#include "NFD/include/nfd.h"
 
 class RecordModule : public Module {
 private: 
@@ -14,6 +15,7 @@ private:
     int frameRate = 30;
 
     char outputNameBuffer[128] = "";
+    char outputPathBuffer[128] = "../Recordings/";
 public:
 
     void HandleData(unsigned int* data) {
@@ -28,6 +30,23 @@ public:
         ImGui::Text("Name: ");  
         ImGui::SameLine();  
         ImGui::InputText("##", outputNameBuffer, IM_ARRAYSIZE(outputNameBuffer)); 
+        ImGui::SameLine();
+        ImGui::Text(".mp4");
+
+        if (ImGui::Button("Choose Output Path")) {
+            nfdchar_t *outPath = NULL;
+            nfdresult_t result = NFD_PickFolder(NULL, &outPath);
+
+            if (result == NFD_OKAY) {
+                strncpy_s(outputPathBuffer, sizeof(outputPathBuffer), outPath, _TRUNCATE);
+                free(outPath);
+            }
+        }
+        if (outputPathBuffer[0] != '\0') {
+            ImGui::SameLine();
+            std::string outputPath = std::string(outputPathBuffer);
+            ImGui::Text("Path: %s", outputPath.c_str());
+        }
 
         // Cannot change frame rate during recording
         if (GlobalData::shouldRecord) {
@@ -47,7 +66,8 @@ public:
 
             if (!GlobalData::shouldRecord && *frameCount > 0) {
                 GlobalData::paused = true;
-                Recorder::encodeVideo(frameRate, *frameCount, outputNameBuffer);
+                std::cout << std::string(outputPathBuffer) << std::endl;
+                Recorder::encodeVideo(frameRate, *frameCount, outputNameBuffer, outputPathBuffer);
                 (*frameCount) = 0;
             }
         }

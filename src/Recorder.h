@@ -20,7 +20,6 @@ private:
 public:
 
     static void clearFrameFolder() {
-        std::cout << "clearing" << std::endl;
         try {
             // Check if the directory exists
             std::string folderPath = "../Recordings/frames";
@@ -40,7 +39,7 @@ public:
         }
     }
 
-    static void encodeVideo(int framerate = 30, unsigned int frameCount = 0, const char outputNameBuffer[] = "output") {
+    static void encodeVideo(int framerate = 30, unsigned int frameCount = 0, const char outputNameBuffer[] = "output", const char outputPathBuffer[] = "../Recordings/") {
         if (frameCount == 0) {
             std::cerr << "Video Encoding Error: Zero Frames" << std::endl;
             return;
@@ -48,10 +47,12 @@ public:
 
         std::string outputName;
         if (std::string(outputNameBuffer) == "") {
-            outputName = "../Recordings/output.mp4";
+            // outputName = "../Recordings/output.mp4";
+            std::string pathEnd = "/output.mp4";
+            outputName = outputPathBuffer + pathEnd;
         }
         else {
-            outputName = "../Recordings/" + std::string(outputNameBuffer) + ".mp4";
+            outputName = std::string(outputPathBuffer) + "/" + std::string(outputNameBuffer) + ".mp4";
         }
 
         std::string folderPath = "../Recordings/frames/";
