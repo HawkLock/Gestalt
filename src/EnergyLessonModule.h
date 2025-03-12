@@ -47,9 +47,9 @@ public:
         for (int i = 0; i < PhysicObjects.size(); i++) {
             std::string objName = "Object " + std::to_string(i);
             if (ImGui::TreeNode(objName.c_str())) {
-                float transEnergy = rotEnergies[i];
-                float rotEnergy = combinedEnergies[i];
-                float combinedEnergy = transEnergy + rotEnergy;
+                float transEnergy = tranEnergies[i];
+                float rotEnergy = rotEnergies[i];
+                float combinedEnergy = combinedEnergies[i];
                 ImGui::Text("Total Energy: %.3f", combinedEnergy);
                 ImGui::Text("Translational Energy: %.3f", transEnergy);
                 ImGui::Text("Rotational Energy: %.3f", rotEnergy);
@@ -64,7 +64,8 @@ public:
     }
 
     void RenderWindow() override {
-        ImGui::Begin("Energy Lesson Module");
+        ImGuiWindowFlags windowFlag = GlobalData::inFocus ? ImGuiWindowFlags_NoInputs : 0;
+        ImGui::Begin("Energy Lesson Module", nullptr, windowFlag);
 
         ImGui::SliderFloat("Global Restitution", &GlobalData::restitution, 0.0f, 1.0f);
         CalculateEnergy();

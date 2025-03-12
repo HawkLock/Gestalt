@@ -150,7 +150,6 @@ void PhysicsObject::CalculateInertiaTensor(glm::mat3& tensor) {
 void PhysicsObject::ScaleSize(float scale) {
 
 	Model.ChangeSize(scale);
-	std::cout << GetFaceExtent() << std::endl;
 	Model.faceLength *= scale;
 
 	// Recompute inertia tensor with scaling rule
@@ -258,42 +257,13 @@ std::vector<Vertex> PhysicsObject::extractVertices(const std::vector<float>& dat
 	return vertices;
 }
 
-std::vector<glm::vec3> PhysicsObject::GetVertices()
+std::vector<glm::vec3> PhysicsObject::PhysicsObject::GetVertices()
 {
-	// Retrieves all the corner vertices from the mesh
-	std::vector<glm::vec3> vertices;
-	for (int i = 0; i < sizeof(Model.verticesU) / sizeof(Model.verticesU[0]);)
-	{
-		glm::vec3 vertex = glm::vec3(Model.verticesU[i], Model.verticesU[i + 1], Model.verticesU[i + 2]) + pos;
-		vertices.push_back(vertex);
-		i += 5;
+	std::vector<glm::vec3> verts = std::vector<glm::vec3>();
+	for (Vertex vert : Model.vertices) {
+		verts.push_back(glm::vec3(rot * glm::vec4(vert.x, vert.y, vert.z, 1.f)) + pos);
 	}
-	// Gets indices of all duplicate vertices
-	std::vector<float> duplicateVertexIndices;
-	for (int i = 0; i < vertices.size(); i++)
-	{
-		for (int z = i + 1; z < vertices.size(); z++)
-		{
-			if (!std::count(duplicateVertexIndices.begin(), duplicateVertexIndices.end(), z))
-			{
-				if (vertices[i] == vertices[z])
-				{
-					duplicateVertexIndices.push_back(z);
-				}
-			}
-		}
-	}
-	// Removes duplicate vertices
-	for (int i = 0; i < duplicateVertexIndices.size(); i++)
-	{
-		vertices[duplicateVertexIndices[i]] = vertices.back();
-	}
-	for (int i = 0; i < duplicateVertexIndices.size(); i++)
-	{
-		vertices.pop_back();
-	}
-
-	return vertices;
+	return verts;
 }
 
 // Rendering

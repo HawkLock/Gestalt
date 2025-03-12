@@ -34,11 +34,14 @@ public:
     static float scale;
 
     // Settings
+    static bool inFocus;
     static glm::vec3 gravity;
     static float gravityScale;
     static bool lockedRotation;
 
+    // Recording Settings
     static bool shouldRecord;
+    static bool includeGUI;
 
 
     GlobalData() {

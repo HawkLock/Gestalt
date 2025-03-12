@@ -273,7 +273,7 @@ void Mesh::extractEdgesFromIndices( const std::vector<unsigned int>& indices, co
 std::vector<glm::vec3> Mesh::GetVertexPositions() {
     std::vector<glm::vec3> verts = std::vector<glm::vec3>();
     for (Vertex vert : vertices) {
-        verts.push_back(glm::vec3(vert.x, vert.y, vert.z));
+        verts.push_back(glm::vec3(vert.x, vert.y, vert.z) + pos);
     }
     return verts;
 }

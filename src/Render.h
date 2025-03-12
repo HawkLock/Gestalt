@@ -113,7 +113,7 @@ public:
     bool showScenarioControl = true;
     bool showLessonModule = true;
     bool showLessonSubModule = true;
-    bool showRecordSubModule = true;
+    bool showRecordModule = true;
 
     float crosshairVertices[16] = {
         // Horizontal line

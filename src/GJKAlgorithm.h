@@ -32,11 +32,37 @@ public:
         return collisionDetected;
     }
 
+    static bool RaycastAgainstMultipleObjects(std::vector<PhysicsObject*> objects, const glm::vec3& rayOrigin, const glm::vec3& rayDirection, float& outLambda, PhysicsObject*& hitObject) {
+        bool hit = false;
+        float closestLambda = std::numeric_limits<float>::infinity();  // Start with a very large value
+        hitObject = nullptr;
+
+        // Loop through all the objects and check for raycast intersections
+        for (PhysicsObject* object : objects) {
+            float lambda;
+            if (GJKAlgorithm::Raycast(object, rayOrigin, rayDirection, lambda)) {
+                // If an intersection is found, check if it's the closest hit so far
+                if (lambda < closestLambda) {
+                    closestLambda = lambda;
+                    hitObject = object;  // Set the hit object
+                    hit = true;
+                }
+            }
+            std::cout << lambda << std::endl;
+
+        }
+
+        // Output the closest distance
+        outLambda = closestLambda;
+        return hit;
+    }
+
+
     static bool Raycast(PhysicsObject* object, const glm::vec3& rayOrigin, const glm::vec3& rayDirection, float& outLambda) {
         // Initial setup
         const float epsilon = 0.0001f; // Small threshold for numerical stability
         float tMin = 0.0f; // Start of the ray
-        float tMax = 1000.0f; // Max distance for the ray
+        float tMax = 1000.0f; // Max distance for the ray (could be adjusted per scenario)
 
         // Simplex data structure used in GJK (specific implementation may vary)
         Simplex simplex;
@@ -46,7 +72,7 @@ public:
 
         while (tMin <= tMax) {
             // Get the support point from the object in the negative direction of the ray
-            glm::vec3 support = GetSupport(object, - direction);
+            glm::vec3 support = GetSupport(object, -direction);
 
             // Project the support point onto the ray
             float projection = glm::dot(support - rayOrigin, direction);
@@ -61,6 +87,9 @@ public:
 
             if (simplex.containsOrigin()) {
                 outLambda = projection; // Distance to the collision point
+                //outHitPoint = rayOrigin + rayDirection * outLambda; // Collision point
+                //outNormal = -direction; // Normal is the opposite of the ray direction
+
                 return true; // Collision detected
             }
 
@@ -75,6 +104,7 @@ public:
 
         return false; // No collision within bounds
     }
+
 
 
 private:

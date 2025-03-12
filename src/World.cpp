@@ -152,6 +152,7 @@ void World::ScenarioUpdate() {
 	if (GlobalData::shouldLoadScenario) {
 		LoadScenario(GlobalData::availableScenarios[GlobalData::selectedScenario], true);
 		GlobalData::shouldLoadScenario = false;
+		focusObject = nullptr;
 	}
 }
 
@@ -767,117 +768,6 @@ std::vector<glm::vec3> World::CalculateCollisionVelocity(PhysicsObject one, Phys
 	return velocities;
 }
 
-// SAT Algorithm Implementation WIP
-void World::CheckCollision(PhysicsObject& one, PhysicsObject& two, bool& result, glm::vec3& shortestOverlap)
-{
-	std::vector<glm::vec3> oneVertices = one.GetVertices();
-	std::vector<glm::vec3> twoVertices = two.GetVertices();
-
-	//std::cout << glm::length(shortestOverlap) << std::endl;
-	std::vector<glm::vec3> oneCollisionVertices;
-	std::vector<glm::vec3> twoCollisionVertices;
-
-	for (unsigned int i = 0; i < oneVertices.size(); i++)
-	{
-		glm::vec3 vA = oneVertices[i];
-		glm::vec3 vB = oneVertices[(i + 1) % oneVertices.size()];
-
-		glm::vec3 edge = vB - vA;
-		// the normal of the edge
-		glm::vec3 axis(-edge.y, edge.x, edge.z);
-
-
-		// Goes {min, max}
-		std::vector<float> extentOneValues = ProjectVertices(oneVertices, axis);
-		std::vector<float> extentTwoValues = ProjectVertices(twoVertices, axis);
-
-		if (extentOneValues[0] > extentTwoValues[1] || extentTwoValues[0] > extentOneValues[1]) {
-			result = false;
-			return;
-		}
-
-		/*
-		float overlapOne = extentOneValues[0] - extentTwoValues[1];
-		float overlapTwo = extentTwoValues[0] - extentOneValues[1];
-		*/
-		float overlapOne = extentOneValues[0] - extentTwoValues[0];
-		float overlapTwo = extentTwoValues[1] - extentOneValues[1];
-		// Determines which is the overlapping part
-		if (extentOneValues[0] - extentTwoValues[1] < 0) {
-			// Min of #1 is less than max of #2
-			if (glm::length(shortestOverlap) > overlapOne) {
-				shortestOverlap = axis * overlapOne;
-			}
-		}
-		else {
-			// Min of #2 is less than max of #1
-			if (glm::length(shortestOverlap) > overlapTwo) {
-				shortestOverlap = axis * overlapTwo;
-			}
-		}
-		//printf("Vertex: %f, %f, %f \n", oneVertices[i].x, oneVertices[i].y, oneVertices[i].z);
-		oneCollisionVertices.push_back(oneVertices[i]);
-	}
-
-	for (unsigned int i = 0; i < twoVertices.size(); i++)
-	{
-		glm::vec3 vA = twoVertices[i];
-		glm::vec3 vB = twoVertices[(i + 1) % twoVertices.size()];
-
-		glm::vec3 edge = vB - vA;
-		// the normal of the edge
-		glm::vec3 axis(-edge.y, edge.x, edge.z);
-
-
-		// Goes {min, max}
-		std::vector<float> extentOneValues = ProjectVertices(oneVertices, axis);
-		std::vector<float> extentTwoValues = ProjectVertices(twoVertices, axis);
-
-		if (extentOneValues[0] > extentTwoValues[1] || extentTwoValues[0] > extentOneValues[1]) {
-			result = false;
-			return;
-		}
-
-		float overlapOne = extentTwoValues[1] - extentOneValues[0];
-		float overlapTwo = extentOneValues[1] - extentTwoValues[0];
-
-		// Determines which is the overlapping part
-		if (extentOneValues[0] - extentTwoValues[1] < 0) {
-			// Min of #1 is less than max of #2
-			if (glm::length(shortestOverlap) > overlapOne) {
-				shortestOverlap = axis * overlapOne;
-			}
-		}
-		else {
-			// Min of #2 is less than max of #1
-			if (glm::length(shortestOverlap) > overlapTwo) {
-				shortestOverlap = axis * overlapTwo;
-			}
-		}
-		twoCollisionVertices.push_back(twoVertices[i]);
-	}
-
-	std::vector<PhysicsUtility::Edge> oneCollisionEdges;
-	std::vector<PhysicsUtility::Edge> twoCollisionEdges;
-	for (int i = 1; i < oneCollisionVertices.size(); i += 2) {
-		oneCollisionEdges.push_back(PhysicsUtility::Edge(oneCollisionVertices[i - 1], oneCollisionVertices[i]));
-	}
-	for (int i = 1; i < twoCollisionVertices.size(); i += 2) {
-		twoCollisionEdges.push_back(PhysicsUtility::Edge(twoCollisionVertices[i - 1], twoCollisionVertices[i]));
-	}
-	/*
-	printf("One Vertex Count: %d\n", oneCollisionVertices.size());
-	printf("One Edge Count: %d\n", oneCollisionEdges.size());
-	printf("Two Vertex Count: %d\n", twoCollisionVertices.size());
-	printf("Two Vertex Count: %d\n", twoCollisionEdges.size());
-	*/
-
-	//std::cout << "ShortestOverlap: " << glm::length(shortestOverlap) << std::endl;
-
-	// If there are no gaps between the objects
-	result = true;
-}
-
 std::vector<float> World::ProjectVertices(std::vector<glm::vec3> vertices, glm::vec3 axis)
 {
 	float min = FLT_MAX;
@@ -899,68 +789,11 @@ std::vector<float> World::ProjectVertices(std::vector<glm::vec3> vertices, glm::
 	return { min, max };
 }
 
-// DOESN'T WORK PROPERLY, BUT IT GETS THE JOB DONE
-bool World::Raycast(PhysicsObject* object, const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& lambda) {
-	// Get the AABB in world space
-	PhysicsObject::AABB worldAABB = object->GetWorldAABB();
-
-	glm::vec3 invDir = 1.0f / rayDir;
-
-	// Compute t_min and t_max for each of the 3 axes
-	float tmin = (worldAABB.min.x - rayOrigin.x) * invDir.x;
-	float tmax = (worldAABB.max.x - rayOrigin.x) * invDir.x;
-
-	if (tmin > tmax) std::swap(tmin, tmax);
-
-	float tymin = (worldAABB.min.y - rayOrigin.y) * invDir.y;
-	float tymax = (worldAABB.max.y - rayOrigin.y) * invDir.y;
-
-	if (tymin > tymax) std::swap(tymin, tymax);
-
-	// Check if the ray is outside the bounding box in the Y axis
-	if ((tmin > tymax) || (tymin > tmax)) {
-		return false;
-	}
-
-	// Update tmin and tmax with the Y intersection
-	if (tymin > tmin) tmin = tymin;
-	if (tymax < tmax) tmax = tymax;
-
-	float tzmin = (worldAABB.min.z - rayOrigin.z) * invDir.z;
-	float tzmax = (worldAABB.max.z - rayOrigin.z) * invDir.z;
-
-	if (tzmin > tzmax) std::swap(tzmin, tzmax);
-
-	// Check if the ray is outside the bounding box in the Z axis
-	if ((tmin > tzmax) || (tzmin > tmax)) {
-		return false;
-	}
-
-	// Update tmin and tmax with the Z intersection
-	if (tzmin > tmin) tmin = tzmin;
-	if (tzmax < tmax) tmax = tzmax;
-
-	// If tmin is positive, the ray hits the AABB at lambda
-	if (tmin > 0) {
-		lambda = tmin;
-		return true;
-	}
-
-	// If tmax is positive, the ray hits the AABB at lambda
-	if (tmax > 0) {
-		lambda = tmax;
-		return true;
-	}
-
-	return false;  // No intersection
-}
-
-
 PhysicsObject* World::castCameraRay() {
 	PhysicsObject* closestObject = nullptr;
 	Raycast::Ray cameraRay;
 	cameraRay.origin = camera.cameraPos;
-	cameraRay.direction = camera.cameraFront;
+	cameraRay.direction = glm::normalize(camera.cameraFront);
 	closestObject = Raycast::CheckRayIntersection(cameraRay, PhysicObjects);
 	return closestObject;
 }
@@ -1075,6 +908,7 @@ void World::ProcessInput()
 
 		// Toggle cursor mode
 		cursorCaptured = !cursorCaptured;
+		GlobalData::inFocus = cursorCaptured;
 		if (cursorCaptured)
 		{
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -1082,7 +916,6 @@ void World::ProcessInput()
 		else
 		{
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-
 		}
 	}
 

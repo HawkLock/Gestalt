@@ -87,7 +87,6 @@ public:
 	void LoadScenario(const std::string& filepath, bool clearWorld);
 
 	// Collision
-	bool Raycast(PhysicsObject* object, const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& lambda);
 	PhysicsObject* castCameraRay(); // returns closest physics object in the direction the camera is facing
 	void resolveOverlap(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap);
 	void resolveImpulses(PhysicsObject* objA, PhysicsObject* objB, const Overlap& overlap);

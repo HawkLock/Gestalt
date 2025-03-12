@@ -42,7 +42,7 @@ public:
 	glm::vec3 cameraUp;
 
 	glm::mat4 GetCameraView();
-	void SetDefaultCursorPos(float x, float y) { defaultX = x; defaultY = y; }
+	void SetDefaultCursorPos(float x, float y) { defaultX = x; defaultY = y; currX = defaultX, currY = defaultY; }
 	void ProcessMouseMovement(double xpos, double ypos);
 	void ProcessMouseScroll(float yoffset, float DeltaTime);
 	void UpdateCameraVectors();

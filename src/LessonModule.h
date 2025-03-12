@@ -27,7 +27,8 @@ public:
 
 
     void RenderWindow() {
-        ImGui::Begin("Lesson");
+        ImGuiWindowFlags windowFlag = GlobalData::inFocus ? ImGuiWindowFlags_NoInputs : 0;
+        ImGui::Begin("Lesson", nullptr, windowFlag);
 
         if (showLessonSubmodule != nullptr) {
             ImGui::Checkbox("Show Lesson Submodule", showLessonSubmodule);

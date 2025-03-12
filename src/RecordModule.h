@@ -23,7 +23,8 @@ public:
     }
 
     void RenderWindow() override {
-        ImGui::Begin("Recording Module");
+        ImGuiWindowFlags windowFlag = GlobalData::inFocus ? ImGuiWindowFlags_NoInputs : 0;
+        ImGui::Begin("Recording Module", nullptr, windowFlag);
 
         std::string buttonName = GlobalData::shouldRecord ? "End Recording" : "Start Recording";
 
@@ -32,6 +33,14 @@ public:
         ImGui::InputText("##", outputNameBuffer, IM_ARRAYSIZE(outputNameBuffer)); 
         ImGui::SameLine();
         ImGui::Text(".mp4");
+
+        if (ImGui::Button(buttonName.c_str())) {
+            GlobalData::shouldRecord = !GlobalData::shouldRecord;
+        }
+
+        ImGui::SameLine();
+
+        ImGui::Checkbox("Include GUI", &GlobalData::includeGUI);
 
         if (ImGui::Button("Choose Output Path")) {
             nfdchar_t *outPath = NULL;
@@ -54,10 +63,6 @@ public:
         }
         else {
             ImGui::SliderInt("Frame Rate: ", &frameRate, 1, 60);
-        }
-
-        if (ImGui::Button(buttonName.c_str())) {
-            GlobalData::shouldRecord = !GlobalData::shouldRecord;
         }
 
         if (frameCount != nullptr) {

@@ -434,6 +434,7 @@ void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
     view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
     shader.setMat4("projection", projection); 
     shader.setMat4("view", view);
+    shader.setFloat("tintIntensity", 0);
 
     // Render the grid
     RenderGrid(GRID_SIZE, GRID_SPACING, view, projection, camera);
@@ -445,7 +446,14 @@ void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
 
     for (auto& object : settingsBus.PhysicObjects)
     {
-        object->RenderMesh(shader);
+        if (settingsBus.focusObject != nullptr && object == settingsBus.focusObject) {
+            shader.setFloat("tintIntensity", 0.2);
+            object->RenderMesh(shader);
+            shader.setFloat("tintIntensity", 0);
+        }
+        else {
+            object->RenderMesh(shader);
+        }
     }
 
     arrowShader.use();
@@ -471,7 +479,7 @@ void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
         }
     }
 
-    if (GlobalData::shouldRecord) {
+    if (GlobalData::shouldRecord && !GlobalData::includeGUI) {
         Recorder::captureFrame(SCR_WIDTH, SCR_HEIGHT, &frameCount);
     }
 
@@ -481,7 +489,8 @@ void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
     glDrawArrays(GL_LINES, 0, 4);  // Draw the two lines that make the crosshair
 
     // ImGUI
-    ImGui::Begin("Modules");
+    ImGuiWindowFlags windowFlag = GlobalData::inFocus ? ImGuiWindowFlags_NoInputs : 0;
+    ImGui::Begin("Modules", nullptr, windowFlag);
 
     if (ImGui::TreeNode("Object List")) {
         // Update and render objects module
@@ -513,10 +522,11 @@ void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
     ImGui::Checkbox("Focused Object", &showFocusObject);
     ImGui::Checkbox("Scenario Control", &showScenarioControl);
     ImGui::Checkbox("Lesson Module", &showLessonModule);
-    ImGui::Checkbox("Recording Module", &showRecordSubModule);
+    ImGui::Checkbox("Recording Module", &showRecordModule);
 
     if (showFocusObject) {
-        ImGui::Begin("Focused Object");
+        ImGuiWindowFlags windowFlag = GlobalData::inFocus ? ImGuiWindowFlags_NoInputs : 0;
+        ImGui::Begin("Focused Object", nullptr, windowFlag);
         if (settingsBus.focusObject != nullptr) {
             // Add focus object settings here
             std::pair<std::string, bool*> follow("Follow With Camera", settingsBus.followFocusedObject);
@@ -551,7 +561,7 @@ void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
         }
     }
 
-    if (showRecordSubModule) {
+    if (showRecordModule) {
         modules[5]->UpdateData(&frameCount);
         modules[5]->RenderWindow();
     }
@@ -563,6 +573,9 @@ void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+    if (GlobalData::shouldRecord && GlobalData::includeGUI) {
+        Recorder::captureFrame(SCR_WIDTH, SCR_HEIGHT, &frameCount);
+    }
 
     glfwSwapBuffers(window);
     glfwPollEvents();

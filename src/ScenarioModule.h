@@ -31,7 +31,8 @@ public:
     }
 
     void RenderWindow() override {
-        ImGui::Begin("Scenario Control");
+        ImGuiWindowFlags windowFlag = GlobalData::inFocus ? ImGuiWindowFlags_NoInputs : 0;
+        ImGui::Begin("Scenario Control", nullptr, windowFlag);
 
         // Dropdown menu to choose a scenario
         std::vector<std::string> availableScenarios = GlobalData::availableScenarios;

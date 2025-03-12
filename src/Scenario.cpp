@@ -248,7 +248,6 @@ void Scenario::LoadLessonModule(std::string id) {
     if (id == "Projectile_Motion") {
         lessonModule = new ProjectileMotionLessonModule();
         ProjectileMotionLessonModule* projectileLesson = dynamic_cast<ProjectileMotionLessonModule*>(lessonModule);
-        std::cout << "Size: " << physicsObjects.size() << std::endl;
         projectileLesson->Load(physicsObjects[0], triggerObjects[0]);
     }
 }

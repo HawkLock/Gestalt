@@ -37,7 +37,8 @@ public:
     }
 
     void RenderWindow() override {
-        ImGui::Begin("Projectile Motion Lesson Module");
+        ImGuiWindowFlags windowFlag = GlobalData::inFocus ? ImGuiWindowFlags_NoInputs : 0;
+        ImGui::Begin("Projectile Motion Lesson Module", nullptr, windowFlag);
 
         // Reload scenario button
         if (ImGui::Button("Reload Scenario")) {
