@@ -8,6 +8,8 @@
 #include "PhysicsUtility.h"
 #include "Mesh.h"
 
+#include "GlobalData.h"
+
 #include <glm/glm/gtx/quaternion.hpp>
 
 // The datatype for a force
@@ -69,9 +71,9 @@ public:
 	glm::vec3 pos;
 	glm::quat rot;
 
-	glm::vec3 acceleration;
+	glm::vec3 acceleration = glm::vec3();
 	glm::vec3 lastRecordedAcceleration; // For display purposes
-	glm::vec3 velocity; // In m/s
+	glm::vec3 velocity = glm::vec3(); // In m/s
 	glm::vec3 angularAcceleration;
 	glm::vec3 angularVelocity;
 

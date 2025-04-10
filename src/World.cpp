@@ -24,7 +24,7 @@ World::World()
 	Recorder::clearFrameFolder();
 
 	ScanForScenarios();
-	LoadWorld();
+	//LoadWorld();
 }
 
 void World::ScanForScenarios() {
@@ -639,9 +639,6 @@ void World::CollisionUpdate() {
 
 			if (isColliding) {
 				// Collision response
-				if (!degenrateCase) {
-					smallestOverlap = EPAAlgorithm::EPA(simplex, shape1, shape2);
-				}
 				std::chrono::high_resolution_clock::time_point currTime = std::chrono::high_resolution_clock::now();
 
 				TriggerObjects[z]->Trigger(currTime, startTime);

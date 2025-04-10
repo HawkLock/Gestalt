@@ -5,6 +5,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 Renderer::Renderer()
 {
+    std::cout << "Working" << std::endl;
     modules = std::vector<Module*>();
     Initialize();
     shader = Shader("../Shaders/VertexShader.vert", "../Shaders/FragmentShader.frag");

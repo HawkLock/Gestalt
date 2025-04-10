@@ -263,9 +263,9 @@ void Scenario::SaveScenarioToFile(const std::string& filepath, const std::string
     // Scene
     file << "sData ";
     file << name << " ";
-    file << scene.gravity.x << " " << scene.gravity.y << " " << scene.gravity.z << " ";
+    file << GlobalData::gravity.x << " " << GlobalData::gravity.y << " " << GlobalData::gravity.z << " ";
     file << GlobalData::scale << " ";
-    file << static_cast<int>(GlobalData::lockedRotation) << " " << scene.timeScale;
+    file << static_cast<int>(GlobalData::lockedRotation) << " " << GlobalData::time;
     file << std::endl;
 
     // Lesson (not always applicable)

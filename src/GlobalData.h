@@ -38,6 +38,7 @@ public:
     static glm::vec3 gravity;
     static float gravityScale;
     static bool lockedRotation;
+    static bool constantAcceleration;
 
     // Recording Settings
     static bool shouldRecord;

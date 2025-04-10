@@ -16,9 +16,9 @@ protected:
 
 	Mesh Model;
 
+public:
 	void (*triggerPtr)(std::chrono::steady_clock::time_point, std::chrono::steady_clock::time_point);
 
-public:
 	glm::vec3 pos;
 	glm::quat rot;
 

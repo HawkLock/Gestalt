@@ -99,4 +99,11 @@ public:
 	bool checkSATCollision(const std::vector<Vertex>& vertices1, const std::vector<Vertex>& vertices2, std::vector<glm::vec3>& axes, Overlap& smallestOverlap);
 
 	Renderer GetRenderer() { return renderer; }
+	std::vector<PhysicsObject*> GetPhysicsObjects() { return PhysicObjects; }
+	std::vector<TriggerObject*> GetTriggerObjects() { return TriggerObjects; }
+	Scenario GetScene() { return scene; }
+
+	// For User
+	
 };
+

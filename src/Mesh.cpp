@@ -27,8 +27,7 @@ Mesh::Mesh(glm::vec3 initialPosition, float faceSize, std::string &modelPath, st
     parseVertexData(modelPath, vertices, normals, indices, edges);
 
     extractEdgesFromIndices(indices, vertices, edges);
-
-
+   
     SetupMesh();
     vertexCount = vertices.size(); // There are five components to each in the vector
     originalVertices = vertices;
@@ -39,7 +38,6 @@ Mesh::Mesh(glm::vec3 initialPosition, float faceSize, std::string &modelPath, st
     }
     else {
         TextureUtils::GenerateTexture(texturePath, texture, false);
-
     }
 
 }
@@ -85,7 +83,7 @@ void Mesh::SetupMesh()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, x));
     glEnableVertexAttribArray(0);
     // UV attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, u));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     // Setup normal attributes

@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Textures\CrateTexture.jpg" />
+    <Image Include="..\Textures\CrateTexture.jpg" />
     <Image Include="Textures\sus.png" />
   </ItemGroup>
   <ItemGroup>
@@ -31,6 +31,7 @@
     <ClCompile Include="..\include\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\src\Camera.cpp" />
+    <ClCompile Include="..\src\Gestalt.cpp" />
     <ClCompile Include="..\src\glad.c" />
     <ClCompile Include="..\src\GlobalData.cpp" />
     <ClCompile Include="..\src\LessonStatics.cpp" />
@@ -61,6 +62,7 @@
     <ClInclude Include="..\src\EnergyLessonModule.h" />
     <ClInclude Include="..\src\EPAAlgorithm.h" />
     <ClInclude Include="..\src\FocusModule.h" />
+    <ClInclude Include="..\src\Gestalt.h" />
     <ClInclude Include="..\src\GJKAlgorithm.h" />
     <ClInclude Include="..\src\GlobalData.h" />
     <ClInclude Include="..\src\LessonModule.h" />
@@ -69,6 +71,7 @@
     <ClInclude Include="..\src\Module.h" />
     <ClInclude Include="..\src\ObjectModule.h" />
     <ClInclude Include="..\src\PhysicsObject.h" />
+    <ClInclude Include="..\src\PObj.h" />
     <ClInclude Include="..\src\PhysicsUtility.h" />
     <ClInclude Include="..\src\ProjectileMotionLessonModule.h" />
     <ClInclude Include="..\src\Raycast.h" />
@@ -83,6 +86,7 @@
     <ClInclude Include="..\src\Shader.h" />
     <ClInclude Include="..\src\Simplex.h" />
     <ClInclude Include="..\src\TextureUtils.h" />
+    <ClInclude Include="..\src\TObj.h" />
     <ClInclude Include="..\src\TriggerObject.h" />
     <ClInclude Include="..\src\World.h" />
   </ItemGroup>

@@ -201,13 +201,20 @@ void PhysicsObject::CalculatePosition(float deltaTime)
 
 void PhysicsObject::CalculatePhysics(float deltaTime, glm::vec3 gravity)
 {
-	CalculateAcceleration(gravity);
+	if (!GlobalData::constantAcceleration) {
+		CalculateAcceleration(gravity);
+	}
+	else {
+		acceleration = gravity;
+	}
 	CalculateVelocity(deltaTime);
 	CalculatePosition(deltaTime);
 
-	// Reset accelerations
-	acceleration = glm::vec3();
-	angularAcceleration = glm::vec3(0.0f);
+	if (!GlobalData::constantAcceleration) {
+		// Reset accelerations
+		acceleration = glm::vec3();
+		angularAcceleration = glm::vec3(0.0f);
+	}
 }
 
 void PhysicsObject::applyFriction(float modifier)

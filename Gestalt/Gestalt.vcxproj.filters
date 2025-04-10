@@ -30,10 +30,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Textures\CrateTexture.jpg">
+    <Image Include="Textures\sus.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="Textures\sus.png">
+    <Image Include="..\Textures\CrateTexture.jpg">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
@@ -99,6 +99,9 @@
       <Filter>Header Files\Modules\LessonModules</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Recorder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Gestalt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -219,6 +222,15 @@
     </ClInclude>
     <ClInclude Include="..\src\RecordModule.h">
       <Filter>Header Files\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Gestalt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PObj.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TObj.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
