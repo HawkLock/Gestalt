@@ -480,7 +480,7 @@ void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
         }
     }
 
-    if (GlobalData::shouldRecord && !GlobalData::includeGUI) {
+    if (GlobalData::shouldRecord && !GlobalData::includeGUI && !GlobalData::paused) {
         Recorder::captureFrame(SCR_WIDTH, SCR_HEIGHT, &frameCount);
     }
 
@@ -568,13 +568,17 @@ void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
     }
 
     ImGui::End();
-
+    for (Widget* widget : settingsBus.Widgets) {
+        ImGui::Begin(widget->name.c_str());
+        widget->RenderWindow();
+        ImGui::End();
+    }
 
     ImGui::Render();
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    if (GlobalData::shouldRecord && GlobalData::includeGUI) {
+    if (GlobalData::shouldRecord && GlobalData::includeGUI && !GlobalData::paused) {
         Recorder::captureFrame(SCR_WIDTH, SCR_HEIGHT, &frameCount);
     }
 

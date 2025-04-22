@@ -71,7 +71,6 @@ public:
 		default:
 			break;
 		}
-		std::cout << modelPath << std::endl;
 		PhysicsObject* obj = new PhysicsObject(defaultPosition, std::vector<glm::vec3>(), defaultRotation, defaultMass, anchored, defaultSize, modelPath, texturePath1, arrowModelPath);
 		obj->scale = size;
 		obj->ScaleSize(size);
@@ -100,12 +99,16 @@ public:
 		default:
 			break;
 		}
-		std::cout << modelPath << std::endl;
 		TriggerObject* obj = new TriggerObject(defaultPosition, defaultRotation, defaultSize, modelPath, texturePath2);
 		obj->scale = size;
 		obj->ScaleSize(size);
 		TObj* tObj = new TObj(obj);
 		return tObj;
+	}
+
+	Widget* CreateWidget(std::string name) {
+		Widget* widget = new Widget(name);
+		return widget;
 	}
 
 	void AddObjectToScene(PObj* pObj) {
@@ -114,6 +117,10 @@ public:
 
 	void AddObjectToScene(TObj* tObj) {
 		world->AddObject(tObj->GetObject());
+	}
+
+	void AddObjectToScene(Widget* widget) {
+		world->AddWidget(widget);
 	}
 
 	void SaveScenario(std::string name) {

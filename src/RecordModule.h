@@ -36,11 +36,16 @@ public:
 
         if (ImGui::Button(buttonName.c_str())) {
             GlobalData::shouldRecord = !GlobalData::shouldRecord;
+            if (GlobalData::recordingUnpauses && GlobalData::paused) {
+                GlobalData::paused = false;
+            }
         }
 
         ImGui::SameLine();
 
         ImGui::Checkbox("Include GUI", &GlobalData::includeGUI);
+        ImGui::SameLine();
+        ImGui::Checkbox("Unpause", &GlobalData::recordingUnpauses);
 
         if (ImGui::Button("Choose Output Path")) {
             nfdchar_t *outPath = NULL;

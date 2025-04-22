@@ -28,3 +28,4 @@ bool GlobalData::constantAcceleration = false;
 
 bool GlobalData::shouldRecord = false;
 bool GlobalData::includeGUI = false;
+bool GlobalData::recordingUnpauses = false;

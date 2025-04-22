@@ -27,6 +27,8 @@
 
 #include "GlobalData.h"
 
+#include "Widget.h"
+
 
 class World {
 
@@ -61,6 +63,8 @@ public:
 
 	std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock::now();
 
+	std::vector<Widget*> Widgets;
+
 	void ScanForScenarios();
 	void LoadWorld();
 	void ScaleWorld();
@@ -81,6 +85,7 @@ public:
 
 	void AddObject(PhysicsObject* object);
 	void AddObject(TriggerObject* object);
+	void AddWidget(Widget* widget);
 
 	void ClearWorld();
 

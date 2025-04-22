@@ -27,6 +27,9 @@ public:
 	glm::vec3 GetAngularAcceleration() const {
 		return obj->angularAcceleration;
 	}
+	float GetMass() const {
+		return obj->GetMass();
+	}
 	void SetPosition(glm::vec3 pos) {
 		obj->pos = pos;
 	}
@@ -44,6 +47,9 @@ public:
 	}
 	void SetAngularAcceleration(glm::vec3 acel) {
 		obj->angularAcceleration = acel;
+	}
+	void SetMass(float mass) {
+		obj->SetMass(mass);
 	}
 
 	void Scale(float scale) {

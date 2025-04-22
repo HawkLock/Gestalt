@@ -44,6 +44,19 @@ public:
         }
     }
 
+    void GenerateVectorSubfolderImmutable(const char* title, glm::vec3* vec) {
+        if (ImGui::TreeNode(title)) {
+            ImGui::Text("%s, ", std::to_string(vec->x).c_str());
+            ImGui::SameLine();
+            ImGui::Text("%s, ", std::to_string(vec->y).c_str());
+            ImGui::SameLine();
+            ImGui::Text("%s", std::to_string(vec->z).c_str());
+            float mag = sqrt(pow(vec->x, 2) + pow(vec->y, 2) + pow(vec->z, 2));
+            ImGui::Text("Mag: %s", std::to_string(mag).c_str());
+            ImGui::TreePop();
+        }
+    }
+
     template <typename... Args>
     void UpdateData(Args&&... args) {
         auto handle = [this](auto&& arg) {

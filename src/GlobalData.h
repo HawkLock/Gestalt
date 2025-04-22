@@ -43,6 +43,7 @@ public:
     // Recording Settings
     static bool shouldRecord;
     static bool includeGUI;
+    static bool recordingUnpauses;
 
 
     GlobalData() {

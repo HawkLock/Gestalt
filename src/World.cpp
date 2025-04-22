@@ -810,6 +810,7 @@ void World::Render()
 	SettingsBus settingsBus = SettingsBus();
 	settingsBus.PhysicObjects = PhysicObjects;
 	settingsBus.TriggerObjects = TriggerObjects;
+	settingsBus.Widgets = Widgets;
 	settingsBus.focusObject = focusObject;
 	settingsBus.followFocusedObject = &followFocusedObject;
 	settingsBus.renderArrows = &renderArrows;
@@ -835,6 +836,12 @@ void World::AddObject(TriggerObject* object)
 {
 	TriggerObjects.push_back(object);
 }
+
+void World::AddWidget(Widget* widget)
+{
+	Widgets.push_back(widget);
+}
+
 
 void World::ProcessInput()
 {

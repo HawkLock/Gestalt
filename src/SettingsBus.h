@@ -5,6 +5,7 @@
 
 #include "PhysicsObject.h" 
 #include "Scenario.h"
+#include "Widget.h"
 
 class SettingsBus {
 
@@ -12,6 +13,7 @@ public:
     // Objects
     std::vector<PhysicsObject*> PhysicObjects;
     std::vector<TriggerObject*> TriggerObjects;
+    std::vector<Widget*> Widgets;
 
     // Focus Object
     PhysicsObject* focusObject;
