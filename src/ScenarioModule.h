@@ -65,6 +65,7 @@ public:
         ImGui::SliderFloat("Time Modifier", &GlobalData::timeModifier, 0, 2);
 
         ImGui::Checkbox("Paused", &GlobalData::paused);
+        ImGui::Text("Elapsed Simulation Time: %.2f", GlobalData::currentSimulationTime);
 
         // Load scenario button
         if (ImGui::Button("Load Scenario")) {

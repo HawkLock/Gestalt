@@ -33,13 +33,22 @@ public:
         }
     }
 
+    //void GenerateVectorSubfolder(const char* title, glm::vec3* vec, float min, float max) {
+    //    if (ImGui::TreeNode(title)) {
+    //        ImGui::SliderFloat("X", &vec->x, min, max);
+    //        ImGui::SliderFloat("Y", &vec->y, min, max);
+    //        ImGui::SliderFloat("Z", &vec->z, min, max);
+    //        ImGui::TreePop();
+    //    }
+    //}
+
     void GenerateVectorSubfolder(const char* title, glm::vec3* vec, float min, float max) {
         if (ImGui::TreeNode(title)) {
             ImGui::SliderFloat("X", &vec->x, min, max);
             ImGui::SliderFloat("Y", &vec->y, min, max);
             ImGui::SliderFloat("Z", &vec->z, min, max);
             float mag = sqrt(pow(vec->x, 2)+ pow(vec->y, 2)+ pow(vec->z, 2));
-            ImGui::Text("%s", std::to_string(mag).c_str());
+            ImGui::Text("Mag: %s", std::to_string(mag).c_str());
             ImGui::TreePop();
         }
     }

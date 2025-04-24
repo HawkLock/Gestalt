@@ -5,10 +5,6 @@
 
 #include "Gestalt.h"
 
-void boxTrigger(std::chrono::steady_clock::time_point currTime, std::chrono::steady_clock::time_point startTime) {
-    std::chrono::duration<double> elapsed = currTime - startTime;
-    std::cout << "Elapsed Time: " << elapsed.count() << std::endl;
-}
 
 float GetRandomFloat(float min, float max) {
     static std::random_device rd;
@@ -21,36 +17,44 @@ glm::vec3 GetRandomVelocity() {
     return glm::vec3(GetRandomFloat(-2.0f, 2.0f), GetRandomFloat(1.0f, 5.0f), GetRandomFloat(-2.0f, 2.0f));
 }
 
+bool boxTriggerActivated = false;
+float boxTriggerTime;
+
+void boxTrigger(std::chrono::steady_clock::time_point currTime, std::chrono::steady_clock::time_point startTime) {
+    boxTriggerTime = GlobalData::currentSimulationTime;
+    boxTriggerActivated = true;
+}
+
 int main()
 {
     Gestalt gestalt;
 
     gestalt.Initialize();
 
-    GlobalData::gravityScale = 0;
-    GlobalData::restitution = 0;
-    GlobalData::time = 0.5;
+    GlobalData::gravity = glm::vec3(0, -0.98, 0);
+    GlobalData::gravityScale = 1;
+    GlobalData::time = 1.75;
+    GlobalData::renderArrowsDecomposed = true;
 
-    PObj* left = gestalt.CreateObject(CUBE, 1, false);
-    left->SetPosition(glm::vec3(-3, 0, 0));
-    left->SetRotation(glm::angleAxis(glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f)));
-    left->SetVelocity(glm::vec3(3, 0, 0));
-    left->SetMass(20);
-    gestalt.AddObjectToScene(left);
+    PObj* block = gestalt.CreateObject(CUBE, 0.3, false);
+    block->SetPosition(glm::vec3(-8, 0, 0));
+    block->SetVelocity(glm::vec3(3, 0, 0));
+    block->SetMass(20);
+    gestalt.AddObjectToScene(block);
 
-    PObj* right = gestalt.CreateObject(CUBE, 1, false);
-    right->SetPosition(glm::vec3(3, 0, 0));
-    right->SetVelocity(glm::vec3(-2, 0, 0));
-    right->SetMass(10);
-    gestalt.AddObjectToScene(right);
+    TObj* line = gestalt.CreateObject(SLIVER, 1);
+    line->SetPosition(glm::vec3(8, 0, 0));
+    line->SetRotation(glm::angleAxis(glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f)));
+    line->setTrigger(boxTrigger);
+    gestalt.AddObjectToScene(line);
 
     Widget* widget = gestalt.CreateWidget("Velocities");
-    widget->AddTracker("Left Velocity", &left->GetObject()->velocity);
-    widget->AddTracker("Right Velocity", &right->GetObject()->velocity);
-    //gestalt.AddObjectToScene(widget);
+    widget->AddTracker("Block Launch Velocity", &block->GetObject()->velocity, 0, 3);
+    widget->AddTracker("Box Trigger Activated", &boxTriggerActivated);
+    widget->AddTracker("Box Trigger Time", &boxTriggerTime);
+    gestalt.AddObjectToScene(widget);
 
     gestalt.SaveScenario("test");
 
     gestalt.Run();
-
 }

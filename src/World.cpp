@@ -101,6 +101,7 @@ void World::ClearWorld() {
 void World::LoadScenario(const std::string& filepath, bool clearWorld) {
 	if (clearWorld) {
 		ClearWorld();
+		GlobalData::currentSimulationTime = 0;
 	}
 	scene = Scenario();
 	scene.LoadScenarioFromFile(filepath);
@@ -135,6 +136,7 @@ void World::Update()
 			CollisionUpdate();
 
 			PhysicsUpdate();
+			GlobalData::currentSimulationTime += GlobalData::fixedTimeStep;
 		}
 		renderer.timeAccumulator -= GlobalData::fixedTimeStep;
 	}
@@ -813,10 +815,10 @@ void World::Render()
 	settingsBus.Widgets = Widgets;
 	settingsBus.focusObject = focusObject;
 	settingsBus.followFocusedObject = &followFocusedObject;
-	settingsBus.renderArrows = &renderArrows;
-	settingsBus.decomposeArrows = &renderArrowsDecomposed;
-	settingsBus.renderArrowsOnTop = &renderArrowsOnTop;
-	settingsBus.renderArrowLabels = &renderArrowLabels;
+	settingsBus.renderArrows = &GlobalData::renderArrows;
+	settingsBus.decomposeArrows = &GlobalData::renderArrowsDecomposed;
+	settingsBus.renderArrowsOnTop = &GlobalData::renderArrowsOnTop;
+	settingsBus.renderArrowLabels = &GlobalData::renderArrowLabels;
 	settingsBus.scene = &scene;
 
 	renderer.RenderLoop(&camera, settingsBus);

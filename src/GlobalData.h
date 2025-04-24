@@ -29,6 +29,7 @@ public:
     static float timeModifier;
     static float minimumFixedTimeStep;
     static float fixedTimeStep;
+    static float currentSimulationTime;
 
     // Scaling
     static float scale;
@@ -40,9 +41,15 @@ public:
     static bool lockedRotation;
     static bool constantAcceleration;
 
+    static bool renderArrows;
+    static bool renderArrowsDecomposed;
+    static bool renderArrowsOnTop;
+    static bool renderArrowLabels;
+
     // Recording Settings
     static bool shouldRecord;
     static bool includeGUI;
+    static bool includePause;
     static bool recordingUnpauses;
 
 

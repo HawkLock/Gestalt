@@ -41,10 +41,6 @@ protected:
 
 	PhysicsObject* focusObject;
 	bool followFocusedObject = false;
-	bool renderArrows = true;
-	bool renderArrowsDecomposed = false;
-	bool renderArrowsOnTop = false;
-	bool renderArrowLabels = false;
 
 	Scenario scene;
 

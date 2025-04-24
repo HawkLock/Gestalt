@@ -480,7 +480,7 @@ void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
         }
     }
 
-    if (GlobalData::shouldRecord && !GlobalData::includeGUI && !GlobalData::paused) {
+    if (GlobalData::shouldRecord && !GlobalData::includeGUI && (!GlobalData::paused || GlobalData::includePause)) {
         Recorder::captureFrame(SCR_WIDTH, SCR_HEIGHT, &frameCount);
     }
 
@@ -578,7 +578,7 @@ void Renderer::RenderLoop(Camera* camera, SettingsBus settingsBus)
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    if (GlobalData::shouldRecord && GlobalData::includeGUI && !GlobalData::paused) {
+    if (GlobalData::shouldRecord && GlobalData::includeGUI && (!GlobalData::paused || GlobalData::includePause)) {
         Recorder::captureFrame(SCR_WIDTH, SCR_HEIGHT, &frameCount);
     }
 

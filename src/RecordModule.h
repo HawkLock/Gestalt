@@ -42,9 +42,9 @@ public:
         }
 
         ImGui::SameLine();
-
         ImGui::Checkbox("Include GUI", &GlobalData::includeGUI);
         ImGui::SameLine();
+        ImGui::Checkbox("Include Pause", &GlobalData::includePause);
         ImGui::Checkbox("Unpause", &GlobalData::recordingUnpauses);
 
         if (ImGui::Button("Choose Output Path")) {

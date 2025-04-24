@@ -16,6 +16,7 @@ bool GlobalData::paused = true;
 float GlobalData::timeModifier = 1.0f;
 float GlobalData::minimumFixedTimeStep = 0.0001;
 float GlobalData::fixedTimeStep = 0.001f;
+float GlobalData::currentSimulationTime = 0;
 
 float GlobalData::scale = 0.4f;
 
@@ -24,8 +25,13 @@ glm::vec3 GlobalData::gravity = glm::vec3(0.0, -9.8, 0.0);
 float GlobalData::gravityScale = 1.0f;
 bool GlobalData::lockedRotation = true;
 bool GlobalData::constantAcceleration = false;
+bool GlobalData::renderArrows = true;
+bool GlobalData::renderArrowsDecomposed = false;
+bool GlobalData::renderArrowsOnTop = false;
+bool GlobalData::renderArrowLabels = false;
 
 
 bool GlobalData::shouldRecord = false;
 bool GlobalData::includeGUI = false;
+bool GlobalData::includePause = false;
 bool GlobalData::recordingUnpauses = false;
