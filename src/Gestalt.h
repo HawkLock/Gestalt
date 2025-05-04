@@ -78,6 +78,37 @@ public:
 		return pObj;
 	}
 
+	PObj* CreateObject(Shape shape, float size, bool anchored, std::string texturePath) {
+		std::string modelPath;
+		switch (shape) {
+		case CUBE:
+			modelPath = cubePath;
+			break;
+		case SPHERE:
+			modelPath = spherePath;
+			break;
+		case PLANE:
+			modelPath = planePath;
+			break;
+		case PYRAMID:
+			modelPath = pyramidPath;
+			break;
+		case SLIVER:
+			modelPath = sliverPath;
+			break;
+		case ARROW:
+			modelPath = arrowModelPath;
+			break;
+		default:
+			break;
+		}
+		PhysicsObject* obj = new PhysicsObject(defaultPosition, std::vector<glm::vec3>(), defaultRotation, defaultMass, anchored, defaultSize, modelPath, texturePath, arrowModelPath);
+		obj->scale = size;
+		obj->ScaleSize(size);
+		PObj* pObj = new PObj(obj);
+		return pObj;
+	}
+
 	TObj* CreateObject(Shape shape, float size) {
 		std::string modelPath;
 		switch (shape) {
@@ -100,6 +131,34 @@ public:
 			break;
 		}
 		TriggerObject* obj = new TriggerObject(defaultPosition, defaultRotation, defaultSize, modelPath, texturePath2);
+		obj->scale = size;
+		obj->ScaleSize(size);
+		TObj* tObj = new TObj(obj);
+		return tObj;
+	}
+
+	TObj* CreateObject(Shape shape, float size, std::string texturePath) {
+		std::string modelPath;
+		switch (shape) {
+		case CUBE:
+			modelPath = cubePath;
+			break;
+		case PLANE:
+			modelPath = planePath;
+			break;
+		case PYRAMID:
+			modelPath = pyramidPath;
+			break;
+		case SLIVER:
+			modelPath = sliverPath;
+			break;
+		case ARROW:
+			modelPath = arrowModelPath;
+			break;
+		default:
+			break;
+		}
+		TriggerObject* obj = new TriggerObject(defaultPosition, defaultRotation, defaultSize, modelPath, texturePath);
 		obj->scale = size;
 		obj->ScaleSize(size);
 		TObj* tObj = new TObj(obj);

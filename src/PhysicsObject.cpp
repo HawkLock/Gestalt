@@ -44,9 +44,7 @@ PhysicsObject::PhysicsObject(glm::vec3 initialPosition, std::vector<glm::vec3> i
 		0.0f, 0.0f, 1
 	);
 	inertiaTensor = momentOfInertia * mat;
-	//PrintMat3(inertiaTensor);
 	CalculateInertiaTensor(inertiaTensor);
-	//PrintMat3(inertiaTensor);
 
 	inverseInertiaTensor = glm::inverse(inertiaTensor);
 }

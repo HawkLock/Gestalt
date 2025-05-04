@@ -19,7 +19,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\Textures\black.jpeg" />
+    <Image Include="..\Textures\black.png" />
+    <Image Include="..\Textures\blue.jpeg" />
+    <Image Include="..\Textures\Blue.png" />
+    <Image Include="..\Textures\blue_2.png" />
     <Image Include="..\Textures\CrateTexture.jpg" />
+    <Image Include="..\Textures\Gray.jpg" />
+    <Image Include="..\Textures\green.jpeg" />
+    <Image Include="..\Textures\green.png" />
+    <Image Include="..\Textures\Grid.png" />
+    <Image Include="..\Textures\Red.png" />
+    <Image Include="..\Textures\yellow.jpeg" />
+    <Image Include="..\Textures\yellow.png" />
     <Image Include="Textures\sus.png" />
   </ItemGroup>
   <ItemGroup>

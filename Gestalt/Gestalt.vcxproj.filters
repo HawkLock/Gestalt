@@ -36,6 +36,42 @@
     <Image Include="..\Textures\CrateTexture.jpg">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="..\Textures\black.jpeg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Textures\black.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Textures\blue.jpeg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Textures\Blue.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Textures\blue_2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Textures\Gray.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Textures\green.jpeg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Textures\green.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Textures\Grid.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Textures\Red.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Textures\yellow.jpeg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Textures\yellow.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Camera.cpp">

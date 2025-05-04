@@ -1,4 +1,7 @@
-sData test 0 -0.98 0 0.4 1 1.75
+sData test 0 -0.98 0 0.4 1 1
 lData N/A N/A N/A
-pObj -8 0 0 0 0 0 0 3 0 0 0 0 0 20 0 2 0.3 ../Models/cube1.txt ../Textures/CrateTexture.jpg ../Models/arrow.txt 0
-tObj 8 0 0 0.707107 -0.707107 -0 -0 2 1 ../Models/sliver.txt ../Textures/Blue.png 
+pObj -8 0 0 0 0 0 0 0.75 5.5 0 0 0 0 20 0 2 0.25 ../Models/cube1.txt ../Textures/blue.jpeg ../Models/arrow.txt 0
+pObj 1 4 0 0.707107 -0 -0.707107 -0 0 0 0 0 0 0 2 1 2 0.8 ../Models/plane.txt ../Textures/black.jpeg ../Models/arrow.txt 0
+pObj 2.1 5 0 0.707107 -0.707107 -0 -0 0 0 0 0 0 0 2 1 2 1 ../Models/plane.txt ../Textures/black.jpeg ../Models/arrow.txt 0
+pObj 0 -0.5 0 0.707107 -0.707107 -0 -0 0 0 0 0 0 0 2 1 2 1 ../Models/plane.txt ../Textures/yellow.jpeg ../Models/arrow.txt 0
+tObj 3 3.75 0 0.707107 -0.707107 -0 -0 0.4 0.04 ../Models/cube1.txt ../Textures/green.jpeg 
